@@ -1,0 +1,357 @@
+/* ============================================================
+   Queue page — matches the Landing design system exactly
+   Tokens: --bg #0c0b09, --paper #efe6d6, --accent #d24a16
+   Fonts: Big Shoulders Display (display), IBM Plex Sans (sans), IBM Plex Mono (mono)
+   ============================================================ */
+
+.shell {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--paper);
+  font-family: var(--sans);
+}
+
+/* ── Top nav ── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 44px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.navMark { color: var(--paper); opacity: 0.8; }
+.navLinks { display: flex; gap: 24px; }
+.navLinks a { color: var(--muted); transition: color 0.15s; }
+.navLinks a:hover { color: var(--paper); }
+
+/* ── Header strip ── */
+.header {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  padding: 40px 32px 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.headerLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+
+.headerTitle {
+  font-family: var(--display);
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  font-weight: 800;
+  line-height: 0.9;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+/* ── Metrics bar ── */
+.metrics {
+  display: flex;
+  gap: 0;
+  justify-content: flex-end;
+  align-items: stretch;
+}
+
+.metric {
+  padding: 0 28px;
+  border-left: 1px solid var(--line);
+  text-align: right;
+}
+
+.metricValue {
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--paper);
+  display: block;
+}
+
+.metricValue.accent { color: var(--accent); }
+
+.metricLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: block;
+  margin-top: 4px;
+}
+
+/* ── Filter bar ── */
+.filterBar {
+  display: flex;
+  gap: 8px;
+  padding: 16px 32px;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+}
+
+.filterLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.filterChip {
+  padding: 4px 12px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.filterChip:hover { border-color: var(--rule); color: var(--paper); }
+.filterChip.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(210, 74, 22, 0.06);
+}
+
+/* ── Table ── */
+.tableWrap {
+  padding: 0 32px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0;
+}
+
+.table thead tr {
+  border-bottom: 1px solid var(--line);
+}
+
+.table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 400;
+  cursor: pointer;
+  user-select: none;
+}
+.table th:hover { color: var(--paper); }
+.table th.sorted { color: var(--accent); }
+
+.table tbody tr {
+  border-bottom: 1px solid var(--line);
+  transition: background 0.12s;
+  cursor: pointer;
+}
+.table tbody tr:hover { background: rgba(239, 230, 214, 0.03); }
+.table tbody tr:last-child { border-bottom: none; }
+
+.table td {
+  padding: 14px 8px;
+  font-size: 13.5px;
+  vertical-align: middle;
+}
+
+/* Invoice link */
+.invoiceLink {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--paper);
+  letter-spacing: 0.06em;
+  text-decoration: none;
+}
+.invoiceLink:hover { color: var(--accent); }
+
+/* State badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.badge.awaiting_action    { border-color: #4a7c59; color: #2a6b48; }
+.badge.awaiting_response  { border-color: #9a6b12; color: #c8891a; }
+.badge.promise_recorded   { border-color: #4a7c59; color: #2a6b48; }
+.badge.contacted          { border-color: #9a6b12; color: #c8891a; }
+.badge.human_review       { border-color: #9a3a12; color: #d24a16; }
+.badge.paused             { border-color: var(--rule); color: var(--muted); }
+.badge.blocked            { border-color: #8f1d1d; color: #c02020; }
+.badge.recovered          { border-color: #2a6b48; background: rgba(42,107,72,0.1); color: #3a9b65; }
+.badge.unrecoverable      { border-color: #8f1d1d; color: #c02020; }
+.badge.cancelled          { border-color: var(--rule); color: var(--muted); }
+.badge.open               { border-color: var(--rule); color: var(--muted); }
+.badge.classified         { border-color: var(--rule); color: var(--muted); }
+
+.badgeDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+/* Cause tag */
+.cause {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+/* Prob bar */
+.probWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.probBar {
+  width: 60px;
+  height: 3px;
+  background: var(--line);
+  position: relative;
+  flex-shrink: 0;
+}
+.probFill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: var(--accent);
+  transition: width 0.4s ease;
+}
+.probFill.high  { background: #2a6b48; }
+.probFill.med   { background: var(--accent); }
+.probFill.low   { background: #8f1d1d; }
+.probText {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Amount */
+.amount {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--paper);
+  text-align: right;
+}
+
+/* Customer */
+.customer {
+  font-size: 12px;
+  color: var(--paper);
+  font-weight: 500;
+  display: block;
+}
+
+.customerGstin {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  display: block;
+  margin-top: 2px;
+}
+
+/* MSME & 43B(h) Chips */
+.msmeTag {
+  display: inline-block;
+  padding: 1px 4px;
+  font-family: var(--mono);
+  font-size: 9px;
+  background: rgba(210, 74, 22, 0.12);
+  color: var(--accent);
+  border-radius: 2px;
+  margin-left: 4px;
+  font-weight: 600;
+}
+
+.countdownChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+}
+
+.countdownChip.disallowed {
+  background: rgba(192, 32, 32, 0.15);
+  border: 1px solid #c02020;
+  color: #ff6b6b;
+}
+
+.countdownChip.urgent {
+  background: rgba(210, 74, 22, 0.15);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+
+.countdownChip.safe {
+  background: rgba(239, 230, 214, 0.05);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+/* Risk Tier */
+.riskTier {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.riskTier.LOW { color: #3a9b65; background: rgba(58, 155, 101, 0.1); }
+.riskTier.MEDIUM { color: #c8891a; background: rgba(200, 137, 26, 0.1); }
+.riskTier.HIGH { color: #d24a16; background: rgba(210, 74, 22, 0.15); }
+.riskTier.CRITICAL { color: #c02020; background: rgba(192, 32, 32, 0.2); }
+
+/* Empty / loading state */
+.statusRow {
+  padding: 60px 32px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.errorRow {
+  padding: 20px 32px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #c02020;
+  border-left: 2px solid #8f1d1d;
+  margin: 16px 32px;
+}
+
