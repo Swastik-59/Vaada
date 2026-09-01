@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -74,3 +75,12 @@ class CashDiscountRequest(BaseModel):
     discount_percent: float = Field(ge=0.0, le=15.0)
 
 
+class RazorpayLookupRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    code: str | None = None
+    reason: str | None = None
+    payment_method: str | None = None
+    source: str | None = None
+    step: str | None = None
+    raw_payload: dict[str, Any] | None = None

@@ -19,7 +19,7 @@ BENCHMARK_HINGLISH_SAMPLES = [
         "language_mix": "hinglish",
     },
     {
-        "input": "Main agle somvar (Monday) 1,20,000 INR pay kar dunga, pakka vaayda.",
+        "input": "Main agle somvar (Monday) 1,20,000 INR pay kar dunga, pakka vaada.",
         "expected_date_offset": 5,
         "expected_amount": 12000000,
         "should_extract": True,
@@ -90,7 +90,7 @@ def run_evaluation() -> dict:
 
     eval_report = f"""# System Evaluation & Benchmark Report
 
-This document records the empirical evaluation of Vaayda's tabular ML recovery probability model and Hinglish promise-to-pay extraction engine.
+This document records the empirical evaluation of Vaada's tabular ML recovery probability model and Hinglish promise-to-pay extraction engine.
 
 ---
 

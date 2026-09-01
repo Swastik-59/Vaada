@@ -5,9 +5,9 @@ from datetime import UTC, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
-os.environ.setdefault("VAAYDA_JWT_SECRET", "test-secret-value-32chars-min")
-os.environ.setdefault("VAAYDA_DATABASE_URL", "sqlite+pysqlite:///:memory:")
-os.environ.setdefault("VAAYDA_CORS_ORIGINS", "http://localhost:3000")
+os.environ.setdefault("VAADA_JWT_SECRET", "test-secret-value-32chars-min")
+os.environ.setdefault("VAADA_DATABASE_URL", "sqlite+pysqlite:///:memory:")
+os.environ.setdefault("VAADA_CORS_ORIGINS", "http://localhost:3000")
 
 from app.core.config import get_settings
 from app.core.security import hash_password
@@ -72,8 +72,8 @@ def test_login_rejects_bad_password() -> None:
 
 
 def test_seed_creates_operator_login() -> None:
-    previous = os.environ.get("VAAYDA_SEED_ADMIN_PASSWORD")
-    os.environ["VAAYDA_SEED_ADMIN_PASSWORD"] = "local-seed-pass-12"
+    previous = os.environ.get("VAADA_SEED_ADMIN_PASSWORD")
+    os.environ["VAADA_SEED_ADMIN_PASSWORD"] = "local-seed-pass-12"
     try:
         get_settings.cache_clear()
         app = create_app()
@@ -86,14 +86,14 @@ def test_seed_creates_operator_login() -> None:
         client = TestClient(app)
         response = client.post(
             "/api/v1/auth/login",
-            json={"email": "operator@vaayda.local", "password": "local-seed-pass-12"},
+            json={"email": "operator@vaada.local", "password": "local-seed-pass-12"},
         )
         assert response.status_code == 200
     finally:
         if previous is None:
-            os.environ.pop("VAAYDA_SEED_ADMIN_PASSWORD", None)
+            os.environ.pop("VAADA_SEED_ADMIN_PASSWORD", None)
         else:
-            os.environ["VAAYDA_SEED_ADMIN_PASSWORD"] = previous
+            os.environ["VAADA_SEED_ADMIN_PASSWORD"] = previous
         get_settings.cache_clear()
 
 

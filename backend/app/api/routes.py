@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.cookies import clear_auth_cookies, set_auth_cookies
+import json
+from app.api.cookies import REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.api.schemas import (
     CaseActionRequest,
     CashDiscountRequest,
@@ -14,6 +15,7 @@ from app.api.schemas import (
     EventIngestRequest,
     LoginRequest,
     PaymentReconcileRequest,
+    RazorpayLookupRequest,
     StatutoryNoticeRequest,
     SyntheticBatchRequest,
     TDSReconcileRequest,
@@ -22,6 +24,12 @@ from app.authz.deps import Principal, current_principal, get_db, require_permiss
 from app.authz.permissions import role_allows
 from app.core.config import Settings, get_settings
 from app.core.errors import AuthorizationFailed, DependencyFailed, NotFound, ValidationFailed
+from app.services.razorpay import (
+    derive_recovery_policy,
+    evaluate_combined_case_decision,
+    get_taxonomy_service,
+    normalize_razorpay_error,
+)
 from app.db.models import (
     AuditEvent,
     CaseTransition,
@@ -98,7 +106,7 @@ def refresh_session(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> dict:
-    token = request.cookies.get("vaayda_refresh")
+    token = request.cookies.get(REFRESH_COOKIE)
     user, access, refresh_token, csrf, expires = rotate_refresh(db, refresh_token=token or "", settings=settings)
     set_auth_cookies(response, access_token=access, refresh_token=refresh_token, csrf_token=csrf, refresh_expires=expires, settings=settings)
     return {"user_id": user.id}
@@ -114,7 +122,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
         user_id = None
     revoke_refresh(
         db,
-        refresh_token=request.cookies.get("vaayda_refresh"),
+        refresh_token=request.cookies.get(REFRESH_COOKIE),
         user_id=user_id,
         correlation_id=getattr(request.state, "correlation_id", None),
     )
@@ -257,6 +265,81 @@ def event_source_status(
         adapter = RazorpayTestModeSource(key_id=settings.razorpay_key_id, key_secret=settings.razorpay_key_secret)
         return {"active": adapter.source_name(), "pull_ready": bool(settings.razorpay_key_id and settings.razorpay_key_secret)}
     return {"active": "synthetic", "pull_ready": True}
+
+
+@router.get("/razorpay/taxonomy")
+def list_razorpay_taxonomy(
+    payment_method: str | None = None,
+    source: str | None = None,
+    step: str | None = None,
+    category: str | None = None,
+    code: str | None = None,
+    reason: str | None = None,
+    recoverability: str | None = None,
+    principal: Principal = Depends(require_permission("cases:read")),
+) -> dict:
+    """Lists official Razorpay published taxonomy errors enriched with derived Vaada recovery logic."""
+    taxonomy_svc = get_taxonomy_service()
+    entries = taxonomy_svc.get_all(
+        payment_method=payment_method,
+        source=source,
+        step=step,
+        category=category,
+        code=code,
+        reason=reason,
+    )
+    items = []
+    for entry in entries:
+        derived = derive_recovery_policy(entry)
+        if recoverability and derived.get("recoverability") != recoverability.lower().strip():
+            continue
+        items.append({
+            "id": entry.id,
+            "official": entry.to_dict(),
+            "derived": derived,
+        })
+    return {
+        "metadata": taxonomy_svc.get_metadata(),
+        "total": len(items),
+        "items": items,
+    }
+
+
+@router.get("/razorpay/taxonomy/{entry_id}")
+def get_razorpay_taxonomy_entry(
+    entry_id: str,
+    principal: Principal = Depends(require_permission("cases:read")),
+) -> dict:
+    """Fetches a specific official Razorpay taxonomy entry by ID."""
+    taxonomy_svc = get_taxonomy_service()
+    entry = taxonomy_svc.get_by_id(entry_id)
+    if not entry:
+        raise NotFound("Razorpay taxonomy entry not found.")
+    return {
+        "official": entry.to_dict(),
+        "derived": derive_recovery_policy(entry),
+    }
+
+
+@router.post("/razorpay/lookup")
+def lookup_razorpay_error(
+    body: RazorpayLookupRequest,
+    principal: Principal = Depends(require_permission("cases:read")),
+) -> dict:
+    """Deterministic lookup of a raw or structured error against official Razorpay taxonomy."""
+    raw = body.raw_payload or {
+        "code": body.code,
+        "reason": body.reason,
+        "source": body.source,
+        "step": body.step,
+        "payment_method": body.payment_method,
+    }
+    normalized = normalize_razorpay_error(
+        raw,
+        payment_method=body.payment_method,
+        failure_code=body.code,
+    )
+    return normalized
 
 
 @router.get("/cases")
@@ -663,11 +746,83 @@ def _case_detail(db: Session, case: RecoveryCase) -> dict:
 
     source_event = db.get(PaymentEvent, case.source_event_id) if case.source_event_id else None
 
+    raw_event_payload = {}
+    if source_event and source_event.payload_json:
+        try:
+            raw_event_payload = json.loads(source_event.payload_json)
+        except Exception:
+            raw_event_payload = {}
+
+    method = raw_event_payload.get("payment_method") or (
+        raw_event_payload.get("error", {}).get("payment_method") if isinstance(raw_event_payload.get("error"), dict) else None
+    )
+
+    norm = normalize_razorpay_error(
+        raw_event_payload,
+        payment_method=method,
+        failure_code=case.root_cause,
+    )
+
+    latest_promise = promises[-1] if promises else None
+    promise_dict = {
+        "promised_date": latest_promise.promised_date.isoformat() if latest_promise else None,
+        "confidence": float(latest_promise.confidence) if latest_promise else 0.0,
+    } if latest_promise else None
+
+    statutory_info = get_43b_h_status(invoice, customer) if (invoice and customer) else None
+    days_rem = statutory_info.get("days_remaining") if statutory_info else None
+    latest_comm = messages[-1].body if messages else (promises[-1].raw_text if promises else None)
+
+    taxonomy_entry = None
+    if norm["matched"] and norm["official"]:
+        taxonomy_svc = get_taxonomy_service()
+        taxonomy_entry = taxonomy_svc.get_by_id(norm["official"]["id"])
+
+    combined_eval = evaluate_combined_case_decision(
+        taxonomy_entry=taxonomy_entry,
+        raw_payload=raw_event_payload,
+        customer_message=latest_comm,
+        promise_to_pay=promise_dict,
+        broken_p2p_count=case.p2p_broken_count,
+        statutory_days_remaining=days_rem,
+    )
+
+    official_data = norm["official"]
+    raw_info = norm["raw"]
+    payment_diagnosis = {
+        "matched": norm["matched"],
+        "provider": "razorpay",
+        "code": official_data["code"] if official_data else (raw_info["code"] or "UNKNOWN_ERROR"),
+        "reason": official_data["reason"] if official_data else (raw_info["reason"] or case.root_cause or "unmapped"),
+        "source": official_data["source"] if official_data else (raw_info["source"] or "customer"),
+        "step": official_data["step"] if official_data else (raw_info["step"] or "payment_initiation"),
+        "payment_method": official_data["payment_method"] if official_data else method,
+        "description": official_data["description"] if official_data else "Unmapped Razorpay error payload. No official published record found.",
+        "official_next_step": official_data["official_next_step"] if official_data else "Flagged for manual operator review; verify raw gateway response.",
+        "official_source_url": official_data["official_source_url"] if official_data else "https://razorpay.com/docs/errors/",
+        "raw_payload": raw_info,
+    }
+
+    recovery_interpretation = {
+        "recoverability": combined_eval["recoverability"],
+        "retryable": combined_eval["retryable"],
+        "urgency": combined_eval["urgency"],
+        "customer_action": norm["derived"].get("recommended_customer_action"),
+        "merchant_action": combined_eval["recommended_action"],
+        "policy_decision": combined_eval["final_policy"],
+        "requires_human_review": combined_eval["requires_human_review"],
+        "confidence": combined_eval["confidence"],
+        "is_unmapped": not norm["matched"],
+    }
+
     upi_info = generate_dynamic_upi_payload(tenant, invoice, case) if (tenant and invoice) else None
     whatsapp_info = compose_whatsapp_interactive_payload(tenant, customer, invoice, case) if (tenant and customer and invoice) else None
 
     return {
         **_case_summary(db, case),
+        "payment_diagnosis": payment_diagnosis,
+        "recovery_interpretation": recovery_interpretation,
+        "decision_chain": combined_eval["decision_trace_chain"],
         "customer": {
             "id": customer.id if customer else None,
             "display_name": customer.display_name if customer else "Unknown",

@@ -33,7 +33,7 @@ def current_principal(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> Principal:
-    token = request.cookies.get("vaayda_access")
+    token = request.cookies.get("vaada_access")
     if not token:
         raise AuthenticationFailed("Authentication required.")
     try:
@@ -49,7 +49,7 @@ def current_principal(
 
     _enforce_csrf(request, settings)
 
-    tenant_id = request.headers.get("X-Vaayda-Tenant-Id")
+    tenant_id = request.headers.get("X-Vaada-Tenant-Id")
     memberships = list(user.memberships)
     if not memberships:
         raise AuthorizationFailed("No tenant membership.")
@@ -60,7 +60,7 @@ def current_principal(
     elif len(memberships) == 1:
         membership = memberships[0]
     else:
-        raise AuthorizationFailed("X-Vaayda-Tenant-Id is required when multiple memberships exist.")
+        raise AuthorizationFailed("X-Vaada-Tenant-Id is required when multiple memberships exist.")
 
     return Principal(
         user=user,
@@ -84,6 +84,6 @@ def _enforce_csrf(request: Request, settings: Settings) -> None:
     if request.method in SAFE_METHODS:
         return
     header = request.headers.get("X-CSRF-Token")
-    cookie = request.cookies.get("vaayda_csrf")
+    cookie = request.cookies.get("vaada_csrf")
     if not header or not cookie or not constant_time_equals(header, cookie):
         raise AuthenticationFailed("CSRF validation failed.")

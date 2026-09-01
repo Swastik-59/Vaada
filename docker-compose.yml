@@ -2,18 +2,18 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: vaayda
-      POSTGRES_PASSWORD: vaayda
-      POSTGRES_DB: vaayda
+      POSTGRES_USER: vaada
+      POSTGRES_PASSWORD: vaada
+      POSTGRES_DB: vaada
     ports:
       - "5432:5432"
     volumes:
-      - vaayda_pg:/var/lib/postgresql/data
+      - vaada_pg:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U vaayda -d vaayda"]
+      test: ["CMD-SHELL", "pg_isready -U vaada -d vaada"]
       interval: 5s
       timeout: 5s
       retries: 10
 
 volumes:
-  vaayda_pg:
+  vaada_pg:

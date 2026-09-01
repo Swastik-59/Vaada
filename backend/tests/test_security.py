@@ -64,13 +64,13 @@ def test_login_succeeds_for_valid_credentials() -> None:
     client = _client_with_users()
     response = client.post("/api/v1/auth/login", json={"email": "manager@acme.test", "password": "password12"})
     assert response.status_code == 200
-    assert "vaayda_access" in response.cookies
+    assert "vaada_access" in response.cookies
 
 
 def test_viewer_cannot_ingest_events() -> None:
     client = _client_with_users()
     _login(client, "viewer@acme.test")
-    csrf = client.cookies.get("vaayda_csrf")
+    csrf = client.cookies.get("vaada_csrf")
     response = client.post(
         "/api/v1/events",
         headers={"X-CSRF-Token": csrf or ""},

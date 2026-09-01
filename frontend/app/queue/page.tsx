@@ -180,11 +180,12 @@ export default function QueuePage() {
   return (
     <div className={styles.shell}>
       <nav className={styles.nav}>
-        <span className={styles.navMark}>VAAYDA / OPS CONSOLE</span>
+        <span className={styles.navMark}>VAADA / OPS CONSOLE</span>
         <div className={styles.navLinks}>
           <Link href="/">Public site</Link>
           <Link href="/audit">Audit trail</Link>
           <Link href="/settings">Compliance config</Link>
+          <Link href="/razorpay-taxonomy">Error Intelligence</Link>
         </div>
       </nav>
 

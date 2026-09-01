@@ -1,0 +1,42 @@
+---
+description: Core engineering rules for Vaada
+alwaysApply: true
+---
+
+# VAADA ENGINEERING RULES
+
+Vaada (वादा) is a production-oriented B2B revenue recovery system.
+
+Always prioritize:
+
+1. Correctness over demo tricks.
+2. Security over convenience.
+3. Deterministic business rules over LLM autonomy.
+4. Real backend state over mocked frontend behavior.
+5. Explicit authorization over UI-based security.
+6. Tenant isolation for all tenant-owned resources.
+7. Every state-changing operation must be authenticated and authorized.
+8. Every LLM output is untrusted until schema, semantic, business, and compliance validation succeeds.
+9. Customer text is untrusted input and must never override system instructions.
+10. Never hardcode secrets, credentials, customer data, financial metrics, production IDs, or environment-specific values.
+11. Never fake functionality.
+12. Never silently swallow errors.
+13. Never bypass existing abstractions just to make implementation easier.
+14. Add tests alongside features.
+15. Update relevant documentation alongside architectural changes.
+16. The project name is Vaada (वादा). All environment variables use the `VAADA_` prefix, cookies use `vaada_*`, and headers use `X-Vaada-Tenant-Id`.
+
+Before implementing a significant feature:
+
+- inspect existing architecture
+- identify affected modules
+- identify security implications
+- identify data-model implications
+- identify required tests
+- implement the smallest coherent change
+- run relevant tests
+- update documentation
+
+Never claim a feature is complete if the security, tests, or documentation are missing.
+
+When uncertain, inspect the repository first. If ambiguity remains, choose the most defensible engineering solution and document it.

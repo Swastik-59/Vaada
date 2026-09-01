@@ -1,0 +1,14 @@
+{
+  "provider": "razorpay",
+  "source": "official_documentation",
+  "taxonomy_version": "razorpay-taxonomy-2026-09-01",
+  "retrieved_at": "2026-09-01T00:00:00Z",
+  "source_urls": [
+    "https://razorpay.com/docs/errors/",
+    "https://razorpay.com/docs/errors/payments/list/",
+    "https://razorpay.com/docs/errors/payments/upi/",
+    "https://razorpay.com/docs/errors/payments/payment-methods-error-parameters/",
+    "https://razorpay.com/docs/errors/common/"
+  ],
+  "provenance_notes": "Authoritative Razorpay payment failure taxonomy extracted directly from official developer documentation. All codes, reasons, sources, steps, descriptions, and official next steps preserve Razorpay's published schema. Derived recovery policies and realistic synthetic scenarios are maintained in separate, distinct layers."
+}

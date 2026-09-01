@@ -12,7 +12,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_prefix="VAAYDA_",
+        env_prefix="VAADA_",
         # Repo-root .env only. A second backend/.env previously overrode the file
         # operators edit and hashed a different seed password than they typed.
         env_file=str(_REPO_ROOT / ".env"),
@@ -32,12 +32,12 @@ class Settings(BaseSettings):
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     jwt_secret: str = Field(min_length=16)
-    jwt_issuer: str = "vaayda-local"
-    jwt_audience: str = "vaayda-ops-console"
+    jwt_issuer: str = "vaada-local"
+    jwt_audience: str = "vaada-ops-console"
     access_token_minutes: int = 15
     refresh_token_days: int = 7
 
-    database_url: str = "sqlite+pysqlite:///./vaayda.db"
+    database_url: str = "sqlite+pysqlite:///./vaada.db"
 
     llm_base_url: str = ""
     llm_model: str = "qwen2.5:7b-instruct"
@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     contact_window_end_hour: int = 19
     max_contacts_per_7_days: int = 3
 
-    seed_admin_email: str = "operator@vaayda.local"
+    seed_admin_email: str = "operator@vaada.local"
     seed_admin_password: str = ""
 
     pagination_max_limit: int = 100
@@ -66,7 +66,7 @@ class Settings(BaseSettings):
         lowered = value.lower()
         if "replace-with" in lowered or value == "changeme":
             raise ValueError(
-                "VAAYDA_JWT_SECRET is still a placeholder. Copy .env.example to .env "
+                "VAADA_JWT_SECRET is still a placeholder. Copy .env.example to .env "
                 "and set a random secret (python -c \"import secrets; print(secrets.token_urlsafe(48))\")."
             )
         return value

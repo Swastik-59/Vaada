@@ -21,7 +21,7 @@ def generate_dynamic_upi_payload(
     # Clean merchant VPA or standard Virtual UPI handle
     clean_tenant_slug = tenant.slug.replace("-", "").lower()
     merchant_vpa = f"{clean_tenant_slug}.settle@icici"
-    merchant_van = f"VAAYDA{invoice.id[:8].upper()}"
+    merchant_van = f"VAADA{invoice.id[:8].upper()}"
 
     txn_ref = f"INV{invoice.invoice_number[:12]}_{case.id[:6]}"
     note = f"Payment for {invoice.invoice_number} to {tenant.legal_name}"
@@ -101,7 +101,7 @@ def compose_whatsapp_interactive_payload(
             "type": "button",
             "header": {"type": "text", "text": header_text},
             "body": {"text": body_text},
-            "footer": {"text": f"Merchant: {tenant.legal_name} • Powered by Vaayda"},
+            "footer": {"text": f"Merchant: {tenant.legal_name} • Powered by Vaada"},
             "action": {
                 "buttons": [
                     {

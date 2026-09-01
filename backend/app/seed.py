@@ -38,7 +38,7 @@ from app.services.statutory import (
 
 # ---------------------------------------------------------------------------
 # Hinglish / messy reply samples used to populate PromiseToPay.raw_text
-# These represent the extraction challenge that differentiates Vaayda.
+# These represent the extraction challenge that differentiates Vaada.
 # ---------------------------------------------------------------------------
 HINGLISH_REPLIES = [
     # Clean, easy
@@ -60,33 +60,59 @@ HINGLISH_REPLIES = [
 # ---------------------------------------------------------------------------
 # Seed cases definition — each dict describes one case to create
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Seed cases definition — each dict describes one case to create
+# ---------------------------------------------------------------------------
 SEED_CASES = [
+    # --- Premier End-to-End Demo Case: ₹18,500 UPI failure + Hinglish promise ---
+    dict(
+        inv="INV-SYN-1004", cust_ref="CUST-SYN-004", cust_name="Kapoor Agri Inputs",
+        amount=1850000, due_days_ago=5, failure_code="INSUFFICIENT_FUNDS",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="insufficient_funds",
+        rzp_source="customer", rzp_step="payment_debit", payment_method="upi",
+        rzp_description="The customer's bank account has insufficient balance to complete the transaction.",
+        state="promise_recorded", prob=0.71823,
+        promise=dict(
+            raw_text="bhai abhi balance nahi hai, Friday tak pakka kar dunga",
+            amount_minor=1850000,
+            promised_days_from_now=4,
+            confidence=0.94,
+            language_mix="hinglish",
+        ),
+    ),
     # --- Straightforward cases in awaiting_action ---
     dict(
         inv="INV-SYN-1002", cust_ref="CUST-SYN-002", cust_name="Mehta Fabrics Pvt Ltd",
-        amount=4750000, due_days_ago=14, failure_code="INSUFFICIENT_FUNDS",
+        amount=4750000, due_days_ago=14, failure_code="BANK_DECLINE",
+        rzp_code="GATEWAY_ERROR", rzp_reason="bank_server_down",
+        rzp_source="gateway", rzp_step="payment_authorization", payment_method="upi",
+        rzp_description="The customer's bank core banking system or UPI switch is temporarily down for maintenance.",
         state="awaiting_action", prob=0.61234,
     ),
     dict(
         inv="INV-SYN-1003", cust_ref="CUST-SYN-003", cust_name="Sharma & Sons Exports",
         amount=9400000, due_days_ago=21, failure_code="MANDATE_FAILED",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="mandate_frequency_limit_exceeded",
+        rzp_source="customer", rzp_step="payment_debit", payment_method="mandate",
+        rzp_description="e-NACH / UPI Autopay recurring debit attempt exceeded the registered mandate frequency schedule.",
         state="awaiting_action", prob=0.38941,
-    ),
-    dict(
-        inv="INV-SYN-1004", cust_ref="CUST-SYN-004", cust_name="Kapoor Agri Inputs",
-        amount=1850000, due_days_ago=5, failure_code="INSUFFICIENT_FUNDS",
-        state="awaiting_action", prob=0.71823,
     ),
     # --- Cases that have been contacted and are awaiting response ---
     dict(
         inv="INV-SYN-1005", cust_ref="CUST-SYN-005", cust_name="Gupta Steel Trading",
         amount=2340000, due_days_ago=18, failure_code="BANK_DECLINE",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="card_declined_by_bank",
+        rzp_source="gateway", rzp_step="payment_authorization", payment_method="card",
+        rzp_description="The card issuing bank declined the authorization request due to internal risk or credit limit breach.",
         state="awaiting_response", prob=0.29874,
         outbound=True,
     ),
     dict(
         inv="INV-SYN-1006", cust_ref="CUST-SYN-002", cust_name="Mehta Fabrics Pvt Ltd",
         amount=6800000, due_days_ago=30, failure_code="INVOICE_MISMATCH",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="card_expired",
+        rzp_source="customer", rzp_step="payment_initiation", payment_method="card",
+        rzp_description="The card expiry date provided is in the past, or the card has lapsed with the issuer.",
         state="awaiting_response", prob=0.44521,
         outbound=True,
     ),
@@ -94,6 +120,9 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1007", cust_ref="CUST-SYN-006", cust_name="Patel Paper Mills",
         amount=1875000, due_days_ago=10, failure_code="INSUFFICIENT_FUNDS",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="invalid_mpin",
+        rzp_source="customer", rzp_step="payment_authentication", payment_method="upi",
+        rzp_description="The customer entered an incorrect UPI PIN (MPIN) during authorization on their PSP app.",
         state="promise_recorded", prob=0.72318,
         promise=dict(
             raw_text=HINGLISH_REPLIES[0],
@@ -106,6 +135,9 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1008", cust_ref="CUST-SYN-007", cust_name="Agarwal Cold Chain",
         amount=4750000, due_days_ago=12, failure_code="NETWORK_ERROR",
+        rzp_code="GATEWAY_ERROR", rzp_reason="network_error",
+        rzp_source="gateway", rzp_step="payment_processing", payment_method="payment",
+        rzp_description="Network connectivity between Razorpay and downstream payment aggregator interrupted.",
         state="promise_recorded", prob=0.81234,
         promise=dict(
             raw_text=HINGLISH_REPLIES[1],
@@ -118,6 +150,9 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1009", cust_ref="CUST-SYN-008", cust_name="Nair Rubber Products",
         amount=2300000, due_days_ago=8, failure_code="INSUFFICIENT_FUNDS",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="insufficient_funds",
+        rzp_source="customer", rzp_step="payment_debit", payment_method="upi",
+        rzp_description="The customer's bank account has insufficient balance to complete the transaction.",
         state="promise_recorded", prob=0.68912,
         promise=dict(
             raw_text=HINGLISH_REPLIES[2],
@@ -130,6 +165,9 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1010", cust_ref="CUST-SYN-009", cust_name="Reddy Textiles Ltd",
         amount=940000, due_days_ago=6, failure_code="MANDATE_FAILED",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="mandate_cancelled",
+        rzp_source="customer", rzp_step="payment_initiation", payment_method="mandate",
+        rzp_description="The recurring e-Mandate was revoked or cancelled by the customer.",
         state="promise_recorded", prob=0.74123,
         promise=dict(
             raw_text=HINGLISH_REPLIES[3],
@@ -143,11 +181,17 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1011", cust_ref="CUST-SYN-010", cust_name="Joshi Auto Parts",
         amount=7200000, due_days_ago=45, failure_code="CUSTOMER_DISPUTE",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="vpa_blocked",
+        rzp_source="customer", rzp_step="payment_initiation", payment_method="upi",
+        rzp_description="The customer's VPA / UPI ID has been blocked or restricted due to risk rules.",
         state="human_review", prob=0.18234,
     ),
     dict(
         inv="INV-SYN-1012", cust_ref="CUST-SYN-003", cust_name="Sharma & Sons Exports",
         amount=3100000, due_days_ago=25, failure_code="BANK_DECLINE",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="netbanking_session_expired",
+        rzp_source="customer", rzp_step="payment_authorization", payment_method="netbanking",
+        rzp_description="The customer's netbanking portal session timed out prior to transaction submission.",
         state="human_review", prob=0.22671,
         promise=dict(
             raw_text=HINGLISH_REPLIES[4],
@@ -161,6 +205,8 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1013", cust_ref="CUST-SYN-006", cust_name="Patel Paper Mills",
         amount=5600000, due_days_ago=60, failure_code="INSUFFICIENT_FUNDS",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="insufficient_funds",
+        rzp_source="customer", rzp_step="payment_debit", payment_method="upi",
         state="human_review", prob=0.09123,
         promise=dict(
             raw_text=HINGLISH_REPLIES[5],
@@ -174,6 +220,8 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1014", cust_ref="CUST-SYN-007", cust_name="Agarwal Cold Chain",
         amount=1200000, due_days_ago=20, failure_code="INVOICE_MISMATCH",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="card_declined_by_bank",
+        rzp_source="gateway", rzp_step="payment_authorization", payment_method="card",
         state="human_review", prob=0.31456,
         promise=dict(
             raw_text=HINGLISH_REPLIES[6],
@@ -188,12 +236,16 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1015", cust_ref="CUST-SYN-008", cust_name="Nair Rubber Products",
         amount=880000, due_days_ago=9, failure_code="NETWORK_ERROR",
+        rzp_code="GATEWAY_ERROR", rzp_reason="payment_timed_out",
+        rzp_source="gateway", rzp_step="payment_processing", payment_method="upi",
         state="paused", prob=0.65421,
     ),
     # --- Compliance-blocked case ---
     dict(
         inv="INV-SYN-1016", cust_ref="CUST-SYN-010", cust_name="Joshi Auto Parts",
         amount=2750000, due_days_ago=3, failure_code="INSUFFICIENT_FUNDS",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="insufficient_funds",
+        rzp_source="customer", rzp_step="payment_debit", payment_method="upi",
         state="blocked", prob=0.58234,
         compliance_blocked=True,
     ),
@@ -201,6 +253,8 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1017", cust_ref="CUST-SYN-009", cust_name="Reddy Textiles Ltd",
         amount=3400000, due_days_ago=28, failure_code="MANDATE_FAILED",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="mandate_frequency_limit_exceeded",
+        rzp_source="customer", rzp_step="payment_debit", payment_method="mandate",
         state="recovered", prob=0.77123,
         promise=dict(
             raw_text=HINGLISH_REPLIES[8],
@@ -213,6 +267,8 @@ SEED_CASES = [
     dict(
         inv="INV-SYN-1018", cust_ref="CUST-SYN-002", cust_name="Mehta Fabrics Pvt Ltd",
         amount=1950000, due_days_ago=35, failure_code="INSUFFICIENT_FUNDS",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="insufficient_funds",
+        rzp_source="customer", rzp_step="payment_debit", payment_method="upi",
         state="recovered", prob=0.82341,
         promise=dict(
             raw_text=HINGLISH_REPLIES[9],
@@ -222,16 +278,21 @@ SEED_CASES = [
             language_mix="english",
         ),
     ),
-    # --- Unrecoverable ---
+    # --- Unrecoverable / Unmapped Case Demo ---
     dict(
         inv="INV-SYN-1019", cust_ref="CUST-SYN-005", cust_name="Gupta Steel Trading",
         amount=8900000, due_days_ago=90, failure_code="CUSTOMER_DISPUTE",
+        rzp_code="GATEWAY_ERROR", rzp_reason="unmapped_bank_anomaly_99",
+        rzp_source="gateway", rzp_step="payment_processing", payment_method="upi",
+        rzp_description="Exotic downstream banking switch response code 99.",
         state="unrecoverable", prob=0.04123,
     ),
     # --- Another awaiting_action with compliance pass seeded ---
     dict(
         inv="INV-SYN-1020", cust_ref="CUST-SYN-004", cust_name="Kapoor Agri Inputs",
         amount=5100000, due_days_ago=11, failure_code="MANDATE_FAILED",
+        rzp_code="BAD_REQUEST_ERROR", rzp_reason="mandate_cancelled",
+        rzp_source="customer", rzp_step="payment_initiation", payment_method="mandate",
         state="awaiting_action", prob=0.54892,
         compliance_passed=True,
     ),
@@ -406,15 +467,34 @@ def _seed_single_case(db: Session, tenant: Tenant, spec: dict, admin_id: str) ->
     db.add(invoice)
     db.flush()
 
-    # Ingest the payment event — this runs classify + score + creates the case
+    # Construct structured Razorpay error payload preserving raw schema
+    rzp_payload = {
+        "error": {
+            "code": spec.get("rzp_code", "BAD_REQUEST_ERROR"),
+            "reason": spec.get("rzp_reason", spec["failure_code"].lower()),
+            "source": spec.get("rzp_source", "customer"),
+            "step": spec.get("rzp_step", "payment_initiation"),
+            "description": spec.get("rzp_description", f"Payment failed with code {spec['failure_code']}"),
+            "payment_method": spec.get("payment_method", "upi"),
+            "metadata": {
+                "payment_id": f"pay_{inv_num.replace('-', '')}",
+                "order_id": f"order_{inv_num.replace('-', '')}",
+            },
+        },
+        "payment_method": spec.get("payment_method", "upi"),
+        "failure_code": spec["failure_code"],
+        "channel": "seed",
+    }
+
+    # Ingest the payment event — this runs taxonomy normalization + score + creates the case
     _event, case, _dup = ingest_payment_event(
         db,
         tenant=tenant,
-        source="synthetic",
-        provider_event_id=f"SYN-EVT-{inv_num}",
+        source="razorpay" if spec.get("rzp_code") else "synthetic",
+        provider_event_id=f"RZP-EVT-{inv_num}",
         invoice=invoice,
         event_type="payment.failed",
-        payload={"failure_code": spec["failure_code"], "channel": "seed"},
+        payload=rzp_payload,
         occurred_at=base_time,
         failure_code=spec["failure_code"],
         note=None,
@@ -587,7 +667,7 @@ def _seed_single_case(db: Session, tenant: Tenant, spec: dict, admin_id: str) ->
 
 def seed_demo(db: Session, settings: Settings) -> dict[str, str]:
     if not settings.seed_admin_password:
-        raise RuntimeError("VAAYDA_SEED_ADMIN_PASSWORD must be set to seed demo data.")
+        raise RuntimeError("VAADA_SEED_ADMIN_PASSWORD must be set to seed demo data.")
 
     # --- Tenant ---
     tenant = db.query(Tenant).filter_by(slug="northwind-textiles").one_or_none()
@@ -619,10 +699,10 @@ def seed_demo(db: Session, settings: Settings) -> dict[str, str]:
         db.add(Membership(user_id=admin.id, tenant_id=tenant.id, role=Role.MANAGER.value))
 
     # --- Viewer user ---
-    viewer = db.query(User).filter_by(email="viewer@vaayda.local").one_or_none()
+    viewer = db.query(User).filter_by(email="viewer@vaada.local").one_or_none()
     if viewer is None:
         viewer = User(
-            email="viewer@vaayda.local",
+            email="viewer@vaada.local",
             password_hash=password_hash,
             is_active=True,
         )
@@ -693,7 +773,7 @@ def main() -> None:
     settings = get_settings()
     if ":memory:" in settings.database_url:
         raise RuntimeError(
-            "Refusing to seed an in-memory database. Unset VAAYDA_DATABASE_URL "
+            "Refusing to seed an in-memory database. Unset VAADA_DATABASE_URL "
             "so the repository-root .env file is used."
         )
     engine = create_engine_from_settings(settings)
@@ -709,7 +789,7 @@ def main() -> None:
         db.close()
     print(f"Seeded local operator {result['admin_email']}")
     print(f"Database: {_engine_url(settings)}")
-    print("Sign in with that email and VAAYDA_SEED_ADMIN_PASSWORD from the repository-root .env")
+    print("Sign in with that email and VAADA_SEED_ADMIN_PASSWORD from the repository-root .env")
 
 
 if __name__ == "__main__":

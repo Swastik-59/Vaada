@@ -121,9 +121,9 @@ export default function Landing() {
             <span>Track 3 · AI revenue recovery</span>
             <span>Local LLM · classical score · executable FPC</span>
           </div>
-          <h1 className={styles.wordmark} aria-label="Vaayda">
-            {"VAAYDA".split("").map((letter) => (
-              <span key={letter} className="heroLetter">{letter}</span>
+          <h1 className={styles.wordmark} aria-label="Vaada">
+            {"VAADA".split("").map((letter, idx) => (
+              <span key={`${letter}-${idx}`} className="heroLetter">{letter}</span>
             ))}
           </h1>
           <div className={styles.subgrid}>
@@ -133,7 +133,7 @@ export default function Landing() {
             <aside className={`${styles.stamp} heroCopy`}>
               <strong>STAMP</strong>
               Consumer smart-retry is already shipped by the rails. Western AR tools still type promises in after a call.
-              Vaayda extracts the वादा from the language Indian merchants actually get — then refuses to act if the rulebook says no.
+              Vaada extracts the वादा from the language Indian merchants actually get — then refuses to act if the rulebook says no.
             </aside>
           </div>
           <div className={`${styles.ctaRow} heroCopy`}>

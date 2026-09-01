@@ -25,7 +25,7 @@ export default function LoginPage() {
 
   return (
     <main style={{ maxWidth: 520, margin: "10vh auto", padding: 24, border: "1px solid var(--line)" }}>
-      <p style={{ fontFamily: "var(--mono)", letterSpacing: "0.18em", fontSize: 12 }}>VAAYDA / OPS</p>
+      <p style={{ fontFamily: "var(--mono)", letterSpacing: "0.18em", fontSize: 12 }}>VAADA / OPS</p>
       <h1 style={{ fontFamily: "var(--display)", fontSize: "clamp(2.4rem, 7vw, 4.2rem)", lineHeight: 0.9, margin: "8px 0 12px", textTransform: "uppercase" }}>
         Operations sign-in
       </h1>

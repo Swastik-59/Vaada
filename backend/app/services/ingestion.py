@@ -89,10 +89,26 @@ def ingest_payment_event(
     )
     db.add(case)
     db.flush()
-    classified = classify_event(failure_code=failure_code, note=note)
+    classified = classify_event(failure_code=failure_code, note=note, payload=payload)
     method = ClassificationMethod.RULE.value if classified.method == "RULE" else ClassificationMethod.LLM.value
     case.root_cause = classified.root_cause
     case.classification_method = method
+    if classified.official_error:
+        write_audit(
+            db,
+            action="taxonomy.matched",
+            resource_type="recovery_case",
+            resource_id=case.id,
+            tenant_id=tenant.id,
+            correlation_id=correlation_id,
+            payload={
+                "code": classified.official_error.get("code"),
+                "reason": classified.official_error.get("reason"),
+                "source": classified.official_error.get("source"),
+                "step": classified.official_error.get("step"),
+                "official_source_url": classified.official_error.get("official_source_url"),
+            },
+        )
     if classified.method == "LLM":
         transition_case(
             db,

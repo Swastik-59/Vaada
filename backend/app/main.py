@@ -31,7 +31,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     factory = session_factory(engine)
     db_dependency = get_db_dependency(factory)
 
-    app = FastAPI(title="Vaayda", version="0.1.0")
+    app = FastAPI(title="Vaada", version="0.1.0")
     app.state.settings = settings
     app.state.engine = engine
     app.state.session_factory = factory
@@ -46,7 +46,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_origins=settings.cors_origin_list,
         allow_credentials=True,
         allow_methods=["GET", "POST", "OPTIONS"],
-        allow_headers=["Content-Type", "X-CSRF-Token", "X-Vaayda-Tenant-Id", "X-Request-ID"],
+        allow_headers=["Content-Type", "X-CSRF-Token", "X-Vaada-Tenant-Id", "X-Request-ID"],
     )
     app.include_router(router, prefix="/api/v1")
 

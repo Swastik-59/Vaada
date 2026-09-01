@@ -6,9 +6,9 @@ from fastapi import Response
 
 from app.core.config import Settings
 
-ACCESS_COOKIE = "vaayda_access"
-REFRESH_COOKIE = "vaayda_refresh"
-CSRF_COOKIE = "vaayda_csrf"
+ACCESS_COOKIE = "vaada_access"
+REFRESH_COOKIE = "vaada_refresh"
+CSRF_COOKIE = "vaada_csrf"
 
 
 def set_auth_cookies(

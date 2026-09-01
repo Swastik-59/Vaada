@@ -119,7 +119,7 @@ def test_dynamic_upi_link_format() -> None:
     assert "am=12500.00" in upi_info["upi_intent_uri"]
     assert upi_info["vpa"] == "apexfabrics.settle@icici"
     assert "pa=apexfabrics.settle" in upi_info["upi_intent_uri"]
-    assert upi_info["van"].startswith("VAAYDA")
+    assert upi_info["van"].startswith("VAADA")
 
 
 

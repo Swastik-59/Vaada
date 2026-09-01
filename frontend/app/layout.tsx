@@ -21,7 +21,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata = {
-  title: "Vaayda — recover the promise",
+  title: "Vaada — recover the promise",
   description: "Bounded B2B revenue recovery for Indian merchants. Classify overdue invoices, extract Hinglish promises, enforce contact rules in code.",
 };
 

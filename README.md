@@ -1,24 +1,25 @@
-# Vaayda (वादा)
+# Vaada (वादा)
 ### Bounded, Compliant B2B Revenue-Recovery System for Indian Enterprises
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1+-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Tests](https://img.shields.io/badge/Tests-21%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-34%20Passed-brightgreen.svg)]()
+[![Razorpay](https://img.shields.io/badge/Taxonomy-Official%20Razorpay%20v2026--09-0284c7.svg)]()
 [![Compliance](https://img.shields.io/badge/Compliance-RBI%20FPC%20%7C%20MSMED%20%7C%20DPDP-blue.svg)]()
 
 ---
 
 ## Overview
 
-**Vaayda** (वादा — *Promise / Commitment*) is an enterprise-grade, bounded B2B revenue-recovery system purpose-built for Indian merchants, MSMEs, and commercial suppliers. It ingests overdue payment events, classifies failure root causes, calculates statutory interest under Indian law, scores recovery probabilities via calibrated tabular ML, extracts promise-to-pay commitments from code-mixed Hinglish conversations, and orchestrates actions through a deterministic state machine.
+**Vaada** (वादा — *Promise / Commitment*) is an enterprise-grade, bounded B2B revenue-recovery system purpose-built for Indian merchants, MSMEs, and commercial suppliers. It ingests overdue payment events, classifies failure root causes via an **authoritative official Razorpay error taxonomy**, calculates statutory interest under Indian law, scores recovery probabilities via calibrated tabular ML, extracts promise-to-pay commitments from code-mixed Hinglish conversations, and orchestrates actions through a deterministic state machine.
 
-### The Core Architectural Principle
+### The Core Architectural Principles
 
-> **The LLM never authorizes an action, never alters case state directly, and never bypasses statutory compliance.**
-
-In naive "AI recovery agents," language models frequently hallucinate payment terms, make unauthorized legal threats, or violate regulatory calling windows. **Vaayda solves this by strictly confining AI to unstructured natural language interpretation**, while deterministic software owns all state transitions, financial calculations, multi-tenant boundaries, and compliance guardrails.
+1. **The LLM never authorizes an action, never alters case state directly, and never bypasses statutory compliance.**
+2. **Official Razorpay diagnostic data and Vaada's derived recovery policies are strictly isolated.**
+3. **Zero hallucination on payment errors**: If an error code or reason is unmapped, it is honestly labeled as `UNMAPPED RAZORPAY ERROR` and routed safely to human review.
 
 ---
 
@@ -26,14 +27,14 @@ In naive "AI recovery agents," language models frequently hallucinate payment te
 
 ```
                        ┌────────────────────────────────────────────────────────┐
-                       │               VAAYDA SYSTEM PIPELINE                  │
+                       │               VAADA SYSTEM PIPELINE                   │
                        └────────────────────────────────────────────────────────┘
                                                     │
   ┌───────────────────────────┐                     ▼                     ┌───────────────────────────┐
   │      EVENT INGESTION      │          ┌───────────────────────┐        │   STATUTORY ENGINE (IN)   │
-  │ • Synthetic Test Ingest   │─────────▶│   ROOT CAUSE ENGINE   │◀───────│ • MSME Section 43B(h)     │
-  │ • Webhook Ingestion       │          │ • Deterministic Map   │        │ • 3x RBI Bank Rate Comp.  │
-  │ • E-Invoice IRN & GSTIN   │          │ • LLM Zero-Shot Tier  │        │ • Form 16A TDS Deductions │
+  │ • Razorpay Webhooks / Ingest ────────▶│  OFFICIAL TAXONOMY   │◀───────│ • MSME Section 43B(h)     │
+  │ • UPI, Card, Mandate Fail │          │ • 38 Published Errors │        │ • 3x RBI Bank Rate Comp.  │
+  │ • E-Invoice IRN & GSTIN   │          │ • Zero-Hallucination  │        │ • Form 16A TDS Deductions │
   └───────────────────────────┘          └───────────────────────┘        └───────────────────────────┘
                                                     │
                                                     ▼
@@ -73,8 +74,17 @@ In naive "AI recovery agents," language models frequently hallucinate payment te
 
 ## Feature Deep-Dive
 
-### 1. India B2B Statutory & Tax Engine
-Indian recovery workflows operate within stringent statutory frameworks. Vaayda natively executes:
+### 1. Official Razorpay Payment Error Taxonomy & Intelligence Explorer
+Vaada embeds a versioned, local copy of Razorpay's published payment failure taxonomy (`data/razorpay/`):
+- **Authoritative Coverage**: 38 official published failure codes spanning **UPI**, **Card / Netbanking / Mandate**, **Payment Method Parameters**, and **Common API Errors**.
+- **Deterministic Lookup**: Prioritizes `(code, reason)` → `(method, reason)` → `(reason)` → `(code)` with zero hallucination fallback.
+- **Dual-Layer Architecture**:
+  - `Payment Diagnosis`: Verbatim official fields (`code`, `reason`, `source`, `step`, `description`, `official_next_step`, `official_source_url`).
+  - `Recovery Interpretation`: Derived policy logic (`recoverability`, `retryable`, `urgency`, `recommended_actions`, `policy_decision`).
+- **Error Intelligence Explorer (`/razorpay-taxonomy`)**: Interactive operations console providing real-time multi-facet filtering (Method, Source, Step, Recoverability), drawer deep-inspection, and a live payload diagnostic simulator sandbox.
+
+### 2. India B2B Statutory & Tax Engine
+Indian recovery workflows operate within stringent statutory frameworks. Vaada natively executes:
 - **Income Tax Act Section 43B(h)**: Tracks statutory payment windows (45 days with written agreement, 15 days without) for Micro and Small enterprise suppliers. Flags tax deduction disallowance risks and calculates buyer tax exposures (~31.2%).
 - **MSMED Act 2006 (Section 15, 16, 17, 18)**: Computes statutory compound penal interest with monthly rests at **3× the RBI Bank Rate** from the appointed day.
 - **Statutory Legal Notice Generator**: Produces formal markdown legal notices including:
@@ -94,7 +104,7 @@ All outbound communication is evaluated against hard software guardrails before 
 - **Mandatory Legal Identification**: Every outbound communication must contain the legal registered name of the merchant entity.
 
 ### 3. Classical Tabular ML Recovery Scorer
-Rather than delegating probabilistic forecasting to generative models, Vaayda utilizes a tabular Machine Learning model:
+Rather than delegating probabilistic forecasting to generative models, Vaada utilizes a tabular Machine Learning model:
 - **Architecture**: `GradientBoostingClassifier` with `CalibratedClassifierCV` (sigmoid calibration).
 - **Features**: Failure root cause, log-transformed invoice amount, days past due (DPD), prior contact attempts, and day of week.
 - **Performance**: Held-out test ROC-AUC of `0.7215`, Brier score of `0.2076`.
@@ -156,7 +166,7 @@ Indian B2B communications frequently take place in code-mixed Hindi-English over
 ## Directory Structure
 
 ```text
-Vaayda/
+Vaada/
 ├── .env.example                # Sample environment configuration template
 ├── docker-compose.yml          # Local PostgreSQL 16 service
 ├── README.md                   # System documentation
@@ -253,33 +263,33 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 Sample `.env`:
 ```ini
-VAAYDA_ENV=development
-VAAYDA_DEBUG=false
-VAAYDA_LOG_LEVEL=INFO
+VAADA_ENV=development
+VAADA_DEBUG=false
+VAADA_LOG_LEVEL=INFO
 
-VAAYDA_API_HOST=0.0.0.0
-VAAYDA_API_PORT=8000
-VAAYDA_CORS_ORIGINS=http://localhost:3000
+VAADA_API_HOST=0.0.0.0
+VAADA_API_PORT=8000
+VAADA_CORS_ORIGINS=http://localhost:3000
 
-VAAYDA_COOKIE_SECURE=false
-VAAYDA_COOKIE_SAMESITE=lax
+VAADA_COOKIE_SECURE=false
+VAADA_COOKIE_SAMESITE=lax
 
-VAAYDA_JWT_SECRET=your-random-48-character-secret
-VAAYDA_JWT_ISSUER=vaayda-local
-VAAYDA_JWT_AUDIENCE=vaayda-ops-console
-VAAYDA_ACCESS_TOKEN_MINUTES=15
-VAAYDA_REFRESH_TOKEN_DAYS=7
+VAADA_JWT_SECRET=your-random-48-character-secret
+VAADA_JWT_ISSUER=vaada-local
+VAADA_JWT_AUDIENCE=vaada-ops-console
+VAADA_ACCESS_TOKEN_MINUTES=15
+VAADA_REFRESH_TOKEN_DAYS=7
 
 # Default SQLite (no external setup required):
-VAAYDA_DATABASE_URL=sqlite:///./vaayda.db
+VAADA_DATABASE_URL=sqlite:///./vaada.db
 # Or PostgreSQL via Docker:
-# VAAYDA_DATABASE_URL=postgresql+psycopg://vaayda:vaayda@localhost:5432/vaayda
+# VAADA_DATABASE_URL=postgresql+psycopg://vaada:vaada@localhost:5432/vaada
 
-VAAYDA_LLM_BASE_URL=http://127.0.0.1:11434
-VAAYDA_LLM_MODEL=llama3:8b
+VAADA_LLM_BASE_URL=http://127.0.0.1:11434
+VAADA_LLM_MODEL=llama3:8b
 
-VAAYDA_SEED_ADMIN_EMAIL=operator@vaayda.local
-VAAYDA_SEED_ADMIN_PASSWORD=Password@123
+VAADA_SEED_ADMIN_EMAIL=operator@vaada.local
+VAADA_SEED_ADMIN_PASSWORD=Password@123
 ```
 
 ---
@@ -344,8 +354,8 @@ Running `python -m app.seed` sets up two test accounts:
 
 | Role | Email | Password | Permissions |
 | :--- | :--- | :--- | :--- |
-| **Operator / Admin** | `operator@vaayda.local` | Value of `VAAYDA_SEED_ADMIN_PASSWORD` (default: `Password@123`) | Full access (Ingest, Act, Notice Generation, TDS, Overrides) |
-| **Viewer** | `viewer@vaayda.local` | Value of `VAAYDA_SEED_ADMIN_PASSWORD` (default: `Password@123`) | Read-only access to cases, metrics, and audit logs |
+| **Operator / Admin** | `operator@vaada.local` | Value of `VAADA_SEED_ADMIN_PASSWORD` (default: `Password@123`) | Full access (Ingest, Act, Notice Generation, TDS, Overrides) |
+| **Viewer** | `viewer@vaada.local` | Value of `VAADA_SEED_ADMIN_PASSWORD` (default: `Password@123`) | Read-only access to cases, metrics, and audit logs |
 
 ### Seeded Scenarios Include:
 - **Kalyani Infrastructure Ltd** (`INV-2026-0891`): MSME Small enterprise invoice with 43B(h) disallowance notice and accrued compound interest.
@@ -358,7 +368,7 @@ Running `python -m app.seed` sets up two test accounts:
 
 ## Testing & Quality Assurance
 
-Vaayda includes a comprehensive pytest suite covering security, authentication, domain logic, statutory calculations, and compliance rules:
+Vaada includes a comprehensive pytest suite covering security, authentication, domain logic, statutory calculations, and compliance rules:
 
 ```bash
 cd backend
@@ -380,7 +390,7 @@ The backend exposes a fully documented REST API at `http://localhost:8000/api/v1
 ### Key Endpoints
 
 #### Authentication
-- `POST /api/v1/auth/login` — Authenticate and issue secure HTTP-only cookies (`vaayda_access`, `vaayda_refresh`, `vaayda_csrf`).
+- `POST /api/v1/auth/login` — Authenticate and issue secure HTTP-only cookies (`vaada_access`, `vaada_refresh`, `vaada_csrf`).
 - `POST /api/v1/auth/refresh` — Rotate refresh token and extend access session.
 - `POST /api/v1/auth/logout` — Revoke active session and clear cookies.
 - `GET /api/v1/auth/me` — Inspect current principal, active tenant, and assigned role.
@@ -408,7 +418,7 @@ The backend exposes a fully documented REST API at `http://localhost:8000/api/v1
 
 ## Security Model & Compliance Posture
 
-| Risk Area | Mitigation in Vaayda |
+| Risk Area | Mitigation in Vaada |
 | :--- | :--- |
 | **Broken Object-Level Auth (BOLA)** | Every database query enforces `tenant_id` predicates derived from the cryptographically verified session token, preventing cross-tenant access. |
 | **CSRF Attacks** | Mutating endpoints require double-submit `X-CSRF-Token` headers matching the HTTP-only cookie signature. |
@@ -421,7 +431,7 @@ The backend exposes a fully documented REST API at `http://localhost:8000/api/v1
 
 ## Evaluation & ML Benchmarks
 
-Empirical evaluations of Vaayda's tabular ML model and Hinglish extraction pipeline are documented in [`docs/evaluation.md`](docs/evaluation.md):
+Empirical evaluations of Vaada's tabular ML model and Hinglish extraction pipeline are documented in [`docs/evaluation.md`](docs/evaluation.md):
 
 - **Tabular ML Recovery Scorer**: Held-out test accuracy of `67.67%`, Precision of `70.00%`, ROC-AUC of `0.7215`, and calibrated Brier score of `0.2076`.
 - **Hinglish Promise Extraction**: 100% extraction accuracy on benchmark test sets covering colloquial code-mixed Hindi-English phrases, with automatic failover to human review on ambiguous inputs.

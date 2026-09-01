@@ -53,7 +53,7 @@ function exportCsv(items: AuditEvent[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `vaayda-audit-${Date.now()}.csv`;
+  a.download = `vaada-audit-${Date.now()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -89,10 +89,11 @@ export default function AuditPage() {
   return (
     <div className={styles.shell}>
       <nav className={styles.nav}>
-        <span className={styles.navMark}>VAAYDA / AUDIT TRAIL</span>
+        <span className={styles.navMark}>VAADA / AUDIT TRAIL</span>
         <div className={styles.navLinks}>
           <Link href="/queue">← Queue</Link>
           <Link href="/settings">Compliance config</Link>
+          <Link href="/razorpay-taxonomy">Error Intelligence</Link>
         </div>
       </nav>
 

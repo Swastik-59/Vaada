@@ -118,15 +118,45 @@ type CaseData = {
   } | null;
   statutory_status?: {
     is_msme: boolean;
-    msme_category: string;
-    udyam_number: string;
+    msme_category?: string;
+    udyam_number?: string;
     statutory_due_date: string;
     days_remaining: number;
     is_disallowed: boolean;
-    overdue_days: number;
+    overdue_days?: number;
     statutory_interest_minor: number;
-    tax_disallowance_exposure_minor: number;
+    interest_rate_percent: number;
+    tax_disallowance_exposure_minor?: number;
   } | null;
+  payment_diagnosis?: {
+    matched: boolean;
+    provider: string;
+    code: string;
+    reason: string;
+    source: string;
+    step: string;
+    payment_method: string | null;
+    description: string;
+    official_next_step: string;
+    official_source_url: string;
+    raw_payload: any;
+  } | null;
+  recovery_interpretation?: {
+    recoverability: string;
+    retryable: boolean;
+    urgency: string;
+    customer_action?: string;
+    merchant_action?: string;
+    policy_decision: string;
+    requires_human_review: boolean;
+    confidence: number;
+    is_unmapped: boolean;
+  } | null;
+  decision_chain?: Array<{
+    stage: string;
+    label: string;
+    details: string;
+  }>;
   upi_payload?: {
     vpa: string;
     van: string;
@@ -551,11 +581,12 @@ export default function CasePage() {
   return (
     <div className={styles.shell}>
       <nav className={styles.nav}>
-        <span className={styles.navMark}>VAAYDA / OPS CONSOLE • INDIA B2B</span>
+        <span className={styles.navMark}>VAADA / OPS CONSOLE • INDIA B2B</span>
         <div className={styles.navLinks}>
           <Link href="/queue">← Queue</Link>
           <Link href="/audit">Audit trail</Link>
           <Link href="/settings">Compliance config</Link>
+          <Link href="/razorpay-taxonomy">Error Intelligence</Link>
         </div>
       </nav>
 
@@ -644,27 +675,179 @@ export default function CasePage() {
             <div className={styles.stationOwner}>INGEST</div>
           </div>
 
-          {/* 02 CAUSE */}
+          {/* 02 PAYMENT DIAGNOSIS & RECOVERY INTELLIGENCE */}
           <div
             className={styles.station}
             ref={(el) => { stationRefs.current[1] = el; }}
           >
             <div className={styles.stationIndex}>02</div>
             <div className={styles.stationBody}>
-              <h2 className={styles.stationTitle}>Cause, not vibes</h2>
-              <div className={styles.causeRow}>
-                <span className={styles.causeTag}>
-                  {CAUSE_LABELS[data.root_cause ?? ""] ?? data.root_cause ?? "Unknown"}
-                </span>
-                {data.classification_method && (
-                  <span className={styles.methodTag}>{data.classification_method}</span>
-                )}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <h2 className={styles.stationTitle} style={{ margin: 0 }}>Payment Diagnosis & Recovery Intelligence</h2>
+                <Link
+                  href="/razorpay-taxonomy"
+                  style={{
+                    fontFamily: "var(--mono)",
+                    fontSize: 10,
+                    color: "#38bdf8",
+                    textDecoration: "none",
+                    border: "1px solid rgba(56, 189, 248, 0.3)",
+                    padding: "3px 8px",
+                  }}
+                >
+                  Razorpay Explorer ↗
+                </Link>
               </div>
-              {data.decision_trace[0] && (
-                <p className={styles.causeReason}>{data.decision_trace[0].reason}</p>
-              )}
+
+              <div className={styles.diagnosisContainer}>
+                {/* ── Official Published Razorpay Diagnosis ── */}
+                <div className={styles.diagBox}>
+                  <div className={styles.diagBoxHeader}>
+                    <h3 className={styles.diagBoxTitle}>01. PAYMENT DIAGNOSIS</h3>
+                    <span className={styles.diagOfficialBadge}>
+                      {data.payment_diagnosis?.matched ? "OFFICIAL PUBLISHED TAXONOMY" : "UNMAPPED ERROR"}
+                    </span>
+                  </div>
+
+                  {!data.payment_diagnosis?.matched && (
+                    <div className={styles.unmappedBanner}>
+                      ⚠️ <strong>UNMAPPED RAZORPAY ERROR</strong>: This failure payload does not match any official published Razorpay error code. Zero-hallucination policy applied; case flagged for manual operator review.
+                    </div>
+                  )}
+
+                  <div className={styles.diagGrid}>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Payment Method</span>
+                      <span className={styles.diagFieldVal}>
+                        {data.payment_diagnosis?.payment_method?.toUpperCase() ?? "UPI"}
+                      </span>
+                    </div>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Razorpay Error Code</span>
+                      <span className={styles.diagFieldVal} style={{ color: "#f87171" }}>
+                        {data.payment_diagnosis?.code ?? "BAD_REQUEST_ERROR"}
+                      </span>
+                    </div>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Failure Reason</span>
+                      <span className={styles.diagFieldVal}>
+                        {data.payment_diagnosis?.reason ?? data.root_cause ?? "unknown"}
+                      </span>
+                    </div>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Source / Step</span>
+                      <span className={styles.diagFieldVal}>
+                        {data.payment_diagnosis?.source ?? "customer"} / {data.payment_diagnosis?.step ?? "payment_initiation"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className={styles.diagFieldKey}>Official Description:</span>
+                    <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--paper)" }}>
+                      {data.payment_diagnosis?.description ?? "No official description available for this unmapped failure."}
+                    </p>
+                  </div>
+
+                  {data.payment_diagnosis?.official_next_step && (
+                    <div className={styles.officialCallout}>
+                      <strong style={{ display: "block", marginBottom: 2, textTransform: "uppercase", fontSize: 10, letterSpacing: "0.1em" }}>
+                        Official Next Step:
+                      </strong>
+                      {data.payment_diagnosis.official_next_step}
+                    </div>
+                  )}
+
+                  {data.payment_diagnosis?.official_source_url && (
+                    <a
+                      href={data.payment_diagnosis.official_source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.officialLink}
+                    >
+                      <span>View official Razorpay documentation</span>
+                      <span>↗</span>
+                    </a>
+                  )}
+                </div>
+
+                {/* ── Derived Vaada Recovery Intelligence ── */}
+                <div className={styles.diagBox} style={{ borderColor: "rgba(56, 189, 248, 0.3)" }}>
+                  <div className={styles.diagBoxHeader}>
+                    <h3 className={styles.diagBoxTitle}>02. RECOVERY INTERPRETATION</h3>
+                    <span className={styles.diagDerivedBadge}>VAADA RECOVERY LOGIC (DERIVED)</span>
+                  </div>
+
+                  <div className={styles.diagGrid}>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Recoverability</span>
+                      <span className={styles.diagFieldVal} style={{
+                        color: data.recovery_interpretation?.recoverability === "recoverable" ? "#4ade80" : (data.recovery_interpretation?.recoverability === "unrecoverable" ? "#f87171" : "#fbbf24"),
+                        textTransform: "uppercase"
+                      }}>
+                        {data.recovery_interpretation?.recoverability ?? "RECOVERABLE"}
+                      </span>
+                    </div>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Retryable</span>
+                      <span className={styles.diagFieldVal}>
+                        {data.recovery_interpretation?.retryable ? "YES (Instant Retry)" : "NO (Switch Rail)"}
+                      </span>
+                    </div>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Urgency</span>
+                      <span className={styles.diagFieldVal} style={{ textTransform: "uppercase" }}>
+                        {data.recovery_interpretation?.urgency ?? "MEDIUM"}
+                      </span>
+                    </div>
+                    <div className={styles.diagField}>
+                      <span className={styles.diagFieldKey}>Human Review</span>
+                      <span className={styles.diagFieldVal}>
+                        {data.recovery_interpretation?.requires_human_review ? "REQUIRED" : "AUTOMATED"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 12 }}>
+                    <span className={styles.diagFieldKey}>Policy Decision & Recommended Action:</span>
+                    <div style={{
+                      background: "rgba(0, 0, 0, 0.4)",
+                      border: "1px solid var(--line)",
+                      padding: "10px 14px",
+                      marginTop: 6,
+                    }}>
+                      <div style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, color: "#38bdf8", marginBottom: 4 }}>
+                        POLICY: {data.recovery_interpretation?.policy_decision ?? "SEND_RETRY_PROMPT"}
+                      </div>
+                      <div style={{ fontSize: 12, color: "var(--paper)", lineHeight: 1.45 }}>
+                        {data.recovery_interpretation?.merchant_action ?? "Deliver automated payment retry prompt."}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Visual Decision Trace Chain ── */}
+                  {data.decision_chain && data.decision_chain.length > 0 && (
+                    <div className={styles.decisionChainContainer}>
+                      <div className={styles.decisionChainTitle}>
+                        END-TO-END REASONING TRACE (DIAGNOSIS → CUSTOMER CONTEXT → ACTION)
+                      </div>
+                      <div className={styles.chainList}>
+                        {data.decision_chain.map((step, idx) => (
+                          <div key={idx} className={styles.chainStep}>
+                            <span className={styles.chainIndex}>0{idx + 1}</span>
+                            <div>
+                              <span className={styles.chainLabel}>{step.label}:</span>
+                              <span className={styles.chainDetails}>{step.details}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className={styles.stationOwner}>CLASSIFY</div>
+            <div className={styles.stationOwner}>DIAGNOSE & RECOVER</div>
           </div>
 
           {/* 03 PROBABILITY */}

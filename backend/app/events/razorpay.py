@@ -21,7 +21,7 @@ class RazorpayTestModeSource(EventSource):
         if not self.key_id or not self.key_secret:
             raise DependencyFailed(
                 "Razorpay test-mode keys are not configured. "
-                "Set VAAYDA_RAZORPAY_KEY_ID and VAAYDA_RAZORPAY_KEY_SECRET, "
+                "Set VAADA_RAZORPAY_KEY_ID and VAADA_RAZORPAY_KEY_SECRET, "
                 "or keep the synthetic EventSource."
             )
         raise DependencyFailed(

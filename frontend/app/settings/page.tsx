@@ -37,10 +37,11 @@ export default function SettingsPage() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--paper)", fontFamily: "var(--sans)" }}>
       <nav style={navStyle}>
-        <span style={{ opacity: 0.8 }}>VAAYDA / COMPLIANCE CONFIG</span>
+        <span style={{ opacity: 0.8 }}>VAADA / COMPLIANCE CONFIG</span>
         <div style={{ display: "flex", gap: 24 }}>
           <Link href="/queue" style={{ color: "var(--muted)" }}>← Queue</Link>
           <Link href="/audit" style={{ color: "var(--muted)" }}>Audit trail</Link>
+          <Link href="/razorpay-taxonomy" style={{ color: "var(--muted)" }}>Error Intelligence</Link>
         </div>
       </nav>
 
