@@ -1,96 +1,40 @@
-from __future__ import annotations
-
 import json
-from datetime import UTC, datetime, timedelta
+import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
-from app.extraction.promise_extractor import PromiseExtractor
-from app.extraction.schemas import PromiseCommitment
+REPO_ROOT = Path(__file__).resolve().parents[3]
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
 from app.scoring.model import train_model
+from app.services.language import (
+    evaluate_linguistic_benchmark,
+    get_l3cube_metadata,
+)
+from evaluation.hinglish.evaluate_hinglish import run_hinglish_evaluation
 
 DOCS_DIR = Path(__file__).resolve().parents[3] / "docs"
 
-BENCHMARK_HINGLISH_SAMPLES = [
-    {
-        "input": "kal tak payment ho jayega bhai, 50000 rupees transfer kar dunga UPI se.",
-        "expected_date_offset": 1,
-        "expected_amount": 5000000,  # minor units (INR 50,000)
-        "should_extract": True,
-        "language_mix": "hinglish",
-    },
-    {
-        "input": "Main agle somvar (Monday) 1,20,000 INR pay kar dunga, pakka vaada.",
-        "expected_date_offset": 5,
-        "expected_amount": 12000000,
-        "should_extract": True,
-        "language_mix": "hinglish",
-    },
-    {
-        "input": "Bank issue chal raha hai, Friday tak ruk jao please. Full balance clear ho jayega.",
-        "expected_date_offset": 4,
-        "expected_amount": None,  # Full invoice amount implied
-        "should_extract": True,
-        "language_mix": "hinglish",
-    },
-    {
-        "input": "Invoice wrong hai, hum pay nahi karenge jab tak discount credit note nahi milta.",
-        "expected_date_offset": None,
-        "expected_amount": None,
-        "should_extract": False,
-        "language_mix": "hinglish",
-    },
-    {
-        "input": "Haan dekhte hain next month tak ho payega shayad.",
-        "expected_date_offset": None,  # Too vague to extract exact commitment
-        "expected_amount": None,
-        "should_extract": False,
-        "language_mix": "hinglish",
-    },
-]
-
 
 def run_evaluation() -> dict:
-    """Run full system ML & extraction evaluation and write docs/evaluation.md."""
-    print("Evaluating Tabular Recovery Probability Model...")
+    """Run full system ML, linguistic, and domain extraction evaluation and write docs/evaluation.md."""
+    print("1/3 Evaluating Tabular Recovery Probability Model...")
     ml_metrics = train_model()
 
-    print("Evaluating Hinglish Promise Extraction Pipeline...")
-    extractor = PromiseExtractor(llm_client=None)  # Uses deterministic parser fallback when Ollama is offline
+    print("2/3 Evaluating L3Cube Linguistic & Code-Switching Benchmark...")
+    print("3/3 Evaluating Payment-Domain Hinglish Extraction Suite...")
+    hinglish_eval = run_hinglish_evaluation()
 
-    correct_extractions = 0
-    total_samples = len(BENCHMARK_HINGLISH_SAMPLES)
-    sample_results = []
-
-    today = datetime.now(UTC).date()
-    invoice_amount_minor = 10000000  # 100,000 INR
-
-    for sample in BENCHMARK_HINGLISH_SAMPLES:
-        result, failure = extractor.extract(
-            raw_text=sample["input"],
-            invoice_amount_minor=invoice_amount_minor,
-            today=today,
-        )
-        is_extracted = result is not None and result.amount is not None or (result is not None and result.promised_date is not None)
-
-        expected = sample["should_extract"]
-        passed = (is_extracted == expected)
-        if passed:
-            correct_extractions += 1
-
-        sample_results.append({
-            "input": sample["input"],
-            "expected_extract": expected,
-            "actual_extracted": is_extracted,
-            "passed": passed,
-            "extracted_data": result.model_dump() if result else None,
-            "failure_reason": failure,
-        })
-
-    extraction_accuracy = round(correct_extractions / total_samples, 4)
+    ling = hinglish_eval["linguistic_benchmark"]
+    dom = hinglish_eval["payment_domain_benchmark"]
 
     eval_report = f"""# System Evaluation & Benchmark Report
 
-This document records the empirical evaluation of Vaada's tabular ML recovery probability model and Hinglish promise-to-pay extraction engine.
+This document records the empirical evaluation of Vaada's tabular ML recovery probability model, L3Cube academic linguistic language identification, and domain-specific Hinglish promise-to-pay extraction engine.
 
 ---
 
@@ -119,20 +63,41 @@ The recovery probability model is trained on tabular features:
 
 ---
 
-## 2. Hinglish Promise-to-Pay Extraction Pipeline
+## 2. Linguistic Foundation: L3Cube-HingCorpus Benchmark
 
-The promise extraction pipeline converts unstructured, code-mixed natural language replies (Hindi-English) into structured `PromiseCommitment` Pydantic models.
+> [!NOTE]
+> **Academic Source**: Nayak & Joshi (2022), *L3Cube-HingCorpus and HingBERT*, BSNLP / WILDRE-6 at LREC 2022.
+> **Scope**: Academic evaluation of language identification (LID), Roman Hindi morphological signals, and code-switching detection. **Does not contain payment domain data.**
 
-### Extraction Benchmark Results
-- **Hand-labeled Test Cases**: `{total_samples}`
-- **Extraction Accuracy**: `{extraction_accuracy * 100:.1f}%`
-- **Fallback Behavior**: Malformed or unparseable responses automatically fail over to `needs_human_review`.
+### Linguistic Benchmark Metrics
+| Metric | Score | Evaluation Dataset |
+| :--- | :--- | :--- |
+| **Language ID (LID) Accuracy** | `{ling['lid_accuracy'] * 100:.1f}%` | L3Cube Curated Samples (`{ling['samples_evaluated']}` sentences) |
+| **Code-Switching Detection Accuracy** | `{ling['code_switching_accuracy'] * 100:.1f}%` | Real Hindi-English Code-Switched Text |
 
-### Sample Benchmark Trace
+---
+
+## 3. Payment-Domain Hinglish Promise Extraction Benchmark
+
+> [!IMPORTANT]
+> **Dataset**: `data/domain/payment_hinglish/` (Synthetic / Domain-Authored).
+> Evaluates structured intent extraction, date parsing, amount resolution, and adversarial robustness across linguistic variations.
+
+### Domain Evaluation Metrics
+| Metric | Score | Target Behavior |
+| :--- | :--- | :--- |
+| **Intent Classification Accuracy** | `{dom['intent_classification_accuracy'] * 100:.1f}%` | Multi-class intent (`promise_to_pay`, `vague`, `dispute`, `refusal`, etc.) |
+| **Promise Detection Precision** | `{dom['promise_precision'] * 100:.1f}%` | Avoids false positive promise commitments |
+| **Promise Detection Recall** | `{dom['promise_recall'] * 100:.1f}%` | Captures legitimate Hinglish commitments |
+| **Promise Detection F1-Score** | `{dom['promise_f1_score']:.4f}` | Harmonic mean of precision and recall |
+| **Adversarial Robustness Rate** | `{dom['adversarial_robustness_rate'] * 100:.1f}%` | Safely rejects disputes, vague promises, and prompt injection attacks |
+
+### Domain Sample Benchmark Trace
 """
-    for res in sample_results:
-        eval_report += f"\n- **Input**: `{res['input']}`\n"
-        eval_report += f"  - Expected Extract: `{res['expected_extract']}` | Actual Extracted: `{res['actual_extracted']}` | Status: `{'PASS' if res['passed'] else 'FAIL'}`\n"
+    for res in dom["details"]:
+        status_str = "PASS" if res["passed"] else "FAIL"
+        eval_report += f"\n- **Input**: `{res['text']}`\n"
+        eval_report += f"  - Intent: `{res['predicted_intent']}` (Gold: `{res['gold_intent']}`) | Extracted Promise: `{res['actual_extracted']}` | Language: `{res['language_mix']}` (Hi: {res['hindi_ratio']}, En: {res['english_ratio']}) | Status: `{status_str}`\n"
 
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     report_file = DOCS_DIR / "evaluation.md"
@@ -141,7 +106,8 @@ The promise extraction pipeline converts unstructured, code-mixed natural langua
 
     return {
         "ml_metrics": ml_metrics,
-        "extraction_accuracy": extraction_accuracy,
+        "linguistic_metrics": ling,
+        "domain_metrics": dom,
         "report_path": str(report_file),
     }
 

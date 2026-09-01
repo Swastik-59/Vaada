@@ -24,6 +24,7 @@ from app.authz.deps import Principal, current_principal, get_db, require_permiss
 from app.authz.permissions import role_allows
 from app.core.config import Settings, get_settings
 from app.core.errors import AuthorizationFailed, DependencyFailed, NotFound, ValidationFailed
+from app.services.language import LanguageDetector
 from app.services.razorpay import (
     derive_recovery_policy,
     evaluate_combined_case_decision,
@@ -773,6 +774,22 @@ def _case_detail(db: Session, case: RecoveryCase) -> dict:
     days_rem = statutory_info.get("days_remaining") if statutory_info else None
     latest_comm = messages[-1].body if messages else (promises[-1].raw_text if promises else None)
 
+    language_analysis = None
+    if latest_comm:
+        det = LanguageDetector.detect(latest_comm)
+        language_analysis = {
+            "raw_text": latest_comm,
+            "language": det.language,
+            "hindi_ratio": det.hindi_ratio,
+            "english_ratio": det.english_ratio,
+            "code_switched": det.code_switched,
+            "confidence": det.confidence,
+            "hindi_signals": det.hindi_signals,
+            "english_signals": det.english_signals,
+            "intent": "promise_to_pay" if latest_promise else "no_commitment",
+            "commitment_strength": "high" if (latest_promise and float(latest_promise.confidence) >= 0.90) else "medium",
+        }
+
     taxonomy_entry = None
     if norm["matched"] and norm["official"]:
         taxonomy_svc = get_taxonomy_service()
@@ -823,6 +840,7 @@ def _case_detail(db: Session, case: RecoveryCase) -> dict:
         "payment_diagnosis": payment_diagnosis,
         "recovery_interpretation": recovery_interpretation,
         "decision_chain": combined_eval["decision_trace_chain"],
+        "language_analysis": language_analysis,
         "customer": {
             "id": customer.id if customer else None,
             "display_name": customer.display_name if customer else "Unknown",

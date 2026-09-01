@@ -30,10 +30,25 @@ def validate_extraction_payload(
     if commitment.promised_date is not None and commitment.promised_date < today:
         return commitment, "date_in_past"
 
-    if commitment.confidence is not None and commitment.confidence < 0.50:
-        return commitment, "low_confidence"
+    # Intent-based routing & failure classifications
+    intent = commitment.intent or "promise_to_pay"
 
-    if commitment.amount is None and commitment.promised_date is None:
+    if intent == "dispute":
+        return commitment, "dispute_detected"
+
+    if intent == "refusal":
+        return commitment, "refusal_detected"
+
+    if intent == "already_paid":
+        return commitment, "payment_claimed_already_completed"
+
+    if intent == "extension_request":
+        return commitment, "extension_requested"
+
+    if intent == "vague_promise" or (commitment.confidence is not None and commitment.confidence < 0.50):
+        return commitment, "low_confidence_or_vague"
+
+    if intent == "no_commitment" or (commitment.amount is None and commitment.promised_date is None):
         return commitment, "no_commitment_detected"
 
     return commitment, None

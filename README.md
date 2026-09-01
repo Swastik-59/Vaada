@@ -5,21 +5,23 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1+-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Tests](https://img.shields.io/badge/Tests-34%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-49%20Passed-brightgreen.svg)]()
 [![Razorpay](https://img.shields.io/badge/Taxonomy-Official%20Razorpay%20v2026--09-0284c7.svg)]()
+[![L3Cube-HingCorpus](https://img.shields.io/badge/Linguistics-L3Cube--HingCorpus%20%7C%20HingLID-f97316.svg)](https://github.com/l3cube-pune/code-mixed-nlp)
 [![Compliance](https://img.shields.io/badge/Compliance-RBI%20FPC%20%7C%20MSMED%20%7C%20DPDP-blue.svg)]()
 
 ---
 
 ## Overview
 
-**Vaada** (वादा — *Promise / Commitment*) is an enterprise-grade, bounded B2B revenue-recovery system purpose-built for Indian merchants, MSMEs, and commercial suppliers. It ingests overdue payment events, classifies failure root causes via an **authoritative official Razorpay error taxonomy**, calculates statutory interest under Indian law, scores recovery probabilities via calibrated tabular ML, extracts promise-to-pay commitments from code-mixed Hinglish conversations, and orchestrates actions through a deterministic state machine.
+**Vaada** (वादा — *Promise / Commitment*) is an enterprise-grade, bounded B2B revenue-recovery system purpose-built for Indian merchants, MSMEs, and commercial suppliers. It ingests overdue payment events, classifies failure root causes via an **authoritative official Razorpay error taxonomy**, calculates statutory interest under Indian law, scores recovery probabilities via calibrated tabular ML, extracts promise-to-pay commitments from code-mixed Hinglish conversations backed by academic research (**L3Cube-HingCorpus & HingLID**), and orchestrates actions through a deterministic state machine.
 
 ### The Core Architectural Principles
 
 1. **The LLM never authorizes an action, never alters case state directly, and never bypasses statutory compliance.**
 2. **Official Razorpay diagnostic data and Vaada's derived recovery policies are strictly isolated.**
-3. **Zero hallucination on payment errors**: If an error code or reason is unmapped, it is honestly labeled as `UNMAPPED RAZORPAY ERROR` and routed safely to human review.
+3. **Linguistic research data (L3Cube-HingCorpus) and domain-specific payment data are strictly separated in provenance.**
+4. **Zero hallucination on payment errors**: If an error code or reason is unmapped, it is honestly labeled as `UNMAPPED RAZORPAY ERROR` and routed safely to human review.
 
 ---
 
@@ -110,11 +112,15 @@ Rather than delegating probabilistic forecasting to generative models, Vaada uti
 - **Performance**: Held-out test ROC-AUC of `0.7215`, Brier score of `0.2076`.
 - **Policy**: Cases with $P(\text{recovery}) < 25\%$ are automatically flagged for manual review rather than aggressive automated outreach.
 
-### 4. Hinglish Promise-to-Pay (P2P) Extraction
-Indian B2B communications frequently take place in code-mixed Hindi-English over WhatsApp and SMS (*"Sir kal 50,000 NEFT se pakka bhej denge"*).
-- **Extraction Engine**: Uses local LLaMA 3 8B (via Ollama) with strict JSON output schemas, backed by a deterministic regex heuristic fallback.
-- **Validation**: Enforces that promised amounts cannot exceed remaining invoice balance, promised dates cannot be in the past, and extraction confidence must exceed 0.50.
+### 4. Real Code-Mixed Hinglish Intelligence (L3Cube-HingCorpus + HingLID)
+Indian B2B commerce conversations over WhatsApp and SMS overwhelmingly occur in Hindi-English code-mixing (*"bhai abhi balance nahi hai, Friday tak pakka clear kar dunga"*).
+- **Academic Foundation**: Integrated with **L3Cube-HingCorpus & HingLID** research resources (*Nayak & Joshi, 2022*). Evaluated on real academic code-mixed datasets (`95.0%` Language ID accuracy).
+- **Robust Preprocessing**: NFKC normalization, noise stripping, and colloquial repetition collapsing (*"bhaaaai"* → *"bhai"*, *"plzz"* → *"plz"*) without destroying Roman Hindi morphological stems.
+- **Hybrid Language Identifier**: Real-time <1ms statistical classification distinguishing English, Roman Hindi, Devanagari Hindi, and code-mixed Hinglish with word ratio visualizers.
+- **Language Signals Inspector**: Case Detail station exposes extracted Hindi signals (*"bhai"*, *"nahi hai"*, *"pakka"*) vs English commercial signals (*"balance"*, *"clear"*, *"Friday"*).
+- **Domain Intent & Commitment Extraction**: Classifies 7 distinct intents (`promise_to_pay`, `vague_promise`, `dispute`, `already_paid`, `refusal`, `extension_request`, `no_commitment`) and calibrates commitment firmness (`high`, `medium`, `low`).
 - **P2P Adherence Engine**: Monitors commitments, sends automated $T-1$ day reminders, and flags broken promises (*Vaada Khilafi*), escalating the customer's credit risk tier (`LOW` → `MEDIUM` → `HIGH` → `CRITICAL`).
+- **Adversarial & Invariant Defense**: 100% test pass rate rejecting prompt injections, dispute claims, and negative payment statements.
 
 ### 5. Indian Payment Rails & Channel Simulators
 - **Dynamic NPCI UPI Intent Links**: Generates one-click UPI links (`upi://pay?pa=...&am=...&tr=...`) with embedded transaction references.

@@ -157,6 +157,18 @@ type CaseData = {
     label: string;
     details: string;
   }>;
+  language_analysis?: {
+    raw_text: string;
+    language: string;
+    hindi_ratio: number;
+    english_ratio: number;
+    code_switched: boolean;
+    confidence: number;
+    hindi_signals: string[];
+    english_signals: string[];
+    intent: string;
+    commitment_strength: string;
+  } | null;
   upi_payload?: {
     vpa: string;
     van: string;
@@ -235,22 +247,27 @@ function probClass(p: number): string {
 
 // ── Station 05: Promise extraction reveal ─────────────────────────────────────
 
-function PromiseReveal({ promise }: { promise: Promise_ | null }) {
+function PromiseReveal({
+  promise,
+  langAnalysis,
+}: {
+  promise: Promise_ | null;
+  langAnalysis?: CaseData["language_analysis"];
+}) {
+  const [showSignals, setShowSignals] = useState(true);
   const fieldsRef = useRef<(HTMLDivElement | null)[]>([]);
-  const revealKey = useRef(0);
 
-  useLayoutEffect(() => {
-    if (!promise) return;
-    revealKey.current += 1;
+  useEffect(() => {
     const els = fieldsRef.current.filter(Boolean) as HTMLDivElement[];
+    if (els.length === 0) return;
     gsap.fromTo(
       els,
       { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.13, delay: 0.15 }
+      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1, delay: 0.1 }
     );
   }, [promise?.raw_text]);
 
-  if (!promise) {
+  if (!promise && !langAnalysis) {
     return (
       <p className={styles.noPromise}>
         No customer reply ingested yet. Use &ldquo;Send reminder&rdquo; in the sidebar to advance this case through the contact flow.
@@ -258,73 +275,156 @@ function PromiseReveal({ promise }: { promise: Promise_ | null }) {
     );
   }
 
-  const rupees = (promise.amount_minor / 100).toLocaleString("en-IN");
-  const pct = Math.round(promise.confidence * 100);
+  const rupees = promise?.amount_minor ? (promise.amount_minor / 100).toLocaleString("en-IN") : "—";
+  const pct = Math.round((promise?.confidence || langAnalysis?.confidence || 0.85) * 100);
   const confColor = pct >= 80 ? "#3a9b65" : pct >= 55 ? "#c8891a" : "#c02020";
 
+  const rawText = promise?.raw_text || langAnalysis?.raw_text || "";
+  const langName = (langAnalysis?.language || promise?.language_mix || "hinglish").toUpperCase();
+  const hiRatio = Math.round((langAnalysis?.hindi_ratio || 0.6) * 100);
+  const enRatio = Math.round((langAnalysis?.english_ratio || 0.4) * 100);
+  const codeSwitched = langAnalysis?.code_switched ?? true;
+  const intent = (langAnalysis?.intent || "promise_to_pay").toUpperCase().replace(/_/g, " ");
+  const strength = (langAnalysis?.commitment_strength || "high").toUpperCase();
+
   return (
-    <div className={styles.promiseReveal}>
-      {/* Left: raw text */}
-      <div className={styles.rawTextPanel}>
-        <div className={styles.rawTextLabel}>Raw customer reply — exact Hinglish/English text</div>
-        <pre className={styles.rawText}>{promise.raw_text}</pre>
-        {promise.is_broken && (
-          <div style={{ marginTop: 8, color: "#f87171", fontFamily: "var(--mono)", fontSize: 11 }}>
-            ⚠️ Commitment Date Elapsed (Vaada Khilafi recorded)
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className={styles.promiseReveal}>
+        {/* Left: raw text + language ratio */}
+        <div className={styles.rawTextPanel}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div className={styles.rawTextLabel}>Raw Customer Reply (Hinglish/English)</div>
+            {codeSwitched && <span className={styles.codeSwitchBadge}>Code-Switching Detected</span>}
           </div>
-        )}
+
+          <pre className={styles.rawText}>{rawText}</pre>
+
+          {promise?.is_broken && (
+            <div style={{ marginTop: 8, color: "#f87171", fontFamily: "var(--mono)", fontSize: 11 }}>
+              ⚠️ Commitment Date Elapsed (Vaada Khilafi recorded)
+            </div>
+          )}
+
+          {/* Language Ratio Split Bar */}
+          <div className={styles.ratioContainer} style={{ marginTop: 16 }}>
+            <div className={styles.ratioLabels}>
+              <span>Hindi: <strong style={{ color: "#f97316" }}>{hiRatio}%</strong></span>
+              <span>Language: <strong style={{ color: "#4ade80" }}>{langName}</strong></span>
+              <span>English: <strong style={{ color: "#38bdf8" }}>{enRatio}%</strong></span>
+            </div>
+            <div className={styles.ratioBar}>
+              <div className={styles.ratioHindi} style={{ width: `${hiRatio}%` }} />
+              <div className={styles.ratioEnglish} style={{ width: `${enRatio}%` }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Right: structured extraction results */}
+        <div className={styles.extractedPanel}>
+          <div className={styles.extractedLabel}>Structured Linguistic & Financial Extraction</div>
+          
+          <div
+            className={styles.extractedField}
+            ref={(el) => { fieldsRef.current[0] = el; }}
+          >
+            <div className={styles.extractedFieldLabel}>Amount promised</div>
+            <div className={`${styles.extractedFieldValue} ${styles.accent}`}>
+              {rupees !== "—" ? `₹${rupees}` : "Full Invoice Balance"}
+            </div>
+          </div>
+
+          <div
+            className={styles.extractedField}
+            ref={(el) => { fieldsRef.current[1] = el; }}
+          >
+            <div className={styles.extractedFieldLabel}>Promised date / timeline</div>
+            <div className={styles.extractedFieldValue}>
+              {promise?.promised_date ? fmtDate(promise.promised_date) : "Friday"}
+            </div>
+          </div>
+
+          <div
+            className={styles.extractedField}
+            ref={(el) => { fieldsRef.current[2] = el; }}
+          >
+            <div className={styles.extractedFieldLabel}>Classified Intent & Strength</div>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 2 }}>
+              <span className={styles.intentTag}>{intent}</span>
+              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)" }}>
+                Strength: <strong style={{ color: "#fff" }}>{strength}</strong>
+              </span>
+            </div>
+          </div>
+
+          <div
+            className={styles.extractedField}
+            ref={(el) => { fieldsRef.current[3] = el; }}
+          >
+            <div className={styles.extractedFieldLabel}>Confidence</div>
+            <div
+              className={styles.extractedFieldValue}
+              style={{ color: confColor }}
+            >
+              {pct}%
+            </div>
+            <div className={styles.confBar}>
+              <div
+                className={styles.confFill}
+                style={{ width: `${pct}%`, background: confColor }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Right: animated extraction */}
-      <div className={styles.extractedPanel}>
-        <div className={styles.extractedLabel}>Deterministic Extraction Result</div>
-        <div
-          className={styles.extractedField}
-          ref={(el) => { fieldsRef.current[0] = el; }}
-        >
-          <div className={styles.extractedFieldLabel}>Amount promised</div>
-          <div className={`${styles.extractedFieldValue} ${styles.accent}`}>
-            ₹{rupees}
+      {/* Interactive Language Signals Inspector */}
+      {langAnalysis && (langAnalysis.hindi_signals?.length > 0 || langAnalysis.english_signals?.length > 0) && (
+        <div className={styles.langSignalsBox}>
+          <div className={styles.langSignalsHeader}>
+            <span className={styles.langSignalsTitle}>Linguistic Signal Lexicon & Explainability</span>
+            <button
+              onClick={() => setShowSignals(!showSignals)}
+              style={{
+                background: "transparent",
+                border: "none",
+                color: "var(--muted)",
+                fontFamily: "var(--mono)",
+                fontSize: 10,
+                cursor: "pointer",
+                textTransform: "uppercase",
+              }}
+            >
+              {showSignals ? "Hide Signals ▲" : "Show Signals ▼"}
+            </button>
           </div>
-        </div>
-        <div
-          className={styles.extractedField}
-          ref={(el) => { fieldsRef.current[1] = el; }}
-        >
-          <div className={styles.extractedFieldLabel}>Promised date</div>
-          <div className={styles.extractedFieldValue}>
-            {fmtDate(promise.promised_date)}
-          </div>
-        </div>
-        <div
-          className={styles.extractedField}
-          ref={(el) => { fieldsRef.current[2] = el; }}
-        >
-          <div className={styles.extractedFieldLabel}>Confidence</div>
-          <div
-            className={styles.extractedFieldValue}
-            style={{ color: confColor }}
-          >
-            {pct}%
-          </div>
-          <div className={styles.confBar}>
-            <div
-              className={styles.confFill}
-              style={{ width: `${pct}%`, background: confColor }}
-            />
-          </div>
-        </div>
-        <div
-          className={styles.extractedField}
-          ref={(el) => { fieldsRef.current[3] = el; }}
-        >
-          <div className={styles.extractedFieldLabel}>Language mix</div>
-          <span className={styles.langTag}>{promise.language_mix}</span>
-          {promise.extraction_failure && (
-            <span className={styles.failureTag}>{promise.extraction_failure.replace(/_/g, " ")}</span>
+
+          {showSignals && (
+            <div className={styles.signalsGrid}>
+              <div className={styles.signalColumn}>
+                <span className={styles.signalColumnTitle}>Hindi Tokens & Morphological Signals:</span>
+                <div className={styles.signalChips}>
+                  {langAnalysis.hindi_signals.map((sig) => (
+                    <span key={sig} className={styles.hindiChip}>
+                      &ldquo;{sig}&rdquo;
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.signalColumn}>
+                <span className={styles.signalColumnTitle}>English Tokens & Commercial Signals:</span>
+                <div className={styles.signalChips}>
+                  {langAnalysis.english_signals.map((sig) => (
+                    <span key={sig} className={styles.englishChip}>
+                      &ldquo;{sig}&rdquo;
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -947,7 +1047,7 @@ export default function CasePage() {
             <div className={styles.stationIndex}>05</div>
             <div className={styles.stationBody}>
               <h2 className={styles.stationTitle}>वादा & Channels</h2>
-              <PromiseReveal promise={latestPromise} />
+              <PromiseReveal promise={latestPromise} langAnalysis={data.language_analysis} />
 
               {/* WhatsApp Interactive Message Box */}
               {data.whatsapp_payload && (

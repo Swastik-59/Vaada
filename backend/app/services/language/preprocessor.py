@@ -27,8 +27,8 @@ class HinglishPreprocessor:
         ]
         cleaned = "".join(clean_chars)
 
-        # 3. Collapse excessive character repetitions (e.g. "bhaaaaai" -> "bhai", "pleasssse" -> "please")
-        cleaned = cls._REPEATING_CHARS_RE.sub(r"\1\1", cleaned)
+        # 3. Collapse excessive character repetitions (e.g. "bhaaaaai" -> "bhai", "pleasssse" -> "please", "plzzzz" -> "plz")
+        cleaned = cls._REPEATING_CHARS_RE.sub(r"\1", cleaned)
 
         # 4. Normalize whitespace (collapse multiple spaces, tabs)
         cleaned = re.sub(r"[ \t]+", " ", cleaned)
