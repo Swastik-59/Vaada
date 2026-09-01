@@ -1,0 +1,25 @@
+{
+  "corpus_name": "L3Cube-HingCorpus",
+  "resource_suite": "L3Cube HingCorpus and HingLID",
+  "version": "1.0",
+  "authors": [
+    "Ravindra Nayak",
+    "Raviraj Joshi"
+  ],
+  "institution": "L3Cube Pune",
+  "publication": "Proceedings of the 9th Workshop on Balto-Slavic Natural Language Processing (BSNLP) / WILDRE-6 workshop at LREC 2022",
+  "year": 2022,
+  "citation": "@inproceedings{nayak2022l3cube,\n  title={L3Cube-HingCorpus and HingBERT: A Code Mixed Hindi-English Dataset and BERT Language Models},\n  author={Nayak, Ravindra and Joshi, Raviraj},\n  booktitle={Proceedings of the 9th Workshop on Balto-Slavic Natural Language Processing},\n  pages={1--6},\n  year={2022}\n}",
+  "paper_urls": [
+    "https://aclanthology.org/2022.wildre-1.2/",
+    "https://arxiv.org/abs/2204.08398"
+  ],
+  "repository_url": "https://github.com/l3cube-pune/code-mixed-nlp",
+  "license": "CC-BY-4.0 / MIT (Research & Prototype Use)",
+  "purpose": "Academic baseline and linguistic evaluation for Hindi-English code-switching and language identification (HingLID).",
+  "provenance_boundary": {
+    "is_payment_domain": false,
+    "contains_payment_data": false,
+    "description": "L3Cube-HingCorpus is an academic code-mixed Hindi-English corpus written in Roman script. It contains general web/social conversations, NOT financial or payment recovery communications. Payment domain datasets in Vaada are authored separately in data/domain/payment_hinglish/."
+  }
+}

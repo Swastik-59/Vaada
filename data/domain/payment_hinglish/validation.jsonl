@@ -1,0 +1,6 @@
+{"text": "sir Tuesday tak 45000 pakka transfer karwa dunga", "language": "hinglish", "intent": "promise_to_pay", "promised_date": "Tuesday", "promised_amount": 4500000, "commitment_strength": "high", "confidence": 0.93}
+{"text": "Thursday morning tak poora clear kar denge", "language": "hinglish", "intent": "promise_to_pay", "promised_date": "Thursday", "promised_amount": null, "commitment_strength": "high", "confidence": 0.91}
+{"text": "try karenge Friday tak kuch kar paaye toh", "language": "hinglish", "intent": "vague_promise", "promised_date": "Friday", "promised_amount": null, "commitment_strength": "low", "confidence": 0.55}
+{"text": "goods delivery defective thi hum payment rok rahe hain", "language": "hinglish", "intent": "dispute", "promised_date": null, "promised_amount": null, "commitment_strength": "high", "confidence": 0.94}
+{"text": "NEFT transfer ho chuka hai 2 ghante pehle check accounts", "language": "hinglish", "intent": "already_paid", "promised_date": null, "promised_amount": null, "commitment_strength": "high", "confidence": 0.92}
+{"text": "bhai please don't call hum court me milenge", "language": "hinglish", "intent": "refusal", "promised_date": null, "promised_amount": null, "commitment_strength": "high", "confidence": 0.96}

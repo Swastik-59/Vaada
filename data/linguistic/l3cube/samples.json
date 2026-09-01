@@ -1,0 +1,142 @@
+[
+  {
+    "id": "l3cube-001",
+    "text": "bhai aaj main market ja raha hu kuch samaan lene",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-002",
+    "text": "please send the updated project report by tomorrow morning",
+    "gold_language": "english",
+    "has_code_switching": false,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-003",
+    "text": "mera phone restart ho gaya aur saara data delete ho gaya",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-004",
+    "text": "kal meeting me discuss karte hain ye problem solve karne ke liye",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-005",
+    "text": "aapka order successfully deliver ho chuka hai",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-006",
+    "text": "the quarterly balance sheet has been submitted to the auditors",
+    "gold_language": "english",
+    "has_code_switching": false,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-007",
+    "text": "mujhe abhi thoda time chahiye sochne ke liye",
+    "gold_language": "roman_hindi",
+    "has_code_switching": false,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-008",
+    "text": "weather bohot pleasant hai aaj evening me drive pe chalte hain",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-009",
+    "text": "train late chal rahi hai do ghante delay hoga",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-010",
+    "text": "हम कल सुबह बैंक जाकर नया खाता खुलवाएंगे",
+    "gold_language": "hindi_devanagari",
+    "has_code_switching": false,
+    "primary_script": "devanagari"
+  },
+  {
+    "id": "l3cube-011",
+    "text": "bhai office me bohot rush hai shaam ko call karta hu",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-012",
+    "text": "kindly acknowledge receipt of the attached procurement documents",
+    "gold_language": "english",
+    "has_code_switching": false,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-013",
+    "text": "wifi connection drop ho raha hai baar baar disconnection issue hai",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-014",
+    "text": "kya aapne new branch location visit kiya hai",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-015",
+    "text": "sab kuch theek hai koi tension lene ki baat nahi hai",
+    "gold_language": "roman_hindi",
+    "has_code_switching": false,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-016",
+    "text": "flight boarding gate number 14 se announce ho rahi hai",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-017",
+    "text": "please provide bank transfer confirmation receipt",
+    "gold_language": "english",
+    "has_code_switching": false,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-018",
+    "text": "mera passbook update nahi ho raha machine me error aa raha hai",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  },
+  {
+    "id": "l3cube-019",
+    "text": "यह लेन-देन तकनीकी कारणों से विफल हो गया है",
+    "gold_language": "hindi_devanagari",
+    "has_code_switching": false,
+    "primary_script": "devanagari"
+  },
+  {
+    "id": "l3cube-020",
+    "text": "bhai tension mat lo sab theek ho jayega weekend pe milte hain",
+    "gold_language": "hinglish",
+    "has_code_switching": true,
+    "primary_script": "roman"
+  }
+]
