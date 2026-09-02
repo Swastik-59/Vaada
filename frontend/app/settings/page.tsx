@@ -28,74 +28,63 @@ export default function SettingsPage() {
   }, []);
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-deep)", color: "var(--text-primary)", fontFamily: "var(--sans)" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-deep)", color: "var(--text-primary)" }}>
       {/* Top Console Navigation */}
       <nav style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 36px", height: 52,
+        padding: "0 48px", height: 80,
         borderBottom: "1px solid var(--border-subtle)",
-        backgroundColor: "var(--bg-surface)",
+        backgroundColor: "var(--bg-deep)",
       }}>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-          <Link href="/queue" style={{ fontFamily: "var(--display)", fontSize: "1.25rem", fontWeight: 900, letterSpacing: "0.04em", color: "var(--text-primary)" }}>
-            VAADA <span style={{ color: "var(--accent)" }}>वादा</span>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
+          <Link href="/queue" style={{ fontFamily: "var(--display)", fontSize: "1.5rem", fontWeight: 300, letterSpacing: "-0.02em", color: "var(--text-primary)", textDecoration: "none" }}>
+            Vaada.
           </Link>
-          <span style={{ color: "var(--border-strong)", fontSize: 12 }}>/</span>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.16em", color: "var(--text-secondary)" }}>
-            COMPLIANCE CONFIGURATION
+          <span style={{ color: "var(--border-strong)" }}>/</span>
+          <span style={{ fontFamily: "var(--sans)", fontSize: 13, color: "var(--text-secondary)" }}>
+            Compliance Configuration
           </span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <Link href="/queue" style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.12em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-            ← Queue
-          </Link>
-          <Link href="/audit" style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.12em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-            Audit Trail
-          </Link>
-          <Link href="/settings" style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.12em", color: "var(--text-primary)", textTransform: "uppercase" }}>
-            Compliance Config
-          </Link>
-          <Link href="/razorpay-taxonomy" style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.12em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-            Error Intelligence
-          </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+          <Link href="/queue" style={{ fontFamily: "var(--sans)", fontSize: 14, color: "var(--text-secondary)", textDecoration: "none" }}>Queue</Link>
+          <Link href="/audit" style={{ fontFamily: "var(--sans)", fontSize: 14, color: "var(--text-secondary)", textDecoration: "none" }}>Audit Trail</Link>
+          <Link href="/settings" style={{ fontFamily: "var(--sans)", fontSize: 14, color: "var(--text-primary)", textDecoration: "none" }}>Compliance Config</Link>
+          <Link href="/razorpay-taxonomy" style={{ fontFamily: "var(--sans)", fontSize: 14, color: "var(--text-secondary)", textDecoration: "none" }}>Taxonomy</Link>
         </div>
       </nav>
 
-      <div style={{ padding: "36px 36px 24px", borderBottom: "1px solid var(--border-subtle)" }}>
-        <p style={{ fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.18em", color: "var(--accent)", margin: "0 0 6px", textTransform: "uppercase" }}>
-          ● Enforced Statutory Code Controls
-        </p>
-        <h1 style={{ fontFamily: "var(--display)", fontSize: "clamp(2.2rem,4vw,3.4rem)", fontWeight: 800, lineHeight: 0.95, textTransform: "uppercase", margin: 0, letterSpacing: "-0.01em" }}>
+      <div style={{ padding: "64px 48px 32px" }}>
+        <h1 style={{ fontFamily: "var(--display)", fontSize: "clamp(3rem, 5vw, 4.5rem)", fontWeight: 300, lineHeight: 0.9, textTransform: "none", margin: 0, letterSpacing: "-0.02em" }}>
           Compliance Registry
         </h1>
-        <p style={{ fontSize: 14, color: "var(--text-secondary)", margin: "8px 0 0", maxWidth: 700 }}>
+        <p style={{ fontFamily: "var(--sans)", fontSize: 16, color: "var(--text-secondary)", margin: "16px 0 0", maxWidth: 600, lineHeight: 1.5 }}>
           Deterministic checks executed on every outbound touchpoint. A failed check aborts outbound delivery at the gateway layer and logs an immutable audit event.
         </p>
       </div>
 
       {error && (
-        <p style={{ fontFamily: "var(--mono)", fontSize: 12, color: "#f87171", padding: "16px 36px", borderBottom: "1px solid var(--color-disallowed)", backgroundColor: "rgba(192,32,32,0.1)", margin: 0 }}>
-          ⚠️ {error}
+        <p style={{ fontFamily: "var(--sans)", fontSize: 14, color: "var(--color-disallowed)", padding: "16px 48px", backgroundColor: "rgba(138, 54, 54, 0.1)", margin: 0 }}>
+          {error}
         </p>
       )}
 
       {config && (
-        <div style={{ padding: "36px" }}>
+        <div style={{ padding: "32px 48px 64px", maxWidth: 1200 }}>
           {/* Key values */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 20, marginBottom: 40 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 32, marginBottom: 64 }}>
             {[
               { label: "Contact window start", value: `${String(config.contact_window_start_hour).padStart(2,"0")}:00 ${config.timezone}`, sub: "Legal Indian Calling Slot" },
               { label: "Contact window end", value: `${String(config.contact_window_end_hour).padStart(2,"0")}:00 ${config.timezone}`, sub: "Automatic Nighttime Lockout" },
               { label: "Max contacts / 7 days", value: String(config.max_contacts_per_7_days), sub: "RBI Rolling Anti-Nagging Limit" },
             ].map((item) => (
-              <div key={item.label} style={{ padding: "20px 24px", backgroundColor: "var(--bg-surface)", border: "1px solid var(--border-subtle)", display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em", color: "var(--text-muted)", textTransform: "uppercase" }}>
-                  {item.label}
-                </div>
-                <div style={{ fontFamily: "var(--display)", fontSize: "2rem", fontWeight: 800, color: "var(--text-primary)" }}>
+              <div key={item.label} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                <div style={{ fontFamily: "var(--display)", fontSize: "2.5rem", fontWeight: 300, color: "var(--text-primary)" }}>
                   {item.value}
                 </div>
-                <div style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--accent)" }}>
+                <div style={{ fontFamily: "var(--sans)", fontSize: 12, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {item.label}
+                </div>
+                <div style={{ fontFamily: "var(--sans)", fontSize: 13, color: "var(--text-muted)" }}>
                   {item.sub}
                 </div>
               </div>
@@ -103,12 +92,12 @@ export default function SettingsPage() {
           </div>
 
           {/* Rules table */}
-          <div style={{ border: "1px solid var(--border-subtle)", backgroundColor: "var(--bg-surface)" }}>
+          <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr style={{ borderBottom: "1px solid var(--border-subtle)", backgroundColor: "rgba(15, 17, 20, 0.95)" }}>
+                <tr>
                   {["Statutory Rule Title", "Enforcement Rule Specification", "Engine Status"].map((h) => (
-                    <th key={h} style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--text-muted)", padding: "14px 16px", textAlign: "left", fontWeight: 400 }}>
+                    <th key={h} style={{ fontFamily: "var(--sans)", fontSize: 12, color: "var(--text-muted)", padding: "16px 24px", textAlign: "left", fontWeight: 400, borderBottom: "1px solid var(--border-subtle)" }}>
                       {h}
                     </th>
                   ))}
@@ -116,28 +105,23 @@ export default function SettingsPage() {
               </thead>
               <tbody>
                 {config.rules.map((r) => (
-                  <tr key={r.id} style={{ borderBottom: "1px solid var(--border-subtle)" }}>
-                    <td style={{ padding: "16px", fontWeight: 600, fontSize: 13, color: "var(--text-primary)" }}>{r.title}</td>
-                    <td style={{ padding: "16px", fontFamily: "var(--mono)", fontSize: 11.5, color: "var(--text-secondary)", lineHeight: 1.5 }}>{r.description}</td>
-                    <td style={{ padding: "16px" }}>
+                  <tr key={r.id} style={{ transition: "background-color 0.2s ease" }}>
+                    <td style={{ padding: "24px", fontWeight: 500, fontSize: 15, color: "var(--text-primary)", borderBottom: "1px solid var(--border-subtle)", fontFamily: "var(--sans)" }}>{r.title}</td>
+                    <td style={{ padding: "24px", fontFamily: "var(--sans)", fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.5, borderBottom: "1px solid var(--border-subtle)" }}>{r.description}</td>
+                    <td style={{ padding: "24px", borderBottom: "1px solid var(--border-subtle)" }}>
                       <span style={{
-                        display: "inline-block", padding: "3px 10px",
-                        border: "1px solid var(--color-recovered)", color: "var(--color-recovered)",
-                        backgroundColor: "rgba(39, 116, 75, 0.1)",
-                        fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.12em", textTransform: "uppercase",
+                        display: "inline-block", padding: "4px 12px",
+                        color: r.enforced ? "var(--color-recovered)" : "var(--text-secondary)",
+                        background: r.enforced ? "rgba(46, 96, 71, 0.1)" : "rgba(255, 255, 255, 0.05)",
+                        fontFamily: "var(--sans)", fontSize: 12, borderRadius: 100
                       }}>
-                        {r.enforced ? "ENFORCED IN CODE" : "DISABLED"}
+                        {r.enforced ? "Enforced" : "Disabled"}
                       </span>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-
-          <div style={{ marginTop: 28, padding: "16px 20px", borderLeft: "3px solid var(--accent)", backgroundColor: "rgba(216, 80, 36, 0.05)", fontFamily: "var(--mono)", fontSize: 11, color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            These statutory limits are read directly from server environment config. Changing them requires a deployment restart.
-            All compliance checks run server-side before outbound messaging. A violation is a hard stop—no warning toast, no retry.
           </div>
         </div>
       )}

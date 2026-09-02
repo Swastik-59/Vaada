@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-design": {
+      "source": "PracticalSwan/agent-skills",
+      "sourceType": "github",
+      "skillPath": "frontend-design/SKILL.md",
+      "computedHash": "eb642575592351d2c6727243662995a145911fbbdf3a30289c94e08463c2e177"
+    },
+    "ui-ux-concept-implementation": {
+      "source": "thienanblog/awesome-ai-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-ux-concept-implementation/SKILL.md",
+      "computedHash": "a49deeb7a5ff913ef572922c1e0e3869d7ef5572031b59b1cfbbfe48b5a07c80"
+    }
+  }
+}

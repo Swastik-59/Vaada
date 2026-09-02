@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 export default function Preloader() {
   const [visible, setVisible] = useState(false);
-  const [phase, setPhase] = useState<"calibrating" | "verified" | "opening">("calibrating");
+  const [phase, setPhase] = useState<"intro" | "reveal" | "exit">("intro");
 
   useEffect(() => {
     // Check if previously seen in this session
@@ -23,17 +23,17 @@ export default function Preloader() {
     setVisible(true);
 
     const t1 = setTimeout(() => {
-      setPhase("verified");
-    }, 600);
+      setPhase("reveal");
+    }, 400);
 
     const t2 = setTimeout(() => {
-      setPhase("opening");
-    }, 1100);
+      setPhase("exit");
+    }, 1200);
 
     const t3 = setTimeout(() => {
       setVisible(false);
       sessionStorage.setItem("vaada_seal_passed", "1");
-    }, 1600);
+    }, 2000);
 
     return () => {
       clearTimeout(t1);
@@ -42,19 +42,13 @@ export default function Preloader() {
     };
   }, []);
 
-  const dismiss = () => {
-    setVisible(false);
-    sessionStorage.setItem("vaada_seal_passed", "1");
-  };
-
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
           key="preloader-overlay"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } }}
-          onClick={dismiss}
+          exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
           style={{
             position: "fixed",
             inset: 0,
@@ -63,160 +57,33 @@ export default function Preloader() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: "pointer",
             overflow: "hidden",
+            pointerEvents: phase === "exit" ? "none" : "auto",
           }}
         >
-          {/* Top and bottom architectural shutter plates */}
-          <motion.div
-            initial={{ scaleY: 1 }}
-            animate={phase === "opening" ? { y: "-100%" } : { y: 0 }}
-            transition={{ duration: 0.6, ease: [0.85, 0, 0.15, 1] }}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              height: "50%",
-              backgroundColor: "var(--bg-deep)",
-              borderBottom: "1px solid var(--border-strong)",
-              zIndex: 1,
-            }}
-          />
-          <motion.div
-            initial={{ scaleY: 1 }}
-            animate={phase === "opening" ? { y: "100%" } : { y: 0 }}
-            transition={{ duration: 0.6, ease: [0.85, 0, 0.15, 1] }}
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              height: "50%",
-              backgroundColor: "var(--bg-deep)",
-              borderTop: "1px solid var(--border-strong)",
-              zIndex: 1,
-            }}
-          />
-
-          {/* Central Seal Container */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 20,
-              padding: "36px 48px",
-              border: "1px solid var(--border-strong)",
-              backgroundColor: "rgba(15, 17, 20, 0.95)",
-              maxWidth: 580,
-              width: "90%",
-              boxShadow: "0 24px 48px rgba(0,0,0,0.8)",
-            }}
-          >
-            {/* Top registration marks */}
-            <div
+          {/* Elegant typographic brand moment */}
+          <div style={{ overflow: "hidden" }}>
+            <motion.div
+              initial={{ y: "100%", opacity: 0 }}
+              animate={
+                phase === "intro" 
+                  ? { y: "100%", opacity: 0 } 
+                  : phase === "reveal" 
+                  ? { y: "0%", opacity: 1 } 
+                  : { y: "-100%", opacity: 0 }
+              }
+              transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
               style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "space-between",
-                fontFamily: "var(--mono)",
-                fontSize: 10,
-                letterSpacing: "0.2em",
-                color: "var(--text-muted)",
+                fontFamily: "var(--display)",
+                fontSize: "clamp(3rem, 10vw, 6rem)",
+                fontWeight: 300,
+                letterSpacing: "-0.02em",
+                color: "var(--text-primary)",
+                lineHeight: 1,
               }}
             >
-              <span>SYS // ARMED</span>
-              <span>IST 08:00–19:00</span>
-              <span>REF 43B(H)</span>
-            </div>
-
-            {/* Wordmark */}
-            <div style={{ textAlign: "center", margin: "10px 0" }}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-                style={{
-                  fontFamily: "var(--display)",
-                  fontSize: "clamp(2.8rem, 8vw, 4.5rem)",
-                  fontWeight: 900,
-                  letterSpacing: "0.02em",
-                  lineHeight: 0.85,
-                  textTransform: "uppercase",
-                  color: "var(--text-primary)",
-                }}
-              >
-                VAADA <span style={{ color: "var(--accent)" }}>/</span> वादा
-              </motion.div>
-              <div
-                style={{
-                  fontFamily: "var(--mono)",
-                  fontSize: 11,
-                  letterSpacing: "0.24em",
-                  textTransform: "uppercase",
-                  color: "var(--text-secondary)",
-                  marginTop: 8,
-                }}
-              >
-                Bounded B2B Revenue Recovery
-              </div>
-            </div>
-
-            {/* Calibration Telemetry Progress */}
-            <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 8 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontFamily: "var(--mono)",
-                  fontSize: 10,
-                  letterSpacing: "0.14em",
-                  color: phase === "verified" ? "var(--color-recovered)" : "var(--color-warning)",
-                }}
-              >
-                <span>
-                  {phase === "calibrating"
-                    ? "CALIBRATING DETERMINISTIC RECOVERY ENGINE…"
-                    : "✓ TAXONOMY & RBI GUARDRAILS VERIFIED"}
-                </span>
-                <span>{phase === "calibrating" ? "42/42 RAILS" : "READY"}</span>
-              </div>
-              <div
-                style={{
-                  height: 3,
-                  width: "100%",
-                  backgroundColor: "var(--border-subtle)",
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
-                <motion.div
-                  initial={{ width: "12%" }}
-                  animate={{ width: phase === "calibrating" ? "75%" : "100%" }}
-                  transition={{ duration: 0.5, ease: "easeInOut" }}
-                  style={{
-                    height: "100%",
-                    backgroundColor: phase === "verified" ? "var(--color-recovered)" : "var(--accent)",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div
-              style={{
-                fontFamily: "var(--mono)",
-                fontSize: 9,
-                letterSpacing: "0.15em",
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                marginTop: 4,
-              }}
-            >
-              Click anywhere to advance
-            </div>
+              Vaada.
+            </motion.div>
           </div>
         </motion.div>
       )}

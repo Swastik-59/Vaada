@@ -1,0 +1,4 @@
+interface:
+  display_name: "UI/UX Concept Implementation"
+  short_description: "Implement selected visual references in UI"
+  default_prompt: "Use $ui-ux-concept-implementation to implement this selected mockup in the existing project and verify it in a real browser."

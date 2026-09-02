@@ -1,45 +1,37 @@
 :root {
-  /* Institutional Tactile Noir Palette */
-  --bg-deep: #08090a;
-  --bg-surface: #0f1114;
-  --bg-elevated: #16181d;
-  --bg-highlight: #1e2229;
-  
-  /* Legacy compatibility aliases */
-  --bg: #08090a;
-  --paper: #f4efe6;
-  --ink: #08090a;
-  --line: #1c2026;
-  --rule: #2a303a;
+  /* Cinematic Editorial Palette */
+  --bg-deep: #050506;
+  --bg-surface: #0a0b0d;
+  --bg-elevated: #111316;
+  --bg-highlight: #181a1f;
   
   /* Typography colors */
-  --text-primary: #f4efe6;
-  --text-secondary: #9e978b;
-  --text-muted: #6b665d;
-  --muted: #9e978b;
+  --text-primary: #ededef;
+  --text-secondary: #8c919a;
+  --text-muted: #5e636b;
   
-  /* Borders */
-  --border-subtle: #1c2026;
-  --border-strong: #2a303a;
-  --border-focus: #3d4452;
+  /* Borders (Extremely Subtle) */
+  --border-subtle: #17191d;
+  --border-strong: #24272c;
+  --border-focus: #373b43;
   
-  /* Domain Financial Status Tokens */
-  --accent: #d85024;
-  --color-accent: #d85024;
-  --color-recovered: #27744b;
-  --color-disallowed: #c02020;
-  --color-warning: #d4973b;
-  --color-neutral: #38bdf8;
-  --color-purple: #c084fc;
+  /* Domain Financial Status Tokens - Softened for Editorial */
+  --accent: #c7a77b; /* Soft luxury amber/sand */
+  --color-accent: #c7a77b;
+  --color-recovered: #2e6047; /* Deep muted emerald */
+  --color-disallowed: #8a3636; /* Deep muted rust */
+  --color-warning: #9e7a46; /* Muted gold */
+  --color-neutral: #4a6785; /* Muted slate */
   
   /* Fonts mapped from layout.tsx */
-  --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
   --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --display: var(--font-display), "Big Shoulders Display", "Arial Black", sans-serif;
+  --display: var(--font-display), "Times New Roman", Times, serif;
 
   /* Transitions & Timing */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out-circ: cubic-bezier(0.85, 0, 0.15, 1);
+  --ease-cinematic: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 * {
@@ -58,8 +50,8 @@ html, body {
 
 /* Custom subtle scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -68,7 +60,7 @@ html, body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -86,8 +78,8 @@ button, input, textarea, select {
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--bg-deep);
+  background: rgba(199, 167, 123, 0.2);
+  color: var(--text-primary);
 }
 
 /* Lenis Recommended CSS */
@@ -107,12 +99,13 @@ html.lenis, html.lenis body {
   overflow: hidden;
 }
 
-.lenis.lenis-scrolling iframe {
+.lenis.lenis-smooth iframe {
   pointer-events: none;
 }
 
+/* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

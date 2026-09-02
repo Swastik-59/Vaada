@@ -46,78 +46,52 @@ export default function LoginPage() {
     >
       <main
         style={{
-          maxWidth: 480,
+          maxWidth: 440,
           width: "100%",
-          backgroundColor: "var(--bg-surface)",
-          border: "1px solid var(--border-strong)",
-          padding: 36,
-          boxShadow: "0 24px 48px rgba(0,0,0,0.6)",
+          padding: 48,
+          display: "flex",
+          flexDirection: "column",
+          gap: 32,
         }}
       >
-        {/* Top Registration Marks */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontFamily: "var(--mono)",
-            fontSize: 10,
-            letterSpacing: "0.2em",
-            color: "var(--text-muted)",
-            borderBottom: "1px solid var(--border-subtle)",
-            paddingBottom: 12,
-            marginBottom: 20,
-          }}
-        >
-          <span>SYS // AUTH GATEWAY</span>
-          <span>ROLE: RECOVERY OPERATOR</span>
-        </div>
-
-        {/* Wordmark */}
-        <div style={{ marginBottom: 20 }}>
+        <div style={{ textAlign: "center" }}>
           <div
             style={{
               fontFamily: "var(--display)",
-              fontSize: "2.4rem",
-              fontWeight: 900,
-              lineHeight: 0.9,
-              textTransform: "uppercase",
-              letterSpacing: "0.02em",
+              fontSize: "3.5rem",
+              fontWeight: 300,
+              lineHeight: 1,
+              letterSpacing: "-0.02em",
+              marginBottom: 16,
             }}
           >
-            VAADA <span style={{ color: "var(--accent)" }}>वादा</span>
+            Vaada.
           </div>
           <h1
             style={{
-              fontFamily: "var(--display)",
-              fontSize: "1.6rem",
-              fontWeight: 700,
-              textTransform: "uppercase",
-              margin: "8px 0 0",
+              fontFamily: "var(--sans)",
+              fontSize: "16px",
+              fontWeight: 400,
               color: "var(--text-secondary)",
+              margin: 0,
             }}
           >
-            Operations Console Sign-in
+            Sign in to the Operations Console
           </h1>
         </div>
 
-        <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 24px" }}>
-          Authenticated operator workspace. All actions are cryptographically signed and recorded in the immutable audit log.
-        </p>
-
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: 16 }}>
+        <form onSubmit={onSubmit} style={{ display: "grid", gap: 24 }}>
           <div>
             <label
               style={{
                 display: "block",
-                fontFamily: "var(--mono)",
-                fontSize: 10.5,
-                letterSpacing: "0.14em",
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                marginBottom: 6,
+                fontFamily: "var(--sans)",
+                fontSize: 13,
+                color: "var(--text-secondary)",
+                marginBottom: 8,
               }}
             >
-              Operator Identity (Email)
+              Email Address
             </label>
             <input
               value={email}
@@ -126,14 +100,18 @@ export default function LoginPage() {
               required
               style={{
                 width: "100%",
-                padding: "12px 14px",
-                backgroundColor: "var(--bg-deep)",
+                padding: "12px 16px",
+                backgroundColor: "var(--bg-surface)",
                 color: "var(--text-primary)",
                 border: "1px solid var(--border-subtle)",
-                fontFamily: "var(--mono)",
-                fontSize: 12,
+                borderRadius: 4,
+                fontFamily: "var(--sans)",
+                fontSize: 14,
                 outline: "none",
+                transition: "border-color 0.2s",
               }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--text-primary)")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}
             />
           </div>
 
@@ -141,15 +119,13 @@ export default function LoginPage() {
             <label
               style={{
                 display: "block",
-                fontFamily: "var(--mono)",
-                fontSize: 10.5,
-                letterSpacing: "0.14em",
-                color: "var(--text-muted)",
-                textTransform: "uppercase",
-                marginBottom: 6,
+                fontFamily: "var(--sans)",
+                fontSize: 13,
+                color: "var(--text-secondary)",
+                marginBottom: 8,
               }}
             >
-              Master Password
+              Password
             </label>
             <input
               type="password"
@@ -159,14 +135,18 @@ export default function LoginPage() {
               required
               style={{
                 width: "100%",
-                padding: "12px 14px",
-                backgroundColor: "var(--bg-deep)",
+                padding: "12px 16px",
+                backgroundColor: "var(--bg-surface)",
                 color: "var(--text-primary)",
                 border: "1px solid var(--border-subtle)",
-                fontFamily: "var(--mono)",
-                fontSize: 12,
+                borderRadius: 4,
+                fontFamily: "var(--sans)",
+                fontSize: 14,
                 outline: "none",
+                transition: "border-color 0.2s",
               }}
+              onFocus={(e) => (e.target.style.borderColor = "var(--text-primary)")}
+              onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}
             />
           </div>
 
@@ -174,89 +154,69 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             style={{
-              padding: "14px 20px",
+              padding: "16px 24px",
               backgroundColor: "var(--accent)",
               color: "var(--bg-deep)",
               border: "none",
-              fontFamily: "var(--mono)",
-              fontSize: 11.5,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
-              textTransform: "uppercase",
+              borderRadius: 100,
+              fontFamily: "var(--sans)",
+              fontSize: 15,
+              fontWeight: 500,
               cursor: "pointer",
-              transition: "opacity 0.15s ease",
-              marginTop: 6,
+              transition: "transform 0.2s ease, background-color 0.2s",
+              marginTop: 8,
             }}
+            onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
+            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            {loading ? "Authenticating Operator…" : "Enter Operations Console →"}
+            {loading ? "Authenticating..." : "Sign In"}
           </button>
 
           {error && (
             <div
-              role="alert"
               style={{
-                padding: "10px 14px",
-                backgroundColor: "rgba(192, 32, 32, 0.15)",
-                borderLeft: "3px solid var(--color-disallowed)",
-                color: "#f87171",
-                fontFamily: "var(--mono)",
-                fontSize: 11,
+                padding: "12px 16px",
+                backgroundColor: "rgba(138, 54, 54, 0.1)",
+                color: "var(--color-disallowed)",
+                fontFamily: "var(--sans)",
+                fontSize: 13,
+                borderRadius: 4,
+                textAlign: "center",
               }}
             >
-              ⚠️ {error}
+              {error}
             </div>
           )}
         </form>
 
-        {/* Demo Credentials Helper */}
         <div
           style={{
-            marginTop: 24,
-            padding: "12px 14px",
-            backgroundColor: "rgba(255, 255, 255, 0.02)",
-            border: "1px solid var(--border-subtle)",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
+            marginTop: 16,
+            textAlign: "center",
+            fontFamily: "var(--sans)",
+            fontSize: 12,
+            color: "var(--text-muted)",
           }}
         >
-          <div style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--text-muted)" }}>
-            <span>DEMO: operator@vaada.local / 123456789</span>
-          </div>
           <button
             type="button"
             onClick={fillDemo}
             style={{
               background: "transparent",
-              border: "1px solid var(--border-strong)",
-              color: "var(--accent)",
-              fontFamily: "var(--mono)",
-              fontSize: 9,
-              letterSpacing: "0.1em",
-              padding: "3px 8px",
+              border: "none",
+              color: "var(--text-secondary)",
               cursor: "pointer",
+              textDecoration: "underline",
             }}
           >
-            PRE-FILL
+            Use Demo Account
           </button>
         </div>
 
-        <div
-          style={{
-            marginTop: 24,
-            paddingTop: 16,
-            borderTop: "1px solid var(--border-subtle)",
-            display: "flex",
-            justifyContent: "space-between",
-            fontFamily: "var(--mono)",
-            fontSize: 11,
-            color: "var(--text-muted)",
-          }}
-        >
-          <Link href="/" style={{ textDecoration: "none", color: "var(--text-secondary)" }}>
-            ← Public Machine
+        <div style={{ textAlign: "center", marginTop: 32 }}>
+          <Link href="/" style={{ textDecoration: "none", color: "var(--text-secondary)", fontFamily: "var(--sans)", fontSize: 13 }}>
+            ← Back to Public Site
           </Link>
-          <span>ENVIRONMENT: LOCALHOST</span>
         </div>
       </main>
     </div>
