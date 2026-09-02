@@ -1,6 +1,5 @@
 .cursor
 .github
-docs/
 # Secrets and local env
 .env
 .env.local
