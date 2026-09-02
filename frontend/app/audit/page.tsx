@@ -88,19 +88,34 @@ export default function AuditPage() {
 
   return (
     <div className={styles.shell}>
-      <nav className={styles.nav}>
-        <span className={styles.navMark}>VAADA / AUDIT TRAIL</span>
+      <nav className={styles.topNav}>
+        <div className={styles.navLeft}>
+          <Link href="/queue" className={styles.navMark}>
+            VAADA <span className={styles.navDevanagari}>वादा</span>
+          </Link>
+          <span className={styles.navSlash}>/</span>
+          <span className={styles.navSectionTitle}>IMMUTABLE AUDIT TRAIL</span>
+        </div>
         <div className={styles.navLinks}>
-          <Link href="/queue">← Queue</Link>
-          <Link href="/settings">Compliance config</Link>
-          <Link href="/razorpay-taxonomy">Error Intelligence</Link>
+          <Link href="/queue" className={styles.navLink}>
+            ← Queue
+          </Link>
+          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>
+            Audit Trail
+          </Link>
+          <Link href="/settings" className={styles.navLink}>
+            Compliance Config
+          </Link>
+          <Link href="/razorpay-taxonomy" className={styles.navLink}>
+            Error Intelligence
+          </Link>
         </div>
       </nav>
 
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <p className={styles.headerLabel}>Tamper-evident log</p>
-          <h1 className={styles.headerTitle}>Audit trail</h1>
+          <p className={styles.headerLabel}>● Tamper-Evident Immutable Log</p>
+          <h1 className={styles.headerTitle}>System Audit Trail</h1>
         </div>
         <button className={styles.exportBtn} onClick={() => exportCsv(items)}>
           Export CSV ({items.length} events)
@@ -108,11 +123,11 @@ export default function AuditPage() {
       </div>
 
       <div className={styles.filterBar}>
-        <span className={styles.filterLabel}>Filter:</span>
+        <span className={styles.filterLabel}>Filter Event Class:</span>
         {ACTION_PREFIXES.map((p) => (
           <button
             key={p.value}
-            className={`${styles.filterChip} ${prefix === p.value ? styles.active : ""}`}
+            className={`${styles.filterChip} ${prefix === p.value ? styles.filterChipActive : ""}`}
             onClick={() => setPrefix(p.value)}
           >
             {p.label}

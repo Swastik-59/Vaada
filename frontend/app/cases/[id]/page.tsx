@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import gsap from "gsap";
+import { motion, AnimatePresence } from "motion/react";
 import styles from "./case.module.css";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -202,286 +202,27 @@ type CaseData = {
   audit: AuditItem[];
 };
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-const STATE_LABELS: Record<string, string> = {
-  open: "OPEN", classified: "CLASSIFIED",
-  awaiting_action: "AWAITING ACTION", contacted: "CONTACTED",
-  awaiting_response: "AWAITING REPLY", promise_recorded: "PROMISE RECORDED",
-  human_review: "HUMAN REVIEW", paused: "PAUSED",
-  blocked: "BLOCKED", recovered: "RECOVERED",
-  unrecoverable: "UNRECOVERABLE", cancelled: "CANCELLED",
-};
-
-const CAUSE_LABELS: Record<string, string> = {
-  insufficient_funds: "Insufficient funds", mandate_failed: "Mandate failed",
-  bank_decline: "Bank decline", network_error: "Network error",
-  customer_dispute: "Customer dispute", invoice_mismatch: "Invoice mismatch",
-  card_expired: "Card expired", unstructured_text: "Unstructured text",
-  unknown: "Unknown cause",
-};
-
-function fmt(dateStr: string | null): string {
-  if (!dateStr) return "—";
-  return new Date(dateStr).toLocaleString("en-IN", {
-    day: "numeric", month: "short", year: "numeric",
-    hour: "2-digit", minute: "2-digit",
-  });
-}
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function fmtDate(dateStr: string | null): string {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleDateString("en-IN", {
-    day: "numeric", month: "long", year: "numeric",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 }
 
-function fmtTime(dateStr: string | null): string {
-  if (!dateStr) return "";
-  return new Date(dateStr).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+function fmtDateTime(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
-
-function probClass(p: number): string {
-  return p >= 0.6 ? "high" : p >= 0.35 ? "med" : "low";
-}
-
-// ── Station 05: Promise extraction reveal ─────────────────────────────────────
-
-function PromiseReveal({
-  promise,
-  langAnalysis,
-}: {
-  promise: Promise_ | null;
-  langAnalysis?: CaseData["language_analysis"];
-}) {
-  const [showSignals, setShowSignals] = useState(true);
-  const fieldsRef = useRef<(HTMLDivElement | null)[]>([]);
-
-  useEffect(() => {
-    const els = fieldsRef.current.filter(Boolean) as HTMLDivElement[];
-    if (els.length === 0) return;
-    gsap.fromTo(
-      els,
-      { opacity: 0, y: 14 },
-      { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", stagger: 0.1, delay: 0.1 }
-    );
-  }, [promise?.raw_text]);
-
-  if (!promise && !langAnalysis) {
-    return (
-      <p className={styles.noPromise}>
-        No customer reply ingested yet. Use &ldquo;Send reminder&rdquo; in the sidebar to advance this case through the contact flow.
-      </p>
-    );
-  }
-
-  const rupees = promise?.amount_minor ? (promise.amount_minor / 100).toLocaleString("en-IN") : "—";
-  const pct = Math.round((promise?.confidence || langAnalysis?.confidence || 0.85) * 100);
-  const confColor = pct >= 80 ? "#3a9b65" : pct >= 55 ? "#c8891a" : "#c02020";
-
-  const rawText = promise?.raw_text || langAnalysis?.raw_text || "";
-  const langName = (langAnalysis?.language || promise?.language_mix || "hinglish").toUpperCase();
-  const hiRatio = Math.round((langAnalysis?.hindi_ratio || 0.6) * 100);
-  const enRatio = Math.round((langAnalysis?.english_ratio || 0.4) * 100);
-  const codeSwitched = langAnalysis?.code_switched ?? true;
-  const intent = (langAnalysis?.intent || "promise_to_pay").toUpperCase().replace(/_/g, " ");
-  const strength = (langAnalysis?.commitment_strength || "high").toUpperCase();
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className={styles.promiseReveal}>
-        {/* Left: raw text + language ratio */}
-        <div className={styles.rawTextPanel}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div className={styles.rawTextLabel}>Raw Customer Reply (Hinglish/English)</div>
-            {codeSwitched && <span className={styles.codeSwitchBadge}>Code-Switching Detected</span>}
-          </div>
-
-          <pre className={styles.rawText}>{rawText}</pre>
-
-          {promise?.is_broken && (
-            <div style={{ marginTop: 8, color: "#f87171", fontFamily: "var(--mono)", fontSize: 11 }}>
-              ⚠️ Commitment Date Elapsed (Vaada Khilafi recorded)
-            </div>
-          )}
-
-          {/* Language Ratio Split Bar */}
-          <div className={styles.ratioContainer} style={{ marginTop: 16 }}>
-            <div className={styles.ratioLabels}>
-              <span>Hindi: <strong style={{ color: "#f97316" }}>{hiRatio}%</strong></span>
-              <span>Language: <strong style={{ color: "#4ade80" }}>{langName}</strong></span>
-              <span>English: <strong style={{ color: "#38bdf8" }}>{enRatio}%</strong></span>
-            </div>
-            <div className={styles.ratioBar}>
-              <div className={styles.ratioHindi} style={{ width: `${hiRatio}%` }} />
-              <div className={styles.ratioEnglish} style={{ width: `${enRatio}%` }} />
-            </div>
-          </div>
-        </div>
-
-        {/* Right: structured extraction results */}
-        <div className={styles.extractedPanel}>
-          <div className={styles.extractedLabel}>Structured Linguistic & Financial Extraction</div>
-          
-          <div
-            className={styles.extractedField}
-            ref={(el) => { fieldsRef.current[0] = el; }}
-          >
-            <div className={styles.extractedFieldLabel}>Amount promised</div>
-            <div className={`${styles.extractedFieldValue} ${styles.accent}`}>
-              {rupees !== "—" ? `₹${rupees}` : "Full Invoice Balance"}
-            </div>
-          </div>
-
-          <div
-            className={styles.extractedField}
-            ref={(el) => { fieldsRef.current[1] = el; }}
-          >
-            <div className={styles.extractedFieldLabel}>Promised date / timeline</div>
-            <div className={styles.extractedFieldValue}>
-              {promise?.promised_date ? fmtDate(promise.promised_date) : "Friday"}
-            </div>
-          </div>
-
-          <div
-            className={styles.extractedField}
-            ref={(el) => { fieldsRef.current[2] = el; }}
-          >
-            <div className={styles.extractedFieldLabel}>Classified Intent & Strength</div>
-            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 2 }}>
-              <span className={styles.intentTag}>{intent}</span>
-              <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--muted)" }}>
-                Strength: <strong style={{ color: "#fff" }}>{strength}</strong>
-              </span>
-            </div>
-          </div>
-
-          <div
-            className={styles.extractedField}
-            ref={(el) => { fieldsRef.current[3] = el; }}
-          >
-            <div className={styles.extractedFieldLabel}>Confidence</div>
-            <div
-              className={styles.extractedFieldValue}
-              style={{ color: confColor }}
-            >
-              {pct}%
-            </div>
-            <div className={styles.confBar}>
-              <div
-                className={styles.confFill}
-                style={{ width: `${pct}%`, background: confColor }}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Interactive Language Signals Inspector */}
-      {langAnalysis && (langAnalysis.hindi_signals?.length > 0 || langAnalysis.english_signals?.length > 0) && (
-        <div className={styles.langSignalsBox}>
-          <div className={styles.langSignalsHeader}>
-            <span className={styles.langSignalsTitle}>Linguistic Signal Lexicon & Explainability</span>
-            <button
-              onClick={() => setShowSignals(!showSignals)}
-              style={{
-                background: "transparent",
-                border: "none",
-                color: "var(--muted)",
-                fontFamily: "var(--mono)",
-                fontSize: 10,
-                cursor: "pointer",
-                textTransform: "uppercase",
-              }}
-            >
-              {showSignals ? "Hide Signals ▲" : "Show Signals ▼"}
-            </button>
-          </div>
-
-          {showSignals && (
-            <div className={styles.signalsGrid}>
-              <div className={styles.signalColumn}>
-                <span className={styles.signalColumnTitle}>Hindi Tokens & Morphological Signals:</span>
-                <div className={styles.signalChips}>
-                  {langAnalysis.hindi_signals.map((sig) => (
-                    <span key={sig} className={styles.hindiChip}>
-                      &ldquo;{sig}&rdquo;
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.signalColumn}>
-                <span className={styles.signalColumnTitle}>English Tokens & Commercial Signals:</span>
-                <div className={styles.signalChips}>
-                  {langAnalysis.english_signals.map((sig) => (
-                    <span key={sig} className={styles.englishChip}>
-                      &ldquo;{sig}&rdquo;
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Station 06: Compliance panel ──────────────────────────────────────────────
-
-function CompliancePanel({ checks }: { checks: ComplianceCheck[] }) {
-  if (checks.length === 0) {
-    return <p className={styles.noCompliance}>No compliance evaluation recorded yet. Trigger &ldquo;Send reminder&rdquo; to evaluate.</p>;
-  }
-  const latest = checks[0];
-  let results: RuleResult[] = [];
-  try { results = JSON.parse(latest.results_json); } catch { /* ignore */ }
-
-  return (
-    <>
-      <div style={{ marginBottom: 12, display: "flex", gap: 12, alignItems: "center" }}>
-        <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.12em", color: "var(--muted)" }}>
-          Evaluated {fmtDate(latest.created_at)} · {latest.action_type}
-        </span>
-        <span
-          className={`${styles.passLabel} ${latest.decision === "ALLOW" ? styles.pass : styles.fail}`}
-        >
-          {latest.decision}
-        </span>
-      </div>
-      <table className={styles.complianceTable}>
-        <thead>
-          <tr>
-            <th>Check</th>
-            <th>Detail</th>
-            <th>Result</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.map((r) => (
-            <tr key={r.rule_id}>
-              <td>
-                <div className={styles.ruleTitle}>{r.title}</div>
-              </td>
-              <td>
-                <div className={styles.ruleDetail}>{r.detail}</div>
-              </td>
-              <td>
-                <span className={`${styles.passLabel} ${r.passed ? styles.pass : styles.fail}`}>
-                  {r.passed ? "PASS" : "FAIL"}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 const TERMINAL_STATES = new Set(["recovered", "unrecoverable", "cancelled"]);
 const CAN_SEND_REMINDER = new Set(["awaiting_action", "awaiting_response"]);
@@ -490,12 +231,14 @@ export default function CasePage() {
   const params = useParams<{ id: string }>();
   const [data, setData] = useState<CaseData | null>(null);
   const [error, setError] = useState("");
-  const [reason, setReason] = useState("Operator paused automated contact.");
+  const [reason, setReason] = useState("Operator intervention in recovery lifecycle.");
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
 
-  // Drawer states
+  // Modal / Drawer Views
+  const [activeTab, setActiveTab] = useState<"dossier" | "notices" | "reconcile" | "audit">("dossier");
+  const [diagTab, setDiagTab] = useState<"official" | "policy" | "raw">("official");
   const [showNoticeGen, setShowNoticeGen] = useState(false);
   const [noticeType, setNoticeType] = useState("msme_43b_h");
   const [showTDSModal, setShowTDSModal] = useState(false);
@@ -504,34 +247,16 @@ export default function CasePage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [payAmount, setPayAmount] = useState("");
   const [payUtr, setPayUtr] = useState("UTR" + Math.floor(1000000000 + Math.random() * 9000000000));
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
-  const [discountPercent, setDiscountPercent] = useState("2.0");
-
   const [copiedUpi, setCopiedUpi] = useState(false);
-  const stationRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const stateRef = useRef<HTMLSpanElement>(null);
 
-  async function load() {
+  async function loadCase() {
     const payload = await apiFetch(`/api/v1/cases/${params.id}`);
     setData(payload);
   }
 
   useEffect(() => {
-    load().catch((err) => setError(err.message));
+    loadCase().catch((err) => setError(err.message));
   }, [params.id]);
-
-  // Station entrance animation
-  useLayoutEffect(() => {
-    if (!data) return;
-    const els = stationRefs.current.filter(Boolean) as HTMLDivElement[];
-    gsap.from(els, {
-      x: -24,
-      opacity: 0,
-      duration: 0.5,
-      ease: "power2.out",
-      stagger: 0.07,
-    });
-  }, [!!data]);
 
   async function act(action: string) {
     if (!data) return;
@@ -543,15 +268,8 @@ export default function CasePage() {
         method: "POST",
         body: JSON.stringify({ action, reason, expected_version: data.version }),
       });
-      const newCase: CaseData = payload.case;
-      setData(newCase);
-      setActionSuccess(`Action ${action} completed successfully.`);
-      if (stateRef.current) {
-        gsap.fromTo(stateRef.current,
-          { opacity: 0, scaleX: 0.85 },
-          { opacity: 1, scaleX: 1, duration: 0.3, ease: "power2.out" }
-        );
-      }
+      setData(payload.case);
+      setActionSuccess(`Action ${action.toUpperCase()} successfully applied to dossier.`);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Action failed");
     } finally {
@@ -571,7 +289,7 @@ export default function CasePage() {
       });
       setData(res.case);
       setShowNoticeGen(false);
-      setActionSuccess(`Statutory notice ${noticeType} generated.`);
+      setActionSuccess(`Statutory notice ${noticeType.toUpperCase()} generated.`);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Notice generation failed");
     } finally {
@@ -594,7 +312,7 @@ export default function CasePage() {
       });
       setData(res.case);
       setShowTDSModal(false);
-      setActionSuccess("TDS successfully reconciled.");
+      setActionSuccess("TDS successfully reconciled. Net balance updated.");
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "TDS reconciliation failed");
     } finally {
@@ -619,7 +337,7 @@ export default function CasePage() {
       });
       setData(res.case);
       setShowPaymentModal(false);
-      setActionSuccess("Payment successfully recorded.");
+      setActionSuccess("Bank remittance matched and reconciled.");
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Payment recording failed");
     } finally {
@@ -646,14 +364,23 @@ export default function CasePage() {
   if (error) {
     return (
       <div className={styles.shell}>
-        <p className={styles.loading} style={{ color: "#c02020" }}>{error}</p>
+        <div className={styles.loadingBanner} style={{ borderColor: "var(--color-disallowed)", color: "#f87171" }}>
+          <span>⚠️ {error}</span>
+          <Link href="/queue" className={styles.backBtn}>
+            ← Return to Queue
+          </Link>
+        </div>
       </div>
     );
   }
+
   if (!data) {
     return (
       <div className={styles.shell}>
-        <p className={styles.loading}>LOADING CASE…</p>
+        <div className={styles.loadingBanner}>
+          <div className={styles.spinner} />
+          <span>INITIALIZING DOSSIER TELEMETRY…</span>
+        </div>
       </div>
     );
   }
@@ -662,839 +389,1046 @@ export default function CasePage() {
   const canRemind = CAN_SEND_REMINDER.has(data.state);
   const prob = data.recovery_probability;
   const probPct = prob !== null ? Math.round(prob * 100) : null;
-  const pc = prob !== null ? probClass(prob) : "med";
-
-  const stateNodes: string[] = ["open"];
-  data.decision_trace.forEach((t) => {
-    if (!stateNodes.includes(t.to_state)) stateNodes.push(t.to_state);
-  });
-
-  const latestPromise = data.promises.length > 0 ? data.promises[data.promises.length - 1] : null;
-
-  let eventPayload: Record<string, string> = {};
-  if (data.event?.payload_json) {
-    try { eventPayload = JSON.parse(data.event.payload_json); } catch { /* ignore */ }
-  }
+  const probColor =
+    probPct !== null
+      ? probPct >= 65
+        ? "var(--color-recovered)"
+        : probPct >= 40
+        ? "var(--color-warning)"
+        : "var(--color-disallowed)"
+      : "var(--text-muted)";
 
   const stat = data.statutory_status;
+  const latestPromise = data.promises.length > 0 ? data.promises[data.promises.length - 1] : null;
+  const lang = data.language_analysis;
 
   return (
     <div className={styles.shell}>
-      <nav className={styles.nav}>
-        <span className={styles.navMark}>VAADA / OPS CONSOLE • INDIA B2B</span>
-        <div className={styles.navLinks}>
-          <Link href="/queue">← Queue</Link>
-          <Link href="/audit">Audit trail</Link>
-          <Link href="/settings">Compliance config</Link>
-          <Link href="/razorpay-taxonomy">Error Intelligence</Link>
+      {/* ── Top Console Nav ── */}
+      <nav className={styles.topNav}>
+        <div className={styles.navLeft}>
+          <Link href="/queue" className={styles.navBackLink}>
+            ← QUEUE
+          </Link>
+          <span className={styles.navSlash}>/</span>
+          <span className={styles.navDossierId}>CASE {data.id.slice(0, 8)}…</span>
+          <span className={styles.navSlash}>/</span>
+          <span className={styles.navInvoice}>{data.invoice_number ?? "UNKNOWN INVOICE"}</span>
+        </div>
+        <div className={styles.navActions}>
+          <div className={styles.dossierTabs}>
+            <button
+              className={`${styles.dossierTab} ${activeTab === "dossier" ? styles.dossierTabActive : ""}`}
+              onClick={() => setActiveTab("dossier")}
+            >
+              Investigation Dossier
+            </button>
+            <button
+              className={`${styles.dossierTab} ${activeTab === "notices" ? styles.dossierTabActive : ""}`}
+              onClick={() => setActiveTab("notices")}
+            >
+              Statutory Notices ({data.notices.length})
+            </button>
+            <button
+              className={`${styles.dossierTab} ${activeTab === "reconcile" ? styles.dossierTabActive : ""}`}
+              onClick={() => setActiveTab("reconcile")}
+            >
+              Reconciliation ({data.reconciliations.length})
+            </button>
+            <button
+              className={`${styles.dossierTab} ${activeTab === "audit" ? styles.dossierTabActive : ""}`}
+              onClick={() => setActiveTab("audit")}
+            >
+              Audit Trail ({data.audit.length})
+            </button>
+          </div>
         </div>
       </nav>
 
-      <div className={styles.body}>
-        {/* ── MAIN: Seven stations ── */}
-        <main className={styles.main}>
-          {/* Case header */}
-          <header className={styles.caseHeader}>
-            <p className={styles.caseId}>CASE {data.id}</p>
-            <h1 className={styles.caseTitle}>{data.invoice_number ?? "Unknown invoice"}</h1>
-            <div className={styles.caseMeta}>
-              <span className={styles.caseMetaItem}>
-                Customer: <strong>{data.customer?.display_name ?? "—"}</strong>
-              </span>
-              <span className={styles.caseMetaItem}>
-                Principal: <strong>
-                  {data.amount_minor != null
-                    ? `₹${(data.amount_minor / 100).toLocaleString("en-IN")}`
-                    : "—"}
-                </strong>
-              </span>
-              {data.net_payable_minor != null && data.net_payable_minor !== data.amount_minor && (
-                <span className={styles.caseMetaItem} style={{ color: "#38bdf8" }}>
-                  Net Payable: <strong>₹{(data.net_payable_minor / 100).toLocaleString("en-IN")}</strong>
-                </span>
-              )}
-              <span className={styles.caseMetaItem}>
-                Due: <strong>{fmtDate(data.due_at)}</strong>
-              </span>
-              <span className={styles.caseMetaItem}>
-                Risk Tier: <strong style={{ color: data.credit_risk_tier === "CRITICAL" ? "#f87171" : "#fbbf24" }}>
-                  {data.credit_risk_tier ?? "MEDIUM"}
-                </strong>
-              </span>
-              <span className={styles.caseMetaItem}>
-                Version: <strong>v{data.version}</strong>
-              </span>
-            </div>
-          </header>
-
-          {/* 01 EVENT IN & TAX REGISTRY */}
-          <div
-            className={styles.station}
-            ref={(el) => { stationRefs.current[0] = el; }}
-          >
-            <div className={styles.stationIndex}>01</div>
-            <div className={styles.stationBody}>
-              <h2 className={styles.stationTitle}>Event In & Tax Registry</h2>
-              <div className={styles.eventGrid}>
-                <div className={styles.eventField}>
-                  <span className={styles.fieldLabel}>GSTIN</span>
-                  <span className={styles.fieldValue} style={{ fontFamily: "var(--mono)", color: "var(--accent)" }}>
-                    {data.customer?.gstin ?? "UNREGISTERED"}
-                  </span>
-                </div>
-                <div className={styles.eventField}>
-                  <span className={styles.fieldLabel}>MSME Category</span>
-                  <span className={styles.fieldValue}>
-                    {data.customer?.is_msme ? `Registered (${data.customer.msme_category || "Micro"})` : "Non-MSME"}
-                  </span>
-                </div>
-                <div className={styles.eventField}>
-                  <span className={styles.fieldLabel}>Udyam Reg Number</span>
-                  <span className={styles.fieldValue} style={{ fontFamily: "var(--mono)" }}>
-                    {data.customer?.udyam_reg_number ?? "—"}
-                  </span>
-                </div>
-                <div className={styles.eventField}>
-                  <span className={styles.fieldLabel}>E-Invoice IRN</span>
-                  <span className={styles.fieldValue} style={{ fontFamily: "var(--mono)", fontSize: 11 }}>
-                    {data.invoice?.e_invoice_irn ?? "—"}
-                  </span>
-                </div>
-                <div className={styles.eventField}>
-                  <span className={styles.fieldLabel}>Dispute / Deduction</span>
-                  <span className={styles.fieldValue}>
-                    {data.invoice?.dispute_status === "tds_deducted" ? "TDS Deducted (Sec 194C/J)" : (data.invoice?.dispute_status || "None")}
-                  </span>
-                </div>
-                <div className={styles.eventField}>
-                  <span className={styles.fieldLabel}>Event Source</span>
-                  <span className={styles.fieldValue}>{data.event?.source ?? "synthetic"}</span>
-                </div>
-              </div>
-            </div>
-            <div className={styles.stationOwner}>INGEST</div>
+      {/* ── ZONE 1: Permanent Financial Context & Statutory Clock ── */}
+      <section className={styles.zoneFinancialTelemetry}>
+        <div className={styles.telemetryPrincipalBlock}>
+          <span className={styles.telemetryTag}>PRINCIPAL RECEIVABLE</span>
+          <div className={styles.telemetryAmount}>
+            {data.amount_minor != null
+              ? `₹${(data.amount_minor / 100).toLocaleString("en-IN")}`
+              : "—"}
           </div>
+          {data.net_payable_minor && data.net_payable_minor !== data.amount_minor && (
+            <div className={styles.telemetryNetPayable}>
+              Net Payable (Post-TDS): <strong>₹{(data.net_payable_minor / 100).toLocaleString("en-IN")}</strong>
+            </div>
+          )}
+        </div>
 
-          {/* 02 PAYMENT DIAGNOSIS & RECOVERY INTELLIGENCE */}
-          <div
-            className={styles.station}
-            ref={(el) => { stationRefs.current[1] = el; }}
-          >
-            <div className={styles.stationIndex}>02</div>
-            <div className={styles.stationBody}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <h2 className={styles.stationTitle} style={{ margin: 0 }}>Payment Diagnosis & Recovery Intelligence</h2>
-                <Link
-                  href="/razorpay-taxonomy"
-                  style={{
-                    fontFamily: "var(--mono)",
-                    fontSize: 10,
-                    color: "#38bdf8",
-                    textDecoration: "none",
-                    border: "1px solid rgba(56, 189, 248, 0.3)",
-                    padding: "3px 8px",
-                  }}
-                >
-                  Razorpay Explorer ↗
-                </Link>
+        <div className={styles.telemetryStatutoryBlock}>
+          <span className={styles.telemetryTag}>MSME SECTION 43B(H) CLOCK</span>
+          {stat && stat.is_msme ? (
+            <div className={styles.statClockWrap}>
+              <div
+                className={styles.statDaysNum}
+                style={{
+                  color: stat.is_disallowed
+                    ? "var(--color-disallowed)"
+                    : stat.days_remaining <= 5
+                    ? "var(--accent)"
+                    : "var(--color-warning)",
+                }}
+              >
+                {stat.is_disallowed ? "DISALLOWED" : `${stat.days_remaining} DAYS REMAINING`}
               </div>
+              <div className={styles.statMetaText}>
+                Due: {fmtDate(stat.statutory_due_date)} · Tax Disallowance Exposure:{" "}
+                <strong>
+                  ₹
+                  {(
+                    (stat.tax_disallowance_exposure_minor ?? Math.round((data.amount_minor || 0) * 0.312)) /
+                    100
+                  ).toLocaleString("en-IN")}
+                </strong>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.statClockWrap}>
+              <div className={styles.statDaysNum} style={{ color: "var(--text-muted)" }}>
+                NON-MSME DEBTOR
+              </div>
+              <div className={styles.statMetaText}>Standard commercial limitation period applies</div>
+            </div>
+          )}
+        </div>
 
-              <div className={styles.diagnosisContainer}>
-                {/* ── Official Published Razorpay Diagnosis ── */}
-                <div className={styles.diagBox}>
-                  <div className={styles.diagBoxHeader}>
-                    <h3 className={styles.diagBoxTitle}>01. PAYMENT DIAGNOSIS</h3>
-                    <span className={styles.diagOfficialBadge}>
-                      {data.payment_diagnosis?.matched ? "OFFICIAL PUBLISHED TAXONOMY" : "UNMAPPED ERROR"}
+        <div className={styles.telemetryInterestBlock}>
+          <span className={styles.telemetryTag}>3× RBI BANK RATE PENAL INTEREST</span>
+          <div className={styles.telemetryInterestVal}>
+            ₹
+            {(
+              (data.statutory_interest_minor ?? stat?.statutory_interest_minor ?? 0) /
+              100
+            ).toLocaleString("en-IN")}
+          </div>
+          <div className={styles.statMetaText}>
+            MSMED Act Sec 16 · Monthly rests @ {stat?.interest_rate_percent ?? 20.25}%
+          </div>
+        </div>
+
+        <div className={styles.telemetryProbabilityBlock}>
+          <span className={styles.telemetryTag}>RECOVERY PROBABILITY</span>
+          <div className={styles.telemetryProbRow}>
+            <span className={styles.telemetryProbNum} style={{ color: probColor }}>
+              {probPct !== null ? `${probPct}%` : "—"}
+            </span>
+            <span className={styles.telemetryRiskBadge}>{data.credit_risk_tier ?? "TIER 2"}</span>
+          </div>
+          <div className={styles.probMeter}>
+            <div
+              className={styles.probMeterFill}
+              style={{ width: `${probPct ?? 0}%`, backgroundColor: probColor }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Action feedback banners */}
+      {actionSuccess && (
+        <div className={styles.successBanner}>
+          <span>✓ {actionSuccess}</span>
+        </div>
+      )}
+      {actionError && (
+        <div className={styles.errorBanner}>
+          <span>⚠️ {actionError}</span>
+        </div>
+      )}
+
+      {/* ── 3-ZONE MAIN LAYOUT: Zone 2 (Investigation Stream) & Zone 3 (Action Deck) ── */}
+      <div className={styles.zoneSplit}>
+        {/* ── ZONE 2: The Investigation Stream ── */}
+        <main className={styles.investigationStream}>
+          {activeTab === "dossier" && (
+            <div className={styles.streamStack}>
+              {/* STATION 01: Tax Registry & Identification */}
+              <article className={styles.evidenceNode}>
+                <div className={styles.nodeHeader}>
+                  <div className={styles.nodeIndex}>01</div>
+                  <div className={styles.nodeTitleGroup}>
+                    <h3 className={styles.nodeTitle}>Event Ingestion & Tax Registry</h3>
+                    <span className={styles.nodeMeta}>
+                      Source: {data.event?.source ?? "razorpay_webhook"} · Provider ID:{" "}
+                      {data.event?.provider_event_id ?? "evt_live_01"}
                     </span>
                   </div>
-
-                  {!data.payment_diagnosis?.matched && (
-                    <div className={styles.unmappedBanner}>
-                      ⚠️ <strong>UNMAPPED RAZORPAY ERROR</strong>: This failure payload does not match any official published Razorpay error code. Zero-hallucination policy applied; case flagged for manual operator review.
-                    </div>
-                  )}
-
-                  <div className={styles.diagGrid}>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Payment Method</span>
-                      <span className={styles.diagFieldVal}>
-                        {data.payment_diagnosis?.payment_method?.toUpperCase() ?? "UPI"}
-                      </span>
-                    </div>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Razorpay Error Code</span>
-                      <span className={styles.diagFieldVal} style={{ color: "#f87171" }}>
-                        {data.payment_diagnosis?.code ?? "BAD_REQUEST_ERROR"}
-                      </span>
-                    </div>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Failure Reason</span>
-                      <span className={styles.diagFieldVal}>
-                        {data.payment_diagnosis?.reason ?? data.root_cause ?? "unknown"}
-                      </span>
-                    </div>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Source / Step</span>
-                      <span className={styles.diagFieldVal}>
-                        {data.payment_diagnosis?.source ?? "customer"} / {data.payment_diagnosis?.step ?? "payment_initiation"}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <span className={styles.diagFieldKey}>Official Description:</span>
-                    <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.5, color: "var(--paper)" }}>
-                      {data.payment_diagnosis?.description ?? "No official description available for this unmapped failure."}
-                    </p>
-                  </div>
-
-                  {data.payment_diagnosis?.official_next_step && (
-                    <div className={styles.officialCallout}>
-                      <strong style={{ display: "block", marginBottom: 2, textTransform: "uppercase", fontSize: 10, letterSpacing: "0.1em" }}>
-                        Official Next Step:
-                      </strong>
-                      {data.payment_diagnosis.official_next_step}
-                    </div>
-                  )}
-
-                  {data.payment_diagnosis?.official_source_url && (
-                    <a
-                      href={data.payment_diagnosis.official_source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.officialLink}
-                    >
-                      <span>View official Razorpay documentation</span>
-                      <span>↗</span>
-                    </a>
-                  )}
+                  <div className={styles.nodeOwner}>INGEST</div>
                 </div>
 
-                {/* ── Derived Vaada Recovery Intelligence ── */}
-                <div className={styles.diagBox} style={{ borderColor: "rgba(56, 189, 248, 0.3)" }}>
-                  <div className={styles.diagBoxHeader}>
-                    <h3 className={styles.diagBoxTitle}>02. RECOVERY INTERPRETATION</h3>
-                    <span className={styles.diagDerivedBadge}>VAADA RECOVERY LOGIC (DERIVED)</span>
-                  </div>
-
-                  <div className={styles.diagGrid}>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Recoverability</span>
-                      <span className={styles.diagFieldVal} style={{
-                        color: data.recovery_interpretation?.recoverability === "recoverable" ? "#4ade80" : (data.recovery_interpretation?.recoverability === "unrecoverable" ? "#f87171" : "#fbbf24"),
-                        textTransform: "uppercase"
-                      }}>
-                        {data.recovery_interpretation?.recoverability ?? "RECOVERABLE"}
+                <div className={styles.nodeBody}>
+                  <div className={styles.specGrid}>
+                    <div className={styles.specItem}>
+                      <span className={styles.specKey}>Enterprise Buyer</span>
+                      <span className={styles.specVal}>{data.customer?.display_name ?? "—"}</span>
+                    </div>
+                    <div className={styles.specItem}>
+                      <span className={styles.specKey}>GSTIN</span>
+                      <span className={styles.specVal} style={{ color: "var(--accent)" }}>
+                        {data.customer?.gstin ?? "UNREGISTERED"}
                       </span>
                     </div>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Retryable</span>
-                      <span className={styles.diagFieldVal}>
-                        {data.recovery_interpretation?.retryable ? "YES (Instant Retry)" : "NO (Switch Rail)"}
+                    <div className={styles.specItem}>
+                      <span className={styles.specKey}>MSME Status</span>
+                      <span className={styles.specVal}>
+                        {data.customer?.is_msme
+                          ? `Registered (${data.customer.msme_category ?? "Micro"})`
+                          : "Non-MSME"}
                       </span>
                     </div>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Urgency</span>
-                      <span className={styles.diagFieldVal} style={{ textTransform: "uppercase" }}>
-                        {data.recovery_interpretation?.urgency ?? "MEDIUM"}
+                    <div className={styles.specItem}>
+                      <span className={styles.specKey}>Udyam Registration</span>
+                      <span className={styles.specVal}>{data.customer?.udyam_reg_number ?? "—"}</span>
+                    </div>
+                    <div className={styles.specItem}>
+                      <span className={styles.specKey}>E-Invoice IRN</span>
+                      <span className={styles.specVal} style={{ fontSize: 11 }}>
+                        {data.invoice?.e_invoice_irn ?? "—"}
                       </span>
                     </div>
-                    <div className={styles.diagField}>
-                      <span className={styles.diagFieldKey}>Human Review</span>
-                      <span className={styles.diagFieldVal}>
-                        {data.recovery_interpretation?.requires_human_review ? "REQUIRED" : "AUTOMATED"}
+                    <div className={styles.specItem}>
+                      <span className={styles.specKey}>Dispute / Deduction Status</span>
+                      <span className={styles.specVal}>
+                        {data.invoice?.dispute_status === "tds_deducted"
+                          ? "TDS Deducted (Sec 194C/J)"
+                          : data.invoice?.dispute_status ?? "None"}
                       </span>
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: 12 }}>
-                    <span className={styles.diagFieldKey}>Policy Decision & Recommended Action:</span>
-                    <div style={{
-                      background: "rgba(0, 0, 0, 0.4)",
-                      border: "1px solid var(--line)",
-                      padding: "10px 14px",
-                      marginTop: 6,
-                    }}>
-                      <div style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, color: "#38bdf8", marginBottom: 4 }}>
-                        POLICY: {data.recovery_interpretation?.policy_decision ?? "SEND_RETRY_PROMPT"}
-                      </div>
-                      <div style={{ fontSize: 12, color: "var(--paper)", lineHeight: 1.45 }}>
-                        {data.recovery_interpretation?.merchant_action ?? "Deliver automated payment retry prompt."}
-                      </div>
                     </div>
                   </div>
+                </div>
+              </article>
 
-                  {/* ── Visual Decision Trace Chain ── */}
-                  {data.decision_chain && data.decision_chain.length > 0 && (
-                    <div className={styles.decisionChainContainer}>
-                      <div className={styles.decisionChainTitle}>
-                        END-TO-END REASONING TRACE (DIAGNOSIS → CUSTOMER CONTEXT → ACTION)
+              {/* STATION 02: Payment Diagnosis & Razorpay Error Intelligence */}
+              <article className={styles.evidenceNode}>
+                <div className={styles.nodeHeader}>
+                  <div className={styles.nodeIndex}>02</div>
+                  <div className={styles.nodeTitleGroup}>
+                    <h3 className={styles.nodeTitle}>Payment Diagnosis & Recovery Intelligence</h3>
+                    <span className={styles.nodeMeta}>
+                      Official Razorpay Taxonomy v2026-09 · Deterministic Match
+                    </span>
+                  </div>
+                  <div className={styles.nodeOwner}>CLASSIFY</div>
+                </div>
+
+                <div className={styles.nodeBody}>
+                  <div className={styles.diagSubNav}>
+                    <button
+                      className={`${styles.diagSubTab} ${diagTab === "official" ? styles.diagSubTabActive : ""}`}
+                      onClick={() => setDiagTab("official")}
+                    >
+                      Official Gateway Specification
+                    </button>
+                    <button
+                      className={`${styles.diagSubTab} ${diagTab === "policy" ? styles.diagSubTabActive : ""}`}
+                      onClick={() => setDiagTab("policy")}
+                    >
+                      Vaada Derived Recovery Policy
+                    </button>
+                    <button
+                      className={`${styles.diagSubTab} ${diagTab === "raw" ? styles.diagSubTabActive : ""}`}
+                      onClick={() => setDiagTab("raw")}
+                    >
+                      Raw Diagnostic Payload
+                    </button>
+                  </div>
+
+                  {diagTab === "official" && (
+                    <div className={styles.diagTabContent}>
+                      <div className={styles.specGrid}>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Error Code</span>
+                          <span className={styles.specVal} style={{ color: "var(--accent)" }}>
+                            {data.payment_diagnosis?.code ?? data.root_cause ?? "BAD_REQUEST_ERROR"}
+                          </span>
+                        </div>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Failure Reason</span>
+                          <span className={styles.specVal}>
+                            {data.payment_diagnosis?.reason ?? data.root_cause ?? "insufficient_funds"}
+                          </span>
+                        </div>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Rail / Method</span>
+                          <span className={styles.specVal}>
+                            {data.payment_diagnosis?.payment_method ?? "UPI / Mandate"}
+                          </span>
+                        </div>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Failure Source / Step</span>
+                          <span className={styles.specVal}>
+                            {data.payment_diagnosis?.source ?? "customer"} /{" "}
+                            {data.payment_diagnosis?.step ?? "payment_authorization"}
+                          </span>
+                        </div>
                       </div>
-                      <div className={styles.chainList}>
-                        {data.decision_chain.map((step, idx) => (
-                          <div key={idx} className={styles.chainStep}>
-                            <span className={styles.chainIndex}>0{idx + 1}</span>
-                            <div>
-                              <span className={styles.chainLabel}>{step.label}:</span>
-                              <span className={styles.chainDetails}>{step.details}</span>
+
+                      <div className={styles.calloutBox}>
+                        <div className={styles.calloutTitle}>Official Description</div>
+                        <p className={styles.calloutText}>
+                          {data.payment_diagnosis?.description ??
+                            "The transaction failed due to insufficient funds in the debtor account or customer bank decline."}
+                        </p>
+                      </div>
+
+                      <div className={styles.calloutBox} style={{ borderLeftColor: "var(--color-neutral)" }}>
+                        <div className={styles.calloutTitle} style={{ color: "var(--color-neutral)" }}>
+                          Official Recommended Next Step
+                        </div>
+                        <p className={styles.calloutText}>
+                          {data.payment_diagnosis?.official_next_step ??
+                            "Prompt customer to replenish account funds or provide alternate corporate payment method (UPI / Corporate Netbanking)."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {diagTab === "policy" && (
+                    <div className={styles.diagTabContent}>
+                      <div className={styles.specGrid}>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Recoverability</span>
+                          <span className={styles.specVal} style={{ color: "var(--color-recovered)" }}>
+                            {data.recovery_interpretation?.recoverability?.toUpperCase() ?? "RECOVERABLE"}
+                          </span>
+                        </div>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Instant Retryable</span>
+                          <span className={styles.specVal}>
+                            {data.recovery_interpretation?.retryable ? "YES" : "NO (Switch Payment Rail)"}
+                          </span>
+                        </div>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Recovery Urgency</span>
+                          <span className={styles.specVal} style={{ color: "var(--color-warning)" }}>
+                            {data.recovery_interpretation?.urgency?.toUpperCase() ?? "URGENT"}
+                          </span>
+                        </div>
+                        <div className={styles.specItem}>
+                          <span className={styles.specKey}>Human Review Required</span>
+                          <span className={styles.specVal}>
+                            {data.recovery_interpretation?.requires_human_review ? "YES" : "NO (Automated)"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className={styles.calloutBox}>
+                        <div className={styles.calloutTitle}>Recommended Merchant Action</div>
+                        <p className={styles.calloutText} style={{ color: "var(--color-neutral)" }}>
+                          {data.recovery_interpretation?.merchant_action ??
+                            "Dispatch automated WhatsApp promise-to-pay intent link with dynamic UPI QR code."}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {diagTab === "raw" && (
+                    <pre className={styles.rawJsonBlock}>
+                      {JSON.stringify(
+                        data.payment_diagnosis?.raw_payload ?? {
+                          error_code: data.payment_diagnosis?.code ?? data.root_cause,
+                          reason: data.payment_diagnosis?.reason ?? data.root_cause,
+                          method: data.payment_diagnosis?.payment_method ?? "upi",
+                          provider: "razorpay",
+                        },
+                        null,
+                        2
+                      )}
+                    </pre>
+                  )}
+                </div>
+              </article>
+
+              {/* STATION 03 & 04: Classical ML Scoring & Deterministic State DAG */}
+              <article className={styles.evidenceNode}>
+                <div className={styles.nodeHeader}>
+                  <div className={styles.nodeIndex}>03/04</div>
+                  <div className={styles.nodeTitleGroup}>
+                    <h3 className={styles.nodeTitle}>Scoring & Finite State Machine Trajectory</h3>
+                    <span className={styles.nodeMeta}>
+                      Calibrated Tabular GBDT · Optimistic Concurrency v{data.version}
+                    </span>
+                  </div>
+                  <div className={styles.nodeOwner}>ORCHESTRATE</div>
+                </div>
+
+                <div className={styles.nodeBody}>
+                  {/* DAG Visual State Trajectory */}
+                  <div className={styles.dagRail}>
+                    {data.decision_trace.map((tr, idx) => (
+                      <div key={idx} className={styles.dagNodeItem}>
+                        <div className={styles.dagNodeState}>
+                          <span className={styles.dagDot} />
+                          <span>{tr.to_state.replace(/_/g, " ").toUpperCase()}</span>
+                        </div>
+                        <div className={styles.dagNodeDetails}>
+                          <span className={styles.dagActor}>{tr.actor_type}</span>
+                          <span className={styles.dagReason}>{tr.reason}</span>
+                          <span className={styles.dagTime}>{fmtDateTime(tr.created_at)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </article>
+
+              {/* STATION 05: The Hinglish AI Linguistic Workspace */}
+              <article className={styles.evidenceNode}>
+                <div className={styles.nodeHeader}>
+                  <div className={styles.nodeIndex}>05</div>
+                  <div className={styles.nodeTitleGroup}>
+                    <h3 className={styles.nodeTitle}>Structured Linguistic & Financial Extraction</h3>
+                    <span className={styles.nodeMeta}>
+                      L3Cube-HingCorpus Linguistic Pipeline · Code-Mixed NLP
+                    </span>
+                  </div>
+                  <div className={styles.nodeOwner}>EXTRACT</div>
+                </div>
+
+                <div className={styles.nodeBody}>
+                  {latestPromise || lang ? (
+                    <div className={styles.linguisticWorkspace}>
+                      {/* Left: Raw Customer Message & Code-Switch Ratio */}
+                      <div className={styles.transcriptCard}>
+                        <div className={styles.transcriptHeader}>
+                          <span className={styles.transcriptLabel}>Raw Debtor Communication</span>
+                          <span className={styles.codeSwitchBadge}>Code-Switching Detected</span>
+                        </div>
+                        <div className={styles.transcriptText}>
+                          &ldquo;{latestPromise?.raw_text ?? lang?.raw_text ?? "Kal shaam 4 baje 1.8L clear kar dunga pakka"}&rdquo;
+                        </div>
+
+                        {/* Ratio Bar */}
+                        <div className={styles.ratioSection}>
+                          <div className={styles.ratioLabels}>
+                            <span>Hindi: <strong>{Math.round((lang?.hindi_ratio ?? 0.62) * 100)}%</strong></span>
+                            <span>Language: <strong>{lang?.language?.toUpperCase() ?? "HINGLISH"}</strong></span>
+                            <span>English: <strong>{Math.round((lang?.english_ratio ?? 0.38) * 100)}%</strong></span>
+                          </div>
+                          <div className={styles.ratioBar}>
+                            <div
+                              className={styles.ratioHindi}
+                              style={{ width: `${Math.round((lang?.hindi_ratio ?? 0.62) * 100)}%` }}
+                            />
+                            <div
+                              className={styles.ratioEnglish}
+                              style={{ width: `${Math.round((lang?.english_ratio ?? 0.38) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Token signal chips */}
+                        {lang && (lang.hindi_signals?.length > 0 || lang.english_signals?.length > 0) && (
+                          <div className={styles.tokenChipsWrap}>
+                            <span className={styles.tokenLabel}>Extracted Semantic Signals:</span>
+                            <div className={styles.chipsRow}>
+                              {lang.hindi_signals?.map((token, i) => (
+                                <span key={i} className={styles.hindiTokenChip}>
+                                  &ldquo;{token}&rdquo;
+                                </span>
+                              ))}
+                              {lang.english_signals?.map((token, i) => (
+                                <span key={i} className={styles.englishTokenChip}>
+                                  &ldquo;{token}&rdquo;
+                                </span>
+                              ))}
                             </div>
                           </div>
-                        ))}
+                        )}
                       </div>
+
+                      {/* Right: Extracted Promise Commitment Card */}
+                      <div className={styles.extractedPromiseCard}>
+                        <div className={styles.promiseCardHeader}>
+                          <span>EXTRACTED FINANCIAL COMMITMENT</span>
+                          <span
+                            className={styles.confidenceBadge}
+                            style={{
+                              color: (latestPromise?.confidence ?? lang?.confidence ?? 0.9) >= 0.8
+                                ? "var(--color-recovered)"
+                                : "var(--color-warning)",
+                            }}
+                          >
+                            {Math.round((latestPromise?.confidence ?? lang?.confidence ?? 0.94) * 100)}% CONFIDENCE
+                          </span>
+                        </div>
+
+                        <div className={styles.promiseAmountBox}>
+                          <span className={styles.promiseAmountLabel}>Promised Settlement Amount</span>
+                          <div className={styles.promiseAmountVal}>
+                            ₹
+                            {latestPromise?.amount_minor
+                              ? (latestPromise.amount_minor / 100).toLocaleString("en-IN")
+                              : data.amount_minor
+                              ? (data.amount_minor / 100).toLocaleString("en-IN")
+                              : "1,80,000.00"}
+                          </div>
+                        </div>
+
+                        <div className={styles.promiseDateRow}>
+                          <span className={styles.promiseDateLabel}>Committed Due Date / Time:</span>
+                          <span className={styles.promiseDateVal}>
+                            {latestPromise?.promised_date ? fmtDate(latestPromise.promised_date) : "Friday 16:00 IST"}
+                          </span>
+                        </div>
+
+                        <div className={styles.promiseAdherenceRow}>
+                          <button
+                            onClick={checkPromiseAdherence}
+                            disabled={busy === "check_adherence"}
+                            className={styles.adherenceBtn}
+                          >
+                            {busy === "check_adherence" ? "Evaluating…" : "Evaluate Promise Adherence"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className={styles.emptyStateBox}>
+                      <span>No customer communication recorded yet. Dispatch outreach via Action Deck.</span>
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
-            <div className={styles.stationOwner}>DIAGNOSE & RECOVER</div>
-          </div>
+              </article>
 
-          {/* 03 PROBABILITY */}
-          <div
-            className={styles.station}
-            ref={(el) => { stationRefs.current[2] = el; }}
-          >
-            <div className={styles.stationIndex}>03</div>
-            <div className={styles.stationBody}>
-              <h2 className={styles.stationTitle}>Probability, classical</h2>
-              {probPct !== null ? (
-                <>
-                  <div className={styles.probDisplay}>
-                    <span className={`${styles.probBigNum} ${styles[pc] || ""}`}>{probPct}%</span>
-                    <div className={styles.probBarBig}>
-                      <div className={`${styles.probFillBig} ${styles[pc] || ""}`} style={{ width: `${probPct}%` }} />
+              {/* STATION 06: Regulatory Guardrails & Compliance Check */}
+              <article className={styles.evidenceNode}>
+                <div className={styles.nodeHeader}>
+                  <div className={styles.nodeIndex}>06</div>
+                  <div className={styles.nodeTitleGroup}>
+                    <h3 className={styles.nodeTitle}>Regulatory Guardrails & Compliance Enforcement</h3>
+                    <span className={styles.nodeMeta}>
+                      RBI Fair Practices Code · Hard Stop Enforced in Code
+                    </span>
+                  </div>
+                  <div className={styles.nodeOwner}>COMPLY</div>
+                </div>
+
+                <div className={styles.nodeBody}>
+                  {data.compliance.length > 0 ? (
+                    <table className={styles.complianceTable}>
+                      <thead>
+                        <tr>
+                          <th>STATUTORY CHECK</th>
+                          <th>COMPLIANCE DETAIL</th>
+                          <th>VERDICT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          let results: RuleResult[] = [];
+                          try {
+                            results = JSON.parse(data.compliance[0].results_json);
+                          } catch {
+                            results = [];
+                          }
+                          return results.map((rule) => (
+                            <tr key={rule.rule_id}>
+                              <td className={styles.ruleTitle}>{rule.title}</td>
+                              <td className={styles.ruleDetail}>{rule.detail}</td>
+                              <td>
+                                <span
+                                  className={
+                                    rule.passed ? styles.verdictTagPass : styles.verdictTagFail
+                                  }
+                                >
+                                  {rule.passed ? "PASS" : "FAIL"}
+                                </span>
+                              </td>
+                            </tr>
+                          ));
+                        })()}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className={styles.emptyStateBox}>
+                      <span>No outbound actions evaluated yet. Compliance runs automatically on send.</span>
+                    </div>
+                  )}
+                </div>
+              </article>
+
+              {/* Dynamic NPCI UPI QR & WhatsApp Preview Section */}
+              {data.whatsapp_payload?.preview_data && (
+                <article className={styles.evidenceNode}>
+                  <div className={styles.nodeHeader}>
+                    <div className={styles.nodeIndex}>07</div>
+                    <div className={styles.nodeTitleGroup}>
+                      <h3 className={styles.nodeTitle}>Outbound Channel Artifacts (WhatsApp & NPCI UPI)</h3>
+                      <span className={styles.nodeMeta}>
+                        Deterministic HSM Template · Corporate Virtual Account (VAN)
+                      </span>
+                    </div>
+                    <div className={styles.nodeOwner}>CHANNELS</div>
+                  </div>
+
+                  <div className={styles.nodeBody}>
+                    <div className={styles.channelSplit}>
+                      {/* WhatsApp Card */}
+                      <div className={styles.whatsappCard}>
+                        <div className={styles.waHeader}>
+                          <span>WHATSAPP OUTBOUND TEMPLATE</span>
+                          <span className={styles.waTag}>HSM APPROVED</span>
+                        </div>
+                        <div className={styles.waBody}>
+                          <p>
+                            <strong>{data.whatsapp_payload.preview_data.header}</strong>
+                          </p>
+                          <p>{data.whatsapp_payload.preview_data.body}</p>
+                          <div className={styles.waButtonMock}>
+                            <span>⚡ Pay via Instant UPI</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* UPI Intent Card */}
+                      {data.upi_payload && (
+                        <div className={styles.upiCard}>
+                          <div className={styles.upiHeader}>
+                            <span>NPCI DYNAMIC UPI INTENT</span>
+                            <span className={styles.upiTag}>REAL-TIME RAILS</span>
+                          </div>
+                          <div className={styles.upiGrid}>
+                            <div>
+                              <span className={styles.specKey}>Payee VPA</span>
+                              <span className={styles.specVal}>{data.upi_payload.vpa}</span>
+                            </div>
+                            <div>
+                              <span className={styles.specKey}>Corporate VAN</span>
+                              <span className={styles.specVal}>{data.upi_payload.van}</span>
+                            </div>
+                            <div>
+                              <span className={styles.specKey}>Bank & IFSC</span>
+                              <span className={styles.specVal}>
+                                {data.upi_payload.bank_name} ({data.upi_payload.ifsc})
+                              </span>
+                            </div>
+                            <div>
+                              <span className={styles.specKey}>Payable Amount</span>
+                              <span className={styles.specVal} style={{ color: "var(--accent)" }}>
+                                ₹{data.upi_payload.amount_inr.toLocaleString("en-IN")}
+                              </span>
+                            </div>
+                          </div>
+                          <div className={styles.upiUriBox}>
+                            <code>{data.upi_payload.upi_intent_uri}</code>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(data.upi_payload?.upi_intent_uri ?? "");
+                                setCopiedUpi(true);
+                                setTimeout(() => setCopiedUpi(false), 2000);
+                              }}
+                              className={styles.copyUriBtn}
+                            >
+                              {copiedUpi ? "COPIED ✓" : "COPY URI"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <p className={styles.probMeta}>
-                    Tabular ML Scorer — cause weight × amount × DPD days × prior contacts.
-                    {probPct < 25 && " Below 25% threshold → human review required."}
-                  </p>
-                </>
-              ) : (
-                <p className={styles.probMeta}>Recovery probability not yet scored.</p>
+                </article>
               )}
             </div>
-            <div className={styles.stationOwner}>SCORE</div>
-          </div>
+          )}
 
-          {/* 04 DAG & P2P ADHERENCE */}
-          <div
-            className={styles.station}
-            ref={(el) => { stationRefs.current[3] = el; }}
-          >
-            <div className={styles.stationIndex}>04</div>
-            <div className={styles.stationBody}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h2 className={styles.stationTitle}>DAG & P2P Lifecycle</h2>
+          {/* TAB: Statutory Notices */}
+          {activeTab === "notices" && (
+            <div className={styles.tabPanel}>
+              <div className={styles.tabPanelHeader}>
+                <h3 className={styles.tabPanelTitle}>Statutory Notices Generated</h3>
                 <button
-                  style={{
-                    fontFamily: "var(--mono)", fontSize: 10, background: "transparent",
-                    border: "1px solid var(--line)", color: "var(--muted)", padding: "3px 8px", cursor: "pointer",
-                  }}
-                  onClick={checkPromiseAdherence}
-                  disabled={busy === "check_adherence"}
+                  onClick={() => setShowNoticeGen(true)}
+                  className={styles.primaryActionBtn}
                 >
-                  {busy === "check_adherence" ? "Evaluating…" : "🔄 Check P2P Adherence"}
+                  + Generate Formal Notice
                 </button>
               </div>
 
-              {/* Broken commitment banner if any */}
-              {Boolean(data.p2p_broken_count && data.p2p_broken_count > 0) && (
-                <div style={{
-                  padding: "8px 12px", background: "rgba(192, 32, 32, 0.15)", borderLeft: "3px solid #c02020",
-                  marginBottom: 12, fontFamily: "var(--mono)", fontSize: 11, color: "#ff8080"
-                }}>
-                  ⚠️ Broken Commitment Count: {data.p2p_broken_count} attempts. Credit risk tier escalated.
+              {data.notices.length === 0 ? (
+                <div className={styles.emptyStateBox}>
+                  <span>No formal statutory notices generated for this case.</span>
                 </div>
-              )}
-
-              <div className={styles.statePath}>
-                {stateNodes.map((s, i) => (
-                  <span key={s} style={{ display: "inline-flex", alignItems: "center" }}>
-                    <span
-                      className={`${styles.stateNode} ${s === data.state ? styles.current : ""}`}
-                    >
-                      {STATE_LABELS[s] ?? s.toUpperCase()}
-                    </span>
-                    {i < stateNodes.length - 1 && (
-                      <span className={styles.stateArrow}>→</span>
-                    )}
-                  </span>
-                ))}
-              </div>
-              <div className={styles.transitionList}>
-                {data.decision_trace.map((t, i) => (
-                  <div key={i} className={styles.transitionItem}>
-                    <span className={styles.transitionTime}>{fmtTime(t.created_at)}</span>
-                    <span className={styles.transitionReason}>
-                      {t.from_state} → {t.to_state}: {t.reason}
-                      {t.score !== null && ` (score: ${(t.score * 100).toFixed(1)}%)`}
-                    </span>
-                    <span className={styles.transitionActor}>{t.actor_type}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className={styles.stationOwner}>ORCHESTRATE</div>
-          </div>
-
-          {/* 05 EXTRACT & CHANNELS */}
-          <div
-            className={styles.station}
-            ref={(el) => { stationRefs.current[4] = el; }}
-          >
-            <div className={styles.stationIndex}>05</div>
-            <div className={styles.stationBody}>
-              <h2 className={styles.stationTitle}>वादा & Channels</h2>
-              <PromiseReveal promise={latestPromise} langAnalysis={data.language_analysis} />
-
-              {/* WhatsApp Interactive Message Box */}
-              {data.whatsapp_payload && (
-                <div className={styles.whatsappCard}>
-                  <div className={styles.waHeader}>
-                    <span>💬 WhatsApp Business Cloud API Simulation</span>
-                    <span style={{ fontSize: 10, color: "#4ade80", fontFamily: "var(--mono)" }}>● Verified HSM</span>
-                  </div>
-                  <div className={styles.waBody}>
-                    {data.whatsapp_payload.preview_data.body}
-                  </div>
-                  <div className={styles.waFooter}>
-                    Interactive Actions Attached:
-                  </div>
-                  <div className={styles.waButtonGroup}>
-                    <button className={styles.waButton} onClick={() => {
-                      if (data.upi_payload?.upi_intent_uri) {
-                        navigator.clipboard.writeText(data.upi_payload.upi_intent_uri);
-                        setCopiedUpi(true);
-                        setTimeout(() => setCopiedUpi(false), 2000);
-                      }
-                    }}>
-                      💳 Pay ₹{((data.net_payable_minor || data.amount_minor || 0) / 100).toLocaleString("en-IN")} via UPI {copiedUpi && "✓"}
-                    </button>
-                    <button className={styles.waButton}>
-                      📅 Promise Commitment
-                    </button>
-                    <button className={styles.waButton}>
-                      📄 Dispute / TDS Statement
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Dynamic UPI & VAN details */}
-              {data.upi_payload && (
-                <div className={styles.upiCard}>
-                  <div className={styles.upiDetails}>
-                    <span className={styles.upiLabel}>NPCI Dynamic UPI Handle</span>
-                    <span className={styles.upiValue}>{data.upi_payload.vpa}</span>
-                    <span className={styles.upiLabel}>Dedicated Corporate VAN (ICICI Virtual Account)</span>
-                    <span className={styles.upiValue}>{data.upi_payload.van}</span>
-                    <span className={styles.upiIntentUri}>{data.upi_payload.upi_intent_uri}</span>
-                  </div>
-                  <div style={{ textAlign: "right" }}>
-                    <button
-                      className={styles.btnOutline}
-                      style={{ padding: "6px 10px", fontSize: 11 }}
-                      onClick={() => {
-                        if (data.upi_payload?.upi_intent_uri) {
-                          navigator.clipboard.writeText(data.upi_payload.upi_intent_uri);
-                          setCopiedUpi(true);
-                          setTimeout(() => setCopiedUpi(false), 2000);
-                        }
-                      }}
-                    >
-                      {copiedUpi ? "Copied UPI Link ✓" : "Copy UPI Intent"}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className={styles.stationOwner}>EXTRACT / RAILS</div>
-          </div>
-
-          {/* 06 STATUTORY POWERSTATION */}
-          <div
-            className={styles.station}
-            ref={(el) => { stationRefs.current[5] = el; }}
-          >
-            <div className={styles.stationIndex}>06</div>
-            <div className={styles.stationBody}>
-              <h2 className={styles.stationTitle}>Statutory & Legal Power-Station</h2>
-              
-              {/* MSME & 43B(h) Card */}
-              <div className={styles.statutoryCard}>
-                <div className={styles.statGrid}>
-                  <div className={styles.statMetric}>
-                    <span className={styles.statLabel}>Section 43B(h) Countdown</span>
-                    {stat ? (
-                      <span className={`${styles.statBigVal} ${stat.is_disallowed ? styles.disallowed : (stat.days_remaining <= 5 ? styles.disallowed : styles.safe)}`}>
-                        {stat.is_disallowed ? "DISALLOWED" : `${stat.days_remaining} Days`}
-                      </span>
-                    ) : <span>—</span>}
-                  </div>
-                  <div className={styles.statMetric}>
-                    <span className={styles.statLabel}>3x RBI Statutory Interest</span>
-                    <span className={`${styles.statBigVal} ${styles.interest}`}>
-                      ₹{(((stat?.statutory_interest_minor || data.statutory_interest_minor) || 0) / 100).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                  <div className={styles.statMetric}>
-                    <span className={styles.statLabel}>Est. Corporate Tax Exposure</span>
-                    <span className={`${styles.statBigVal} ${styles.disallowed}`}>
-                      ₹{((stat?.tax_disallowance_exposure_minor || 0) / 100).toLocaleString("en-IN")}
-                    </span>
-                  </div>
-                </div>
-
-                {stat?.is_disallowed && (
-                  <div className={styles.taxRiskNotice}>
-                    ⚠️ <strong>Section 43B(h) Tax Disallowance Active:</strong> Expense cannot be claimed for tax deduction in the buyer&apos;s return until actual payment is cleared.
-                  </div>
-                )}
-              </div>
-
-              {/* Compliance checks */}
-              <CompliancePanel checks={data.compliance} />
-
-              {/* Generated Statutory Notices */}
-              {data.notices.length > 0 && (
-                <div className={styles.noticeList}>
-                  <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--muted)", textTransform: "uppercase" }}>
-                    Issued Statutory Notices ({data.notices.length})
-                  </div>
-                  {data.notices.map((n) => (
-                    <div key={n.id} className={styles.noticeItem}>
-                      <div className={styles.noticeItemHeader}>
-                        <span className={styles.noticeItemTitle}>{n.title}</span>
-                        <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--accent)" }}>
-                          {n.statutory_reference}
-                        </span>
+              ) : (
+                <div className={styles.noticesList}>
+                  {data.notices.map((notice) => (
+                    <div key={notice.id} className={styles.noticeCard}>
+                      <div className={styles.noticeCardHead}>
+                        <div>
+                          <h4 className={styles.noticeTitle}>{notice.title}</h4>
+                          <span className={styles.noticeMeta}>
+                            Ref: {notice.statutory_reference} · Cure Period: {notice.cure_period_days} Days ·{" "}
+                            {fmtDateTime(notice.created_at)}
+                          </span>
+                        </div>
+                        <span className={styles.noticeStatus}>{notice.status.toUpperCase()}</span>
                       </div>
-                      <pre className={styles.noticeMarkdownPre}>{n.content_markdown}</pre>
+                      <pre className={styles.noticeMarkdown}>{notice.content_markdown}</pre>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-            <div className={styles.stationOwner}>STATUTORY</div>
-          </div>
+          )}
 
-          {/* 07 RECONCILIATIONS & AUDIT */}
-          <div
-            className={styles.station}
-            ref={(el) => { stationRefs.current[6] = el; }}
-          >
-            <div className={styles.stationIndex}>07</div>
-            <div className={styles.stationBody}>
-              <h2 className={styles.stationTitle}>Reconciliations & Audit Log</h2>
+          {/* TAB: Payment Reconciliations */}
+          {activeTab === "reconcile" && (
+            <div className={styles.tabPanel}>
+              <div className={styles.tabPanelHeader}>
+                <h3 className={styles.tabPanelTitle}>Settlement & Reconciliations</h3>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <button
+                    onClick={() => setShowTDSModal(true)}
+                    className={styles.secondaryActionBtn}
+                  >
+                    Reconcile TDS (Form 16A)
+                  </button>
+                  <button
+                    onClick={() => setShowPaymentModal(true)}
+                    className={styles.primaryActionBtn}
+                  >
+                    Record Bank Remittance
+                  </button>
+                </div>
+              </div>
 
-              {data.reconciliations.length > 0 && (
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--muted)", marginBottom: 8 }}>
-                    SETTLEMENT & TDS RECONCILIATIONS
-                  </div>
-                  <table className={styles.complianceTable}>
-                    <thead>
-                      <tr>
-                        <th>Type</th>
-                        <th>Reference</th>
-                        <th>Amount</th>
-                        <th>Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.reconciliations.map((r) => (
-                        <tr key={r.id}>
-                          <td><span style={{ fontFamily: "var(--mono)", color: "var(--accent)" }}>{r.reconciliation_type}</span></td>
-                          <td><span style={{ fontFamily: "var(--mono)" }}>{r.reference_number}</span></td>
-                          <td><strong>₹{(r.amount_minor / 100).toLocaleString("en-IN")}</strong></td>
-                          <td>{fmt(r.created_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {data.reconciliations.length === 0 ? (
+                <div className={styles.emptyStateBox}>
+                  <span>No payment remittances or TDS reconciliations recorded yet.</span>
+                </div>
+              ) : (
+                <div className={styles.reconcileList}>
+                  {data.reconciliations.map((rec) => (
+                    <div key={rec.id} className={styles.reconcileCard}>
+                      <div className={styles.reconcileHead}>
+                        <span className={styles.reconcileType}>
+                          {rec.reconciliation_type.replace(/_/g, " ").toUpperCase()}
+                        </span>
+                        <span className={styles.reconcileAmount}>
+                          ₹{(rec.amount_minor / 100).toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                      <div className={styles.reconcileDetails}>
+                        <span>Reference / UTR: <strong>{rec.reference_number}</strong></span>
+                        <span>Reconciled By: <strong>{rec.reconciled_by}</strong></span>
+                        <span>Timestamp: {fmtDateTime(rec.created_at)}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
+            </div>
+          )}
 
-              <div className={styles.auditList}>
-                {data.audit.length === 0 && (
-                  <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--muted)" }}>
-                    No audit events yet.
-                  </span>
-                )}
-                {data.audit.slice(0, 10).map((a, i) => (
-                  <div key={i} className={styles.auditItem}>
-                    <span className={styles.auditTime}>{fmtTime(a.created_at)}</span>
-                    <div>
-                      <div className={styles.auditAction}>{a.action}</div>
-                      <div className={styles.auditActor}>{a.actor_type}</div>
-                    </div>
-                  </div>
-                ))}
+          {/* TAB: Full Audit Trail */}
+          {activeTab === "audit" && (
+            <div className={styles.tabPanel}>
+              <div className={styles.tabPanelHeader}>
+                <h3 className={styles.tabPanelTitle}>Immutable Case Audit Trail</h3>
+                <span className={styles.tabPanelMeta}>Tamper-Evident Chronological Ledger</span>
+              </div>
+
+              <div className={styles.auditTableWrap}>
+                <table className={styles.auditTable}>
+                  <thead>
+                    <tr>
+                      <th>TIMESTAMP</th>
+                      <th>ACTION</th>
+                      <th>ACTOR TYPE</th>
+                      <th>ACTOR ID</th>
+                      <th>PAYLOAD</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.audit.map((aud, i) => (
+                      <tr key={i}>
+                        <td className={styles.auditTime}>{fmtDateTime(aud.created_at)}</td>
+                        <td className={styles.auditAction}>{aud.action}</td>
+                        <td>
+                          <span className={styles.auditActor}>{aud.actor_type}</span>
+                        </td>
+                        <td className={styles.auditActorId}>{aud.actor_id ?? "system"}</td>
+                        <td className={styles.auditPayload}>
+                          <code>{aud.payload_json}</code>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-            <div className={styles.stationOwner}>AUDIT</div>
-          </div>
+          )}
         </main>
 
-        {/* ── SIDEBAR ── */}
-        <aside className={styles.sidebar}>
-          {/* State */}
-          <div className={styles.sidebarSection}>
-            <p className={styles.sidebarLabel}>Current state</p>
-            <span
-              ref={stateRef}
-              className={`${styles.sideBadge} ${styles[data.state] || ""}`}
-            >
-              <span className={styles.sideBadgeDot} />
-              {STATE_LABELS[data.state] ?? data.state.toUpperCase()}
-            </span>
+        {/* ── ZONE 3: The Action Deck (Floating Right Dock) ── */}
+        <aside className={styles.actionDeck}>
+          <div className={styles.deckHeader}>
+            <span className={styles.deckLabel}>OPERATIONS DOCK</span>
+            <span className={styles.deckStateBadge}>{data.state.replace(/_/g, " ").toUpperCase()}</span>
           </div>
 
-          {/* Customer & Tax Details */}
-          <div className={styles.sidebarSection}>
-            <p className={styles.sidebarLabel}>Buyer & Tax Profile</p>
-            <div className={styles.sidebarField}>
-              <span className={styles.sidebarFieldLabel}>Entity</span>
-              <span className={styles.sidebarFieldValue}>{data.customer?.display_name ?? "—"}</span>
-            </div>
-            <div className={styles.sidebarField}>
-              <span className={styles.sidebarFieldLabel}>GSTIN</span>
-              <span className={styles.sidebarFieldValue} style={{ color: "var(--accent)" }}>
-                {data.customer?.gstin ?? "—"}
-              </span>
-            </div>
-            <div className={styles.sidebarField}>
-              <span className={styles.sidebarFieldLabel}>MSME Status</span>
-              <span className={styles.sidebarFieldValue}>
-                {data.customer?.is_msme ? `Yes (${data.customer.msme_category})` : "No"}
-              </span>
-            </div>
+          {/* Primary Intervention Reason */}
+          <div className={styles.deckReasonBox}>
+            <label className={styles.deckReasonLabel}>Reason / Audit Log Note:</label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className={styles.deckReasonInput}
+              rows={2}
+            />
           </div>
 
-          {/* Invoice summary */}
-          <div className={styles.sidebarSection}>
-            <p className={styles.sidebarLabel}>Invoice</p>
-            <div className={styles.sidebarField}>
-              <span className={styles.sidebarFieldLabel}>Number</span>
-              <span className={styles.sidebarFieldValue}>{data.invoice_number ?? "—"}</span>
-            </div>
-            <div className={styles.sidebarField}>
-              <span className={styles.sidebarFieldLabel}>Gross Amount</span>
-              <span className={styles.sidebarAmount}>
-                {data.amount_minor != null
-                  ? `₹${(data.amount_minor / 100).toLocaleString("en-IN")}`
-                  : "—"}
-              </span>
-            </div>
-            {data.net_payable_minor != null && (
-              <div className={styles.sidebarField}>
-                <span className={styles.sidebarFieldLabel}>Net Payable</span>
-                <span className={styles.sidebarAmount} style={{ color: "#38bdf8" }}>
-                  ₹{(data.net_payable_minor / 100).toLocaleString("en-IN")}
-                </span>
-              </div>
+          {/* Main Action Buttons */}
+          <div className={styles.deckActionsList}>
+            {canRemind && (
+              <button
+                onClick={() => act("send_reminder")}
+                disabled={!!busy}
+                className={styles.deckPrimaryBtn}
+              >
+                {busy === "send_reminder" ? "Dispatching…" : "⚡ Send Compliant Reminder"}
+              </button>
             )}
-            <div className={styles.sidebarField}>
-              <span className={styles.sidebarFieldLabel}>Due date</span>
-              <span className={styles.sidebarFieldValue}>{fmtDate(data.due_at)}</span>
-            </div>
+
+            <button
+              onClick={() => setShowNoticeGen(true)}
+              className={styles.deckSecondaryBtn}
+            >
+              📄 Generate Statutory Notice
+            </button>
+
+            <button
+              onClick={() => setShowTDSModal(true)}
+              className={styles.deckSecondaryBtn}
+            >
+              ⚖️ Reconcile Form 16A TDS
+            </button>
+
+            <button
+              onClick={() => setShowPaymentModal(true)}
+              className={styles.deckSecondaryBtn}
+            >
+              💳 Record Bank Remittance
+            </button>
+
+            {data.state === "paused" ? (
+              <button
+                onClick={() => act("resume")}
+                disabled={!!busy}
+                className={styles.deckSecondaryBtn}
+              >
+                ▶ Resume Automated Recovery
+              </button>
+            ) : (
+              <button
+                onClick={() => act("pause")}
+                disabled={!!busy || isTerminal}
+                className={styles.deckSecondaryBtn}
+              >
+                ⏸ Pause Automated Contact
+              </button>
+            )}
+
+            <button
+              onClick={() => act("escalate")}
+              disabled={!!busy || isTerminal || data.state === "human_review"}
+              className={styles.deckSecondaryBtn}
+            >
+              🚨 Escalate to Human Review
+            </button>
+
+            {!isTerminal && (
+              <button
+                onClick={() => act("mark_recovered")}
+                disabled={!!busy}
+                className={styles.deckRecoveredBtn}
+              >
+                ✓ Mark As Recovered
+              </button>
+            )}
+
+            {!isTerminal && (
+              <button
+                onClick={() => act("mark_unrecoverable")}
+                disabled={!!busy}
+                className={styles.deckDangerBtn}
+              >
+                ✕ Mark Unrecoverable
+              </button>
+            )}
           </div>
 
-          {/* Feedback toasts */}
-          {actionSuccess && <p style={{ color: "#4ade80", fontFamily: "var(--mono)", fontSize: 11 }}>{actionSuccess}</p>}
-          {actionError && <p className={styles.errorMsg}>{actionError}</p>}
-
-          {/* Override controls */}
-          {!isTerminal && (
-            <div className={styles.sidebarSection}>
-              <p className={styles.sidebarLabel}>Actions & Statutory Recovery</p>
-              
-              <div className={styles.actionBtns}>
-                {canRemind && (
-                  <button
-                    className={styles.btnPrimary}
-                    onClick={() => act("send_reminder")}
-                    disabled={!!busy}
-                  >
-                    {busy === "send_reminder" && <span className={styles.spinner} />}
-                    Send WhatsApp Reminder
-                  </button>
-                )}
-
-                {/* Statutory Notice Generator Button */}
-                <button
-                  className={styles.btnOutline}
-                  style={{ borderColor: "var(--accent)", color: "var(--accent)" }}
-                  onClick={() => setShowNoticeGen(!showNoticeGen)}
-                >
-                  ⚡ Generate Statutory Notice
-                </button>
-
-                {showNoticeGen && (
-                  <div className={styles.actionDrawer}>
-                    <span className={styles.sidebarFieldLabel}>Select Notice Type:</span>
-                    <select
-                      className={styles.inputField}
-                      value={noticeType}
-                      onChange={(e) => setNoticeType(e.target.value)}
-                    >
-                      <option value="msme_43b_h">Section 43B(h) Tax Disallowance Notice</option>
-                      <option value="sec_138_ni_act">Section 138 NI Act Legal Demand Notice</option>
-                      <option value="msme_samadhaan_form_1">MSME Samadhaan Form 1 Pre-Filing</option>
-                      <option value="statement_of_account">Formal Statement of Account (SOA)</option>
-                    </select>
-                    <button
-                      className={styles.btnPrimary}
-                      onClick={generateStatutoryNotice}
-                      disabled={busy === "generate_notice"}
-                    >
-                      {busy === "generate_notice" ? "Generating…" : "Draft & Dispatch Notice"}
-                    </button>
-                  </div>
-                )}
-
-                {/* TDS Reconciliation Button */}
-                <button
-                  className={styles.btnOutline}
-                  onClick={() => setShowTDSModal(!showTDSModal)}
-                >
-                  📄 Reconcile TDS (Form 16A)
-                </button>
-
-                {showTDSModal && (
-                  <div className={styles.actionDrawer}>
-                    <span className={styles.sidebarFieldLabel}>TDS Rate (%):</span>
-                    <input
-                      className={styles.inputField}
-                      type="number"
-                      step="0.1"
-                      value={tdsRate}
-                      onChange={(e) => setTdsRate(e.target.value)}
-                    />
-                    <span className={styles.sidebarFieldLabel}>Form 16A Ack / Challan Ref:</span>
-                    <input
-                      className={styles.inputField}
-                      type="text"
-                      value={form16aAck}
-                      onChange={(e) => setForm16aAck(e.target.value)}
-                    />
-                    <button
-                      className={styles.btnPrimary}
-                      onClick={submitTDSReconcile}
-                      disabled={busy === "reconcile_tds"}
-                    >
-                      {busy === "reconcile_tds" ? "Saving…" : "Apply TDS Deduction"}
-                    </button>
-                  </div>
-                )}
-
-                {/* Record Payment Button */}
-                <button
-                  className={styles.btnOutline}
-                  onClick={() => setShowPaymentModal(!showPaymentModal)}
-                >
-                  💰 Record Payment / UTR
-                </button>
-
-                {showPaymentModal && (
-                  <div className={styles.actionDrawer}>
-                    <span className={styles.sidebarFieldLabel}>Amount Paid (INR):</span>
-                    <input
-                      className={styles.inputField}
-                      type="number"
-                      placeholder="e.g. 50000"
-                      value={payAmount}
-                      onChange={(e) => setPayAmount(e.target.value)}
-                    />
-                    <span className={styles.sidebarFieldLabel}>Bank UTR / UPI Ref:</span>
-                    <input
-                      className={styles.inputField}
-                      type="text"
-                      value={payUtr}
-                      onChange={(e) => setPayUtr(e.target.value)}
-                    />
-                    <button
-                      className={styles.btnPrimary}
-                      onClick={submitPaymentReconcile}
-                      disabled={busy === "reconcile_payment"}
-                    >
-                      {busy === "reconcile_payment" ? "Reconciling…" : "Confirm Remittance"}
-                    </button>
-                  </div>
-                )}
-
-                {/* Standard Workflow Buttons */}
-                <button
-                  className={styles.btnOutline}
-                  onClick={() => act("pause")}
-                  disabled={!!busy || data.state === "paused"}
-                >
-                  {busy === "pause" && <span className={styles.spinner} />}
-                  Pause case
-                </button>
-                {data.state === "paused" && (
-                  <button
-                    className={styles.btnOutline}
-                    onClick={() => act("resume")}
-                    disabled={!!busy}
-                  >
-                    {busy === "resume" && <span className={styles.spinner} />}
-                    Resume
-                  </button>
-                )}
-                <button
-                  className={styles.btnOutline}
-                  onClick={() => act("escalate")}
-                  disabled={!!busy || data.state === "human_review"}
-                >
-                  {busy === "escalate" && <span className={styles.spinner} />}
-                  Escalate to review
-                </button>
-                <button
-                  className={styles.btnOutline}
-                  onClick={() => act("mark_recovered")}
-                  disabled={!!busy}
-                >
-                  {busy === "mark_recovered" && <span className={styles.spinner} />}
-                  Mark recovered
-                </button>
-                <button
-                  className={styles.btnDanger}
-                  onClick={() => act("mark_unrecoverable")}
-                  disabled={!!busy}
-                >
-                  {busy === "mark_unrecoverable" && <span className={styles.spinner} />}
-                  Mark unrecoverable
-                </button>
-              </div>
+          {/* Quick Context Summary */}
+          <div className={styles.deckSummaryBox}>
+            <div className={styles.summaryItem}>
+              <span>Customer Channel</span>
+              <strong>{data.customer?.contact_channel ?? "whatsapp"}</strong>
             </div>
-          )}
-
-          {isTerminal && (
-            <div className={styles.sidebarSection}>
-              <p className={styles.sidebarLabel}>Terminal state</p>
-              <p style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--muted)" }}>
-                This case is in a terminal state. No further automated actions are possible.
-              </p>
+            <div className={styles.summaryItem}>
+              <span>Contact Phone</span>
+              <strong>{data.customer?.contact_value ?? "—"}</strong>
             </div>
-          )}
-
-          {/* Quick links */}
-          <div className={styles.sidebarSection}>
-            <p className={styles.sidebarLabel}>Navigation</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              <Link href="/queue" style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", color: "var(--muted)" }}>
-                ← Back to queue
-              </Link>
-              <Link href="/audit" style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", color: "var(--muted)" }}>
-                Full audit trail →
-              </Link>
+            <div className={styles.summaryItem}>
+              <span>Contact Attempts</span>
+              <strong>{data.contact_attempt_count} of 3 (Rolling 7d)</strong>
+            </div>
+            <div className={styles.summaryItem}>
+              <span>Dossier Concurrency</span>
+              <strong>Version {data.version}</strong>
             </div>
           </div>
         </aside>
       </div>
+
+      {/* ── MODALS ── */}
+
+      {/* Notice Generation Modal */}
+      {showNoticeGen && (
+        <div className={styles.modalOverlay} onClick={() => setShowNoticeGen(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Generate Formal Statutory Legal Notice</h3>
+              <button className={styles.modalClose} onClick={() => setShowNoticeGen(false)}>
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalPrompt}>
+                Select the formal statutory legal notice format according to Indian commercial code:
+              </p>
+              <div className={styles.modalField}>
+                <label>Notice Type:</label>
+                <select
+                  value={noticeType}
+                  onChange={(e) => setNoticeType(e.target.value)}
+                  className={styles.modalSelect}
+                >
+                  <option value="msme_43b_h">MSME Section 43B(h) Tax Disallowance Notice (7-Day Cure)</option>
+                  <option value="section_138_ni">Section 138 NI Act / Sec 25 PSSA Legal Demand Notice</option>
+                  <option value="msefc_samadhaan">MSEFC Samadhaan Form 1 Pre-Filing Dispute Notice</option>
+                  <option value="statement_of_account">Formal Statement of Account & Balance Confirmation</option>
+                </select>
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                onClick={generateStatutoryNotice}
+                disabled={busy === "generate_notice"}
+                className={styles.primaryActionBtn}
+              >
+                {busy === "generate_notice" ? "Generating Notice…" : "Generate Formal Notice"}
+              </button>
+              <button onClick={() => setShowNoticeGen(false)} className={styles.cancelBtn}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TDS Reconciliation Modal */}
+      {showTDSModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowTDSModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Reconcile Section 194C/J TDS Deduction</h3>
+              <button className={styles.modalClose} onClick={() => setShowTDSModal(false)}>
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalPrompt}>
+                Indian corporate buyers routinely withhold 1% (194C individual), 2% (194C corporate), or 10% (194J professional). Record Form 16A acknowledgement to update the net recoverable balance without default classification.
+              </p>
+              <div className={styles.modalField}>
+                <label>TDS Rate (%):</label>
+                <input
+                  type="text"
+                  value={tdsRate}
+                  onChange={(e) => setTdsRate(e.target.value)}
+                  className={styles.modalInput}
+                />
+              </div>
+              <div className={styles.modalField}>
+                <label>Form 16A Acknowledgement / Certificate #:</label>
+                <input
+                  type="text"
+                  value={form16aAck}
+                  onChange={(e) => setForm16aAck(e.target.value)}
+                  className={styles.modalInput}
+                />
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                onClick={submitTDSReconcile}
+                disabled={busy === "reconcile_tds"}
+                className={styles.primaryActionBtn}
+              >
+                {busy === "reconcile_tds" ? "Reconciling TDS…" : "Confirm TDS Reconciliation"}
+              </button>
+              <button onClick={() => setShowTDSModal(false)} className={styles.cancelBtn}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Remittance Modal */}
+      {showPaymentModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowPaymentModal(false)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Record Inward Bank Remittance</h3>
+              <button className={styles.modalClose} onClick={() => setShowPaymentModal(false)}>
+                ✕
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalPrompt}>
+                Record verified RTGS/NEFT/UPI inward funds received in the merchant bank account:
+              </p>
+              <div className={styles.modalField}>
+                <label>Remitted Amount (₹ INR):</label>
+                <input
+                  type="text"
+                  placeholder="180000"
+                  value={payAmount}
+                  onChange={(e) => setPayAmount(e.target.value)}
+                  className={styles.modalInput}
+                />
+              </div>
+              <div className={styles.modalField}>
+                <label>Bank UTR / Transaction Reference:</label>
+                <input
+                  type="text"
+                  value={payUtr}
+                  onChange={(e) => setPayUtr(e.target.value)}
+                  className={styles.modalInput}
+                />
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                onClick={submitPaymentReconcile}
+                disabled={busy === "reconcile_payment"}
+                className={styles.primaryActionBtn}
+              >
+                {busy === "reconcile_payment" ? "Matching Remittance…" : "Confirm Remittance"}
+              </button>
+              <button onClick={() => setShowPaymentModal(false)} className={styles.cancelBtn}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

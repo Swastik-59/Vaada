@@ -166,13 +166,27 @@ export default function RazorpayTaxonomyPage() {
   return (
     <div className={styles.shell}>
       {/* Top Navigation */}
-      <nav className={styles.nav}>
-        <span className={styles.navMark}>VAADA / RAZORPAY ERROR INTELLIGENCE</span>
+      <nav className={styles.topNav}>
+        <div className={styles.navLeft}>
+          <Link href="/queue" className={styles.navMark}>
+            VAADA <span className={styles.navDevanagari}>वादा</span>
+          </Link>
+          <span className={styles.navSlash}>/</span>
+          <span className={styles.navSectionTitle}>RAZORPAY ERROR INTELLIGENCE</span>
+        </div>
         <div className={styles.navLinks}>
-          <Link href="/queue">← Queue</Link>
-          <Link href="/audit">Audit trail</Link>
-          <Link href="/settings">Compliance config</Link>
-          <Link href="/razorpay-taxonomy" className={styles.active}>Error Intelligence</Link>
+          <Link href="/queue" className={styles.navLink}>
+            ← Queue
+          </Link>
+          <Link href="/audit" className={styles.navLink}>
+            Audit Trail
+          </Link>
+          <Link href="/settings" className={styles.navLink}>
+            Compliance Config
+          </Link>
+          <Link href="/razorpay-taxonomy" className={`${styles.navLink} ${styles.navLinkActive}`}>
+            Error Intelligence
+          </Link>
         </div>
       </nav>
 
