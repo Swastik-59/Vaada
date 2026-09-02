@@ -4,7 +4,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1+-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16+-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org)
+[![SQLite / PostgreSQL](https://img.shields.io/badge/Database-SQLite%20%7C%20PostgreSQL%2016+-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![Tests](https://img.shields.io/badge/Tests-49%20Passed-brightgreen.svg)]()
 [![Razorpay](https://img.shields.io/badge/Taxonomy-Official%20Razorpay%20v2026--09-0284c7.svg)]()
 [![L3Cube-HingCorpus](https://img.shields.io/badge/Linguistics-L3Cube--HingCorpus%20%7C%20HingLID-f97316.svg)](https://github.com/l3cube-pune/code-mixed-nlp)
@@ -16,12 +16,15 @@
 
 **Vaada** (वादा — *Promise / Commitment*) is an enterprise-grade, bounded B2B revenue-recovery system purpose-built for Indian merchants, MSMEs, and commercial suppliers. It ingests overdue payment events, classifies failure root causes via an **authoritative official Razorpay error taxonomy**, calculates statutory interest under Indian law, scores recovery probabilities via calibrated tabular ML, extracts promise-to-pay commitments from code-mixed Hinglish conversations backed by academic research (**L3Cube-HingCorpus & HingLID**), and orchestrates actions through a deterministic state machine.
 
-### The Core Architectural Principles
+The frontend is a fully designed premium digital product — a narrative operations console built for financial and revenue operations professionals, not developers.
+
+### Core Architectural Principles
 
 1. **The LLM never authorizes an action, never alters case state directly, and never bypasses statutory compliance.**
 2. **Official Razorpay diagnostic data and Vaada's derived recovery policies are strictly isolated.**
 3. **Linguistic research data (L3Cube-HingCorpus) and domain-specific payment data are strictly separated in provenance.**
 4. **Zero hallucination on payment errors**: If an error code or reason is unmapped, it is honestly labeled as `UNMAPPED RAZORPAY ERROR` and routed safely to human review.
+5. **Progressive disclosure**: Technical evidence (raw JSON, correlation IDs, decision DAGs) is Level 5 information — tucked into expandable trays, never presented as primary content.
 
 ---
 
@@ -127,7 +130,12 @@ Indian B2B commerce conversations over WhatsApp and SMS overwhelmingly occur in 
 - **Corporate Virtual Accounts (VAN)**: Issues dedicated ICICI Bank Virtual Account Numbers for real-time NEFT/RTGS settlement attribution.
 - **WhatsApp Cloud API Interactive HSM**: Formats Meta-compliant interactive message templates with action buttons (*Pay UPI*, *Commit Date*, *Submit TDS*).
 
-### 6. Operations Console & Immutable Audit Log
+### 6. Indian Payment Rails & Channel Simulators
+- **Dynamic NPCI UPI Intent Links**: Generates one-click UPI links (`upi://pay?pa=...&am=...&tr=...`) with embedded transaction references.
+- **Corporate Virtual Accounts (VAN)**: Issues dedicated ICICI Bank Virtual Account Numbers for real-time NEFT/RTGS settlement attribution.
+- **WhatsApp Cloud API Interactive HSM**: Formats Meta-compliant interactive message templates with action buttons (*Pay UPI*, *Commit Date*, *Submit TDS*).
+
+### 7. Operations Console & Immutable Audit Log
 - **Multi-Tenant Security**: Role-based access control (`admin`, `manager`, `operator`, `viewer`) with tenant isolation on every SQL query.
 - **Optimistic Locking**: Version tracking (`expected_version`) on cases to prevent race conditions during concurrent operator overrides.
 - **Auditability**: Every transition, compliance evaluation, notice dispatch, and manual override writes to an append-only `AuditEvent` log with user attribution and correlation IDs.
@@ -139,33 +147,66 @@ Indian B2B commerce conversations over WhatsApp and SMS overwhelmingly occur in 
 ```
 [ Frontend: Next.js 15 App Router ]
    │
-   ├── Public Landing (/) ── [ GSAP Micro-Interactions & Truthful Metrics ]
-   ├── Auth (/login) ─────── [ Secure HTTP-Only Cookie Session ]
-   ├── Queue (/queue) ────── [ Real-time Filtered Case Table & Risk Badges ]
-   ├── Detail (/cases/[id]) ─ [ 7-Station Case Power-Station ]
-   ├── Audit (/audit) ────── [ Immutable System Audit Viewer ]
-   └── Config (/settings) ── [ Compliance Rule Configuration ]
+   ├── Public Landing (/)              Cinematic 6-scene narrative scroll
+   │                                   Scene 1: Portfolio crisis telemetry
+   │                                   Scene 2: Interactive Razorpay failure comparison
+   │                                   Scene 3: Hinglish NLP word-level tokenizer
+   │                                   Scene 4: Section 43B(h) statutory calculator
+   │                                   Scene 5: Data provenance transparency
+   │                                   Scene 6: Console launchpad
    │
-   ▼ HTTP (CORS + CSRF + Auth Cookies)
+   ├── Auth (/login)                   Argon2id-backed session, HttpOnly cookies
+   ├── Queue (/queue)                  Executive financial ledger, portfolio health strip
+   ├── Case Dossier (/cases/[id])      4-chapter progressive investigation narrative
+   │                                   Level 5 progressive disclosure (raw JSON in trays)
+   ├── Audit (/audit)                  Human-readable immutable activity ledger
+   ├── Settings (/settings)            Compliance registry & tenant configuration
+   └── Taxonomy (/razorpay-taxonomy)   Live Razorpay error explorer & simulator
+   │
+   ▼ HTTP (same-origin proxy · CSRF · HttpOnly cookies)
 [ Backend: FastAPI Modular Monolith ]
    │
-   ├── /app/api/ ─────────── [ REST Endpoints & Request Validation Schemas ]
-   ├── /app/authz/ ───────── [ Principal Injection & RBAC Dependency Guards ]
-   ├── /app/core/ ────────── [ Security, Argon2, Config, Middleware ]
+   ├── /app/api/           REST endpoints & request validation schemas
+   ├── /app/authz/         Principal injection & RBAC dependency guards
+   ├── /app/core/          Security, Argon2id, config, middleware
    ├── /app/services/
-   │    ├── statutory.py ─── [ MSME 43B(h), 3x RBI Interest, Legal Notice Templates ]
-   │    ├── compliance.py ── [ RBI FPC, Frequency Limiter, Window & Tone Rules ]
-   │    ├── cases.py ─────── [ Case Lifecycle Mutations & Override Orchestration ]
-   │    ├── channels.py ──── [ Dynamic UPI & WhatsApp Cloud API Payloads ]
-   │    ├── p2p.py ───────── [ Promise Adherence Evaluation & Broken P2P Tracking ]
-   │    └── ingestion.py ─── [ Deduplicated Payment Event Pipeline ]
-   ├── /app/extraction/ ──── [ Hinglish Prompts, Validators & Heuristic Fallbacks ]
-   ├── /app/scoring/ ─────── [ Tabular GBDT Scorer & Feature Extractors ]
-   └── /app/db/ ──────────── [ SQLAlchemy ORM Models & Session Management ]
+   │    ├── statutory.py   MSME 43B(h), 3× RBI interest, legal notice templates
+   │    ├── compliance.py  RBI FPC, frequency limiter, window & tone rules
+   │    ├── cases.py       Case lifecycle mutations & override orchestration
+   │    ├── channels.py    Dynamic UPI & WhatsApp Cloud API payloads
+   │    ├── p2p.py         Promise adherence evaluation & broken P2P tracking
+   │    └── ingestion.py   Deduplicated payment event pipeline
+   ├── /app/extraction/    Hinglish prompts, validators & heuristic fallbacks
+   ├── /app/scoring/       Tabular GBDT scorer & feature extractors
+   └── /app/db/            SQLAlchemy ORM models & session management
    │
    ▼ Database
-[ PostgreSQL 16 / SQLite ]
+[ SQLite (default) / PostgreSQL 16 ]
 ```
+
+### Frontend Design System
+
+| Layer | Token | Value |
+|---|---|---|
+| Background deep | `--bg-deep` | `#08090c` |
+| Background surface | `--bg-surface` | `#0e1014` |
+| Background elevated | `--bg-elevated` | `#15181f` |
+| Accent / CTA | `--accent` | `#e09f3e` (amber) |
+| Recovered / settled | `--color-recovered` | `#10b981` (emerald) |
+| Disallowance / risk | `--color-disallowed` | `#ef4444` (crimson) |
+| Display font | Syne (500–800) | Headlines, brand mark |
+| UI / Body font | Plus Jakarta Sans (400–700) | All prose, labels, nav |
+| Financial data font | JetBrains Mono (400–600) | Currency, GSTINs, UTR codes |
+
+### Progressive Disclosure Hierarchy
+
+| Level | What it shows | Where |
+|---|---|---|
+| 1 | What is happening — debtor name, amount, days overdue | Case telemetry strip (always visible) |
+| 2 | Why it happened — gateway failure translated to business cause | Chapter 2 primary content |
+| 3 | What should happen — recommended operator action | Action deck, focus banner |
+| 4 | Why the system decided this — compliance rules, risk score | Expandable policy section |
+| 5 | Raw evidence — gateway JSON, correlation IDs, decision DAG | Collapsible "Inspect ↓" trays only |
 
 ---
 
@@ -223,20 +264,26 @@ Vaada/
 │       ├── test_security.py    # CSRF, RBAC & tenant boundary tests
 │       └── test_statutory.py   # MSME 43B(h), 3x RBI interest & UPI link tests
 ├── frontend/
-│   ├── package.json            # Node dependencies (Next.js 15, GSAP, React 19)
+│   ├── package.json            # Node dependencies (Next.js 15, motion/react, Lenis)
 │   ├── tsconfig.json           # TypeScript configuration
+│   ├── next.config.ts          # Same-origin proxy rewrite: /api/v1/* → :8000
+│   ├── app/
+│   │   ├── globals.css         # Design tokens, typography, motion curves
+│   │   ├── layout.tsx          # 3-tier font stack (Syne / Plus Jakarta Sans / JetBrains Mono)
+│   │   ├── page.tsx            # Public homepage (→ Landing)
+│   │   ├── login/page.tsx      # Operator authentication gateway
+│   │   ├── queue/page.tsx      # Executive financial ledger & operations console
+│   │   ├── cases/[id]/page.tsx # 4-chapter narrative case investigation dossier
+│   │   ├── audit/page.tsx      # Human-readable immutable audit ledger
+│   │   ├── settings/page.tsx   # Compliance guardrail configuration
+│   │   └── razorpay-taxonomy/  # Live taxonomy explorer & diagnostic simulator
 │   ├── components/
-│   │   └── Landing.tsx         # Public marketing landing component with GSAP
-│   ├── lib/
-│   │   └── api.ts              # Authenticated fetch client with CSRF support
-│   └── app/
-│       ├── layout.tsx          # Root layout & design tokens
-│       ├── page.tsx            # Public homepage
-│       ├── login/page.tsx      # Operator login portal
-│       ├── queue/page.tsx      # Recovery case queue & real-time metrics
-│       ├── cases/[id]/page.tsx # 7-Station Case Operations Power-Station
-│       ├── audit/page.tsx      # Immutable system audit log viewer
-│       └── settings/page.tsx   # Compliance guardrail settings
+│   │   ├── Landing.tsx         # Cinematic 6-scene landing narrative
+│   │   ├── Preloader.tsx       # Entry preloader animation
+│   │   ├── SmoothScroll.tsx    # Lenis smooth scroll provider
+│   │   └── PageTransition.tsx  # Page transition wrapper
+│   └── lib/
+│       └── api.ts              # Authenticated fetch client with CSRF & cookie support
 └── docs/                       # Technical specifications & benchmark reports
 ```
 
@@ -275,7 +322,7 @@ VAADA_LOG_LEVEL=INFO
 
 VAADA_API_HOST=0.0.0.0
 VAADA_API_PORT=8000
-VAADA_CORS_ORIGINS=http://localhost:3000
+VAADA_CORS_ORIGINS=http://localhost:3004
 
 VAADA_COOKIE_SECURE=false
 VAADA_COOKIE_SAMESITE=lax
@@ -295,7 +342,7 @@ VAADA_LLM_BASE_URL=http://127.0.0.1:11434
 VAADA_LLM_MODEL=llama3:8b
 
 VAADA_SEED_ADMIN_EMAIL=operator@vaada.local
-VAADA_SEED_ADMIN_PASSWORD=Password@123
+VAADA_SEED_ADMIN_PASSWORD=123456789
 ```
 
 ---
@@ -344,13 +391,21 @@ VAADA_SEED_ADMIN_PASSWORD=Password@123
 
 2. Start the Next.js development server:
    ```bash
-   npm run dev
+   npm run dev        # development on :3004
+   # or for production:
+   npm run build && npx next start -p 3004
    ```
 
 3. Open your browser:
-   - **Public Site**: [http://localhost:3000](http://localhost:3000)
-   - **Operations Login**: [http://localhost:3000/login](http://localhost:3000/login)
-   - **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+   | URL | Description |
+   |---|---|
+   | [http://localhost:3004](http://localhost:3004) | Public landing narrative |
+   | [http://localhost:3004/login](http://localhost:3004/login) | Operator authentication |
+   | [http://localhost:3004/queue](http://localhost:3004/queue) | Operations console (requires auth) |
+   | [http://localhost:8000/docs](http://localhost:8000/docs) | FastAPI auto-generated API docs |
+
+   > **Note**: The Next.js frontend proxies all `/api/v1/*` requests to the backend via `next.config.ts`. This ensures same-origin HttpOnly cookie delivery without any CORS configuration needed on the frontend.
 
 ---
 
@@ -359,14 +414,16 @@ VAADA_SEED_ADMIN_PASSWORD=Password@123
 Running `python -m app.seed` sets up two test accounts:
 
 | Role | Email | Password | Permissions |
-| :--- | :--- | :--- | :--- |
-| **Operator / Admin** | `operator@vaada.local` | Value of `VAADA_SEED_ADMIN_PASSWORD` (default: `Password@123`) | Full access (Ingest, Act, Notice Generation, TDS, Overrides) |
-| **Viewer** | `viewer@vaada.local` | Value of `VAADA_SEED_ADMIN_PASSWORD` (default: `Password@123`) | Read-only access to cases, metrics, and audit logs |
+|---|---|---|---|
+| **Operator / Admin** | `operator@vaada.local` | `123456789` | Full access — ingest, act, notice generation, TDS, overrides |
+| **Viewer** | `viewer@vaada.local` | `123456789` | Read-only — cases, metrics, audit logs |
 
-### Seeded Scenarios Include:
+### Seeded Scenarios Include
+
 - **Kalyani Infrastructure Ltd** (`INV-2026-0891`): MSME Small enterprise invoice with 43B(h) disallowance notice and accrued compound interest.
 - **Mehta Fabrics Pvt Ltd** (`INV-SYN-1002`): Insufficient funds bounce in `awaiting_action` with NPCI dynamic UPI QR generated.
 - **Sharma & Sons Exports** (`INV-SYN-1003`): Mandate failure with high classical recovery probability.
+- **Kapoor Agri Inputs** (`INV-SYN-1004`): Hinglish promise *"bhai abhi balance nahi hai, Friday shaam 4 baje 1.85L RTGS kar dunga pakka"* — demonstrates word-level tokenization, structured P2P extraction, and binding commitment card.
 - **Patel Paper Mills** (`INV-SYN-1007`): Active Hinglish promise commitment extracted from customer response.
 - **Apex Garments** (`INV-SYN-1008`): Broken promise (*Vaada Khilafi*) escalating credit risk tier to `CRITICAL`.
 
@@ -425,9 +482,10 @@ The backend exposes a fully documented REST API at `http://localhost:8000/api/v1
 ## Security Model & Compliance Posture
 
 | Risk Area | Mitigation in Vaada |
-| :--- | :--- |
+|---|---|
 | **Broken Object-Level Auth (BOLA)** | Every database query enforces `tenant_id` predicates derived from the cryptographically verified session token, preventing cross-tenant access. |
-| **CSRF Attacks** | Mutating endpoints require double-submit `X-CSRF-Token` headers matching the HTTP-only cookie signature. |
+| **CSRF Attacks** | Mutating endpoints require double-submit `X-CSRF-Token` headers matching the HttpOnly cookie signature. |
+| **Password Storage** | `argon2-cffi` Argon2id hashing — no plaintext or bcrypt. |
 | **Prompt Injection / Jailbreak** | LLM inputs are isolated as untrusted data. The LLM produces only structured JSON and has zero tool execution privileges. |
 | **Hallucinated State Changes** | All case transitions are validated against a strict DAG finite state machine. The LLM cannot mutate case state. |
 | **Regulatory Harassment** | Executable RBI Fair Practices Code guardrails run before any communication dispatch; blocked attempts are logged to the audit trail. |

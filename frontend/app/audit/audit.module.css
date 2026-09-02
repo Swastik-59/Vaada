@@ -257,10 +257,28 @@
 }
 
 .actionCell {
-  font-family: var(--mono);
-  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.actionHumanText {
+  font-family: var(--sans);
+  font-size: 13.5px;
   font-weight: 600;
+  color: var(--text-primary);
+}
+
+.actionRawCode {
+  font-family: var(--mono);
+  font-size: 11px;
   color: var(--accent);
+}
+
+.resourceTypeText {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .actorBadge {

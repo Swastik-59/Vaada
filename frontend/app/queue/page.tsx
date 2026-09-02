@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
@@ -38,29 +38,26 @@ type Metrics = {
   msme_43b_h_at_risk_cases?: number;
 };
 
-const STATE_LABELS: Record<string, { label: string; color: string; bg: string }> = {
-  open: { label: "Open", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
-  classified: { label: "Classified", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
-  awaiting_action: { label: "Awaiting Action", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.1)" },
-  contacted: { label: "Contacted", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.1)" },
-  awaiting_response: { label: "Awaiting Reply", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.1)" },
-  promise_recorded: { label: "Promise Recorded", color: "#34d399", bg: "rgba(52, 211, 153, 0.1)" },
-  human_review: { label: "Human Review", color: "#f97316", bg: "rgba(249, 115, 22, 0.1)" },
-  paused: { label: "Paused", color: "var(--text-muted)", bg: "var(--bg-elevated)" },
-  blocked: { label: "Blocked", color: "#f87171", bg: "rgba(248, 113, 113, 0.1)" },
-  recovered: { label: "Recovered", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
-  unrecoverable: { label: "Unrecoverable", color: "var(--color-disallowed)", bg: "rgba(239, 68, 68, 0.1)" },
-  cancelled: { label: "Cancelled", color: "var(--text-muted)", bg: "var(--bg-elevated)" },
+type UserProfile = {
+  user_id: string;
+  email: string;
+  tenant_id: string;
+  role: string;
 };
 
-const ALL_STATES = [
-  "awaiting_action",
-  "awaiting_response",
-  "promise_recorded",
-  "human_review",
-  "recovered",
-  "unrecoverable",
-];
+const HUMAN_STATE_DESCRIPTIONS: Record<string, { label: string; actionHint: string; color: string; bg: string }> = {
+  open: { label: "Ingested", actionHint: "Classifying gateway error", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
+  classified: { label: "Diagnosed", actionHint: "Evaluating recovery policy", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
+  awaiting_action: { label: "Action Pending", actionHint: "Ready for payment reminder", color: "#0284c7", bg: "rgba(2, 132, 199, 0.1)" },
+  contacted: { label: "Debtor Contacted", actionHint: "WhatsApp delivery sent", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+  awaiting_response: { label: "Awaiting Reply", actionHint: "Waiting on customer commitment", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+  promise_recorded: { label: "Promise Committed", actionHint: "Debtor scheduled payment", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
+  human_review: { label: "Needs Operator Review", actionHint: "Dispute or manual escalation", color: "#f97316", bg: "rgba(249, 115, 22, 0.1)" },
+  paused: { label: "Temporarily Paused", actionHint: "Debtor requested grace period", color: "var(--text-muted)", bg: "var(--bg-elevated)" },
+  blocked: { label: "Compliance Blocked", actionHint: "Exceeded 3 contacts / 7d cap", color: "#ef4444", bg: "rgba(239, 68, 68, 0.1)" },
+  recovered: { label: "Settled & Verified", actionHint: "Bank remittance matched", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
+  unrecoverable: { label: "Marked Bad Debt", actionHint: "Exhausted statutory rails", color: "var(--color-disallowed)", bg: "rgba(239, 68, 68, 0.1)" },
+};
 
 function formatCurrency(minor: number | null | undefined): string {
   if (minor == null) return "—";
@@ -82,15 +79,24 @@ export default function QueuePage() {
   const router = useRouter();
   const [items, setItems] = useState<CaseRow[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [error, setError] = useState("");
   const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Filters & Search
   const [stateFilter, setStateFilter] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("amount_minor");
   const [sortAsc, setSortAsc] = useState(false);
 
   useEffect(() => {
+    // Load current user profile
+    apiFetch("/api/v1/auth/me")
+      .then((u) => setUser(u))
+      .catch(() => {});
+
+    // Load active recovery queue
     apiFetch("/api/v1/cases?limit=50")
       .then((data) => {
         setItems(data.items ?? []);
@@ -116,114 +122,161 @@ export default function QueuePage() {
     }
   };
 
-  let displayed = items;
-  if (stateFilter) {
-    displayed = displayed.filter((i) => i.state === stateFilter);
-  }
-  if (searchQuery.trim()) {
-    const q = searchQuery.toLowerCase();
-    displayed = displayed.filter(
-      (i) =>
-        (i.invoice_number || "").toLowerCase().includes(q) ||
-        (i.customer_name || "").toLowerCase().includes(q) ||
-        (i.customer_gstin || "").toLowerCase().includes(q)
+  // Filter and sort computation
+  const filtered = useMemo(() => {
+    let result = items;
+    if (stateFilter) {
+      result = result.filter((i) => i.state === stateFilter);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (i) =>
+          (i.invoice_number || "").toLowerCase().includes(q) ||
+          (i.customer_name || "").toLowerCase().includes(q) ||
+          (i.customer_gstin || "").toLowerCase().includes(q)
+      );
+    }
+    if (sortKey) {
+      result = [...result].sort((a, b) => {
+        const av = a[sortKey] ?? 0;
+        const bv = b[sortKey] ?? 0;
+        return sortAsc ? (av < bv ? -1 : 1) : (av > bv ? -1 : 1);
+      });
+    }
+    return result;
+  }, [items, stateFilter, searchQuery, sortKey, sortAsc]);
+
+  // Find the single highest-priority case needing immediate human attention
+  const highestPriorityCase = useMemo(() => {
+    return (
+      items.find((c) => c.state === "human_review") ||
+      items.find((c) => c.statutory_status?.days_remaining != null && c.statutory_status.days_remaining <= 5 && !c.statutory_status.is_disallowed) ||
+      items[0]
     );
-  }
-  if (sortKey) {
-    displayed = [...displayed].sort((a, b) => {
-      const av = a[sortKey] ?? 0;
-      const bv = b[sortKey] ?? 0;
-      return sortAsc ? (av < bv ? -1 : 1) : (av > bv ? -1 : 1);
-    });
-  }
+  }, [items]);
 
   return (
-    <div className={styles.shell}>
-      {/* ── Top Navigation ── */}
-      <nav className={styles.topNav}>
-        <div className={styles.navLeft}>
-          <Link href="/" className={styles.navBrand}>
-            VAADA <span className={styles.navDevanagari}>वादा</span>
+    <div className={styles.ledgerShell}>
+      {/* ── Top Executive Navigation ── */}
+      <nav className={styles.topBar}>
+        <div className={styles.barLeft}>
+          <Link href="/" className={styles.brandMark}>
+            <span>VAADA</span>
+            <span className={styles.brandDevanagari}>वादा</span>
           </Link>
-          <span className={styles.navDivider}>/</span>
-          <span className={styles.navTitle}>OPERATIONS CONSOLE</span>
+          <span className={styles.barDivider}>/</span>
+          <span className={styles.barTitle}>Operations Console</span>
         </div>
-        <div className={styles.navRight}>
-          <Link href="/" className={styles.navLink}>Public Machine</Link>
-          <Link href="/audit" className={styles.navLink}>Audit Trail</Link>
-          <Link href="/settings" className={styles.navLink}>Compliance</Link>
-          <Link href="/razorpay-taxonomy" className={styles.navLink}>Taxonomy</Link>
-          <Link href="/login" className={styles.navAuthBtn}>Operator</Link>
+
+        <div className={styles.barRight}>
+          <Link href="/audit" className={styles.barNavLink}>Audit Log</Link>
+          <Link href="/settings" className={styles.barNavLink}>Compliance Rules</Link>
+          <Link href="/razorpay-taxonomy" className={styles.barNavLink}>Gateway Taxonomy</Link>
+          
+          {user ? (
+            <div className={styles.userProfilePill}>
+              <span className={styles.userDot} />
+              <span className={styles.userEmail}>{user.email}</span>
+              <span className={styles.userRoleTag}>{user.role}</span>
+            </div>
+          ) : (
+            <Link href="/login" className={styles.signInLink}>Sign In</Link>
+          )}
         </div>
       </nav>
 
-      {/* ── Main Workspace ── */}
+      {/* ── Main Executive Workspace ── */}
       <main className={styles.workspace}>
+        {/* Header Strip */}
         <header className={styles.header}>
-          <div className={styles.headerInfo}>
-            <div className={styles.statusTicker}>
-              <span className={styles.statusDot} />
-              <span>LIVE QUEUE · 42 STATUTORY RAILS ACTIVE · TIMEZONE: IST</span>
-            </div>
-            <h1 className={styles.title}>Recovery Dossiers</h1>
-            <p className={styles.subtitle}>
-              Prioritized commercial receivables under active algorithmic tracking and Section 43B(h) statutory clock enforcement.
+          <div>
+            <span className={styles.contextTag}>ACTIVE RECOVERY PORTFOLIO</span>
+            <h1 className={styles.pageHeadline}>Commercial Receivables</h1>
+            <p className={styles.pageSubheadline}>
+              Prioritized invoices under automated surveillance, debtor communication, and Section 43B(h) compliance.
             </p>
           </div>
 
+          {/* Portfolio Health Summary Strip */}
           {metrics && (
-            <div className={styles.metricsGrid}>
-              <div className={styles.metricCard}>
-                <span className={styles.metricVal}>{metrics.open_cases}</span>
-                <span className={styles.metricLbl}>ACTIVE CASES</span>
+            <div className={styles.metricsSummaryStrip}>
+              <div className={styles.metricItem}>
+                <span className={styles.mLabel}>PORTFOLIO VALUE</span>
+                <span className={styles.mValue}>
+                  {formatCurrency(items.reduce((sum, item) => sum + (item.amount_minor || 0), 0))}
+                </span>
+                <span className={styles.mMeta}>{items.length} active invoices</span>
               </div>
-              <div className={styles.metricCard}>
-                <span className={styles.metricVal} style={{ color: "var(--color-recovered)" }}>
+
+              <div className={styles.metricItem}>
+                <span className={styles.mLabel}>CASH SETTLED</span>
+                <span className={styles.mValue} style={{ color: "var(--color-recovered)" }}>
                   {formatCurrency(metrics.recovered_amount_minor)}
                 </span>
-                <span className={styles.metricLbl}>FUNDS RECOVERED</span>
+                <span className={styles.mMeta}>{metrics.recovered_cases} verified payments</span>
               </div>
-              <div className={styles.metricCard}>
-                <span className={styles.metricVal} style={{ color: "var(--color-disallowed)" }}>
-                  {metrics.msme_43b_h_at_risk_cases ?? 0}
+
+              <div className={styles.metricItem}>
+                <span className={styles.mLabel}>DISALLOWANCE RISK</span>
+                <span className={styles.mValue} style={{ color: "var(--color-disallowed)" }}>
+                  {metrics.msme_43b_h_at_risk_cases ?? 0} Debtors
                 </span>
-                <span className={styles.metricLbl}>43B(H) TAX AT RISK</span>
+                <span className={styles.mMeta}>MSME 45-day cutoff</span>
               </div>
-              <div className={styles.metricCard}>
-                <span className={styles.metricVal} style={{ color: "var(--accent)" }}>
+
+              <div className={styles.metricItem}>
+                <span className={styles.mLabel}>3× PENAL ACCRUED</span>
+                <span className={styles.mValue} style={{ color: "var(--accent)" }}>
                   {formatCurrency(metrics.statutory_interest_minor ?? 0)}
                 </span>
-                <span className={styles.metricLbl}>3× PENAL ACCRUED</span>
+                <span className={styles.mMeta}>MSMED Act claimable</span>
               </div>
             </div>
           )}
         </header>
 
-        {/* Unauthorized Banner */}
-        {isUnauthorized && (
-          <div className={styles.authNoticeBanner}>
-            <div>
-              <strong>Operator Session Required.</strong> Please sign in to view the live database queue and execute recovery actions.
+        {/* Highest Priority Attention Banner */}
+        {highestPriorityCase && (
+          <div className={styles.attentionBanner}>
+            <div className={styles.attnLeft}>
+              <span className={styles.attnTag}>RECOMMENDED OPERATOR FOCUS</span>
+              <h3 className={styles.attnTitle}>
+                {highestPriorityCase.customer_name} — {highestPriorityCase.invoice_number} ({formatCurrency(highestPriorityCase.amount_minor)})
+              </h3>
+              <p className={styles.attnDetail}>
+                {highestPriorityCase.state === "human_review"
+                  ? "Requires human adjudication: Debtor raised payment terms query or disputed invoice."
+                  : highestPriorityCase.statutory_status?.days_remaining != null && highestPriorityCase.statutory_status.days_remaining <= 5
+                  ? `Critical Section 43B(h) deadline: ${highestPriorityCase.statutory_status.days_remaining} days left before debtor incurs 31.2% corporate tax disallowance.`
+                  : "Active promise scheduled on WhatsApp. Ready for automated reminder verification."}
+              </p>
             </div>
-            <Link href="/login" className={styles.signInBtn}>
-              Sign In to Console →
+            <Link href={`/cases/${highestPriorityCase.id}`} className={styles.attnActionBtn}>
+              Inspect Dossier →
             </Link>
           </div>
         )}
 
-        {/* General Error Banner */}
-        {error && (
-          <div className={styles.errorBanner}>
-            Connection Notice: {error}
+        {/* Unauthorized Notification */}
+        {isUnauthorized && (
+          <div className={styles.authNotice}>
+            <div>
+              <strong>Operator session required.</strong> Sign in with demo credentials to access live case records and trigger recovery actions.
+            </div>
+            <Link href="/login" className={styles.authSignInBtn}>Sign In Now →</Link>
           </div>
         )}
 
-        {/* Controls Bar */}
-        <div className={styles.controlsBar}>
+        {/* Error Notification */}
+        {error && <div className={styles.errorNotice}>Notice: {error}</div>}
+
+        {/* Controls: Search, Filters, and Sorters */}
+        <div className={styles.controlsRow}>
           <div className={styles.searchBox}>
             <input
               type="text"
-              placeholder="Filter by invoice, buyer name, or GSTIN..."
+              placeholder="Search by enterprise buyer, invoice, or GSTIN..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
@@ -232,56 +285,67 @@ export default function QueuePage() {
 
           <div className={styles.filterPills}>
             <button
-              className={`${styles.filterPill} ${stateFilter === null ? styles.filterPillActive : ""}`}
+              className={`${styles.filterPill} ${stateFilter === null ? styles.pillActive : ""}`}
               onClick={() => setStateFilter(null)}
             >
-              All Cases ({items.length})
+              All Invoices ({items.length})
             </button>
-            {ALL_STATES.filter((s) => items.some((i) => i.state === s)).map((s) => {
-              const count = items.filter((i) => i.state === s).length;
-              return (
-                <button
-                  key={s}
-                  className={`${styles.filterPill} ${stateFilter === s ? styles.filterPillActive : ""}`}
-                  onClick={() => setStateFilter(stateFilter === s ? null : s)}
-                >
-                  {STATE_LABELS[s]?.label ?? s} ({count})
-                </button>
-              );
-            })}
+            <button
+              className={`${styles.filterPill} ${stateFilter === "awaiting_action" ? styles.pillActive : ""}`}
+              onClick={() => setStateFilter(stateFilter === "awaiting_action" ? null : "awaiting_action")}
+            >
+              Action Pending ({items.filter((i) => i.state === "awaiting_action").length})
+            </button>
+            <button
+              className={`${styles.filterPill} ${stateFilter === "promise_recorded" ? styles.pillActive : ""}`}
+              onClick={() => setStateFilter(stateFilter === "promise_recorded" ? null : "promise_recorded")}
+            >
+              Promises Committed ({items.filter((i) => i.state === "promise_recorded").length})
+            </button>
+            <button
+              className={`${styles.filterPill} ${stateFilter === "human_review" ? styles.pillActive : ""}`}
+              onClick={() => setStateFilter(stateFilter === "human_review" ? null : "human_review")}
+            >
+              Needs Review ({items.filter((i) => i.state === "human_review").length})
+            </button>
+            <button
+              className={`${styles.filterPill} ${stateFilter === "recovered" ? styles.pillActive : ""}`}
+              onClick={() => setStateFilter(stateFilter === "recovered" ? null : "recovered")}
+            >
+              Settled ({items.filter((i) => i.state === "recovered").length})
+            </button>
           </div>
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className={styles.emptyState}>
-            Initializing Dossier Telemetry...
+          <div className={styles.loadingBox}>
+            Synchronizing portfolio ledger with database...
           </div>
         )}
 
         {/* Empty State */}
-        {!loading && !isUnauthorized && displayed.length === 0 && (
-          <div className={styles.emptyState}>
-            No recovery dossiers match the current filter.
+        {!loading && filtered.length === 0 && (
+          <div className={styles.emptyBox}>
+            No receivables match the active filter criteria.
           </div>
         )}
 
-        {/* Table Ledger */}
-        {!loading && displayed.length > 0 && (
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
+        {/* Data-Dense Executive Ledger */}
+        {!loading && filtered.length > 0 && (
+          <div className={styles.tableContainer}>
+            <table className={styles.ledgerTable}>
               <thead>
                 <tr>
-                  <th>INVOICE NUMBER</th>
-                  <th>DEBTOR / GSTIN</th>
-                  <th>RECOVERY STATE</th>
-                  <th>RISK TIER</th>
-                  <th>MSME 43B(H) STATUS</th>
+                  <th>INVOICE</th>
+                  <th>ENTERPRISE BUYER</th>
+                  <th>RECOVERY STATUS</th>
+                  <th>SECTION 43B(H) CLOCK</th>
                   <th
                     className={sortKey === "recovery_probability" ? styles.sortColActive : styles.sortCol}
                     onClick={() => toggleSort("recovery_probability")}
                   >
-                    P(RECOVERY) {sortKey === "recovery_probability" ? (sortAsc ? "▲" : "▼") : ""}
+                    ESTIMATED RECOVERY {sortKey === "recovery_probability" ? (sortAsc ? "▲" : "▼") : ""}
                   </th>
                   <th
                     className={sortKey === "amount_minor" ? styles.sortColActive : styles.sortCol}
@@ -293,18 +357,20 @@ export default function QueuePage() {
                     className={sortKey === "due_at" ? styles.sortColActive : styles.sortCol}
                     onClick={() => toggleSort("due_at")}
                   >
-                    ORIGINAL DUE {sortKey === "due_at" ? (sortAsc ? "▲" : "▼") : ""}
+                    DUE DATE {sortKey === "due_at" ? (sortAsc ? "▲" : "▼") : ""}
                   </th>
                   <th>CONTACTS</th>
                 </tr>
               </thead>
               <tbody>
-                {displayed.map((item) => {
-                  const stateCfg = STATE_LABELS[item.state] || {
+                {filtered.map((item) => {
+                  const stateMeta = HUMAN_STATE_DESCRIPTIONS[item.state] || {
                     label: item.state,
+                    actionHint: "In progress",
                     color: "var(--text-secondary)",
                     bg: "var(--bg-elevated)",
                   };
+
                   const probPct = item.recovery_probability != null ? Math.round(item.recovery_probability * 100) : null;
                   const probColor =
                     probPct != null
@@ -321,82 +387,93 @@ export default function QueuePage() {
                     <tr
                       key={item.id}
                       onClick={() => router.push(`/cases/${item.id}`)}
-                      className={styles.tableRow}
+                      className={styles.ledgerRow}
                     >
-                      <td>
-                        <Link href={`/cases/${item.id}`} className={styles.invoiceLink}>
+                      {/* Invoice Link */}
+                      <td className={styles.invoiceCell}>
+                        <Link href={`/cases/${item.id}`} className={styles.invoiceNumber}>
                           {item.invoice_number ?? item.id.slice(0, 8)}
                         </Link>
                       </td>
+
+                      {/* Debtor & GSTIN */}
                       <td>
-                        <div className={styles.debtorCell}>
+                        <div className={styles.debtorInfo}>
                           <div className={styles.debtorNameRow}>
-                            <span className={styles.debtorName}>{item.customer_name ?? "Unknown Enterprise"}</span>
+                            <span className={styles.debtorTitle}>{item.customer_name ?? "Unknown Enterprise"}</span>
                             {item.customer_is_msme && (
                               <span className={styles.msmeTag}>
-                                MSME {item.customer_msme_category ? `(${item.customer_msme_category[0]})` : ""}
+                                MSME ({item.customer_msme_category ?? "Small"})
                               </span>
                             )}
                           </div>
-                          {item.customer_gstin && (
-                            <span className={styles.debtorGstin}>{item.customer_gstin}</span>
-                          )}
+                          <span className={styles.debtorGstin}>{item.customer_gstin ?? "Unregistered Buyer"}</span>
                         </div>
                       </td>
+
+                      {/* Human Status & Action Hint */}
                       <td>
-                        <span
-                          className={styles.stateTag}
-                          style={{ color: stateCfg.color, backgroundColor: stateCfg.bg }}
-                        >
-                          {stateCfg.label}
-                        </span>
+                        <div className={styles.statusCell}>
+                          <span
+                            className={styles.statusBadge}
+                            style={{ color: stateMeta.color, backgroundColor: stateMeta.bg }}
+                          >
+                            {stateMeta.label}
+                          </span>
+                          <span className={styles.statusActionHint}>{stateMeta.actionHint}</span>
+                        </div>
                       </td>
-                      <td>
-                        <span className={styles.riskTierTag}>
-                          {item.credit_risk_tier ?? "TIER 2"}
-                        </span>
-                      </td>
+
+                      {/* Statutory Section 43B(h) Status */}
                       <td>
                         {stat && stat.is_msme ? (
                           stat.is_disallowed ? (
-                            <span className={styles.statDisallowed}>Disallowed</span>
+                            <span className={styles.clockDisallowed}>Disallowed (Tax Penalty)</span>
                           ) : stat.days_remaining <= 5 ? (
-                            <span className={styles.statUrgent}>{stat.days_remaining}d remaining</span>
+                            <span className={styles.clockUrgent}>{stat.days_remaining}d remaining</span>
                           ) : (
-                            <span className={styles.statSafe}>{stat.days_remaining}d remaining</span>
+                            <span className={styles.clockSafe}>{stat.days_remaining}d remaining</span>
                           )
                         ) : (
-                          <span className={styles.statMuted}>Non-MSME</span>
+                          <span className={styles.clockNonMsme}>Non-MSME</span>
                         )}
                       </td>
+
+                      {/* Recovery Likelihood Meter */}
                       <td>
                         {probPct != null ? (
-                          <div className={styles.probMeterWrap}>
-                            <div className={styles.probTrack}>
+                          <div className={styles.likelihoodWrap}>
+                            <div className={styles.likelihoodTrack}>
                               <div
-                                className={styles.probBar}
+                                className={styles.likelihoodFill}
                                 style={{ width: `${probPct}%`, backgroundColor: probColor }}
                               />
                             </div>
-                            <span className={styles.probNum} style={{ color: probColor }}>
+                            <span className={styles.likelihoodNum} style={{ color: probColor }}>
                               {probPct}%
                             </span>
                           </div>
                         ) : (
-                          <span className={styles.statMuted}>—</span>
+                          <span className={styles.clockNonMsme}>—</span>
                         )}
                       </td>
+
+                      {/* Principal Amount */}
                       <td>
-                        <span className={styles.principalVal}>
+                        <span className={styles.principalNumber}>
                           {formatCurrency(item.amount_minor)}
                         </span>
                       </td>
+
+                      {/* Due Date */}
                       <td>
-                        <span className={styles.dueVal}>{formatDate(item.due_at)}</span>
+                        <span className={styles.dateNumber}>{formatDate(item.due_at)}</span>
                       </td>
+
+                      {/* Rolling Contacts Cap */}
                       <td>
-                        <span className={styles.contactsVal}>
-                          {item.contact_attempt_count ?? 0}/3
+                        <span className={styles.contactsCounter}>
+                          {item.contact_attempt_count ?? 0} / 3
                         </span>
                       </td>
                     </tr>

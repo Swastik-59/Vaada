@@ -228,6 +228,20 @@ function formatCurrency(minor: number | null | undefined): string {
   return "₹" + Math.round(minor / 100).toLocaleString("en-IN");
 }
 
+const HUMAN_STATE_DESCRIPTIONS: Record<string, { label: string; actionHint: string; color: string; bg: string }> = {
+  open: { label: "Ingested", actionHint: "Classifying gateway error", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
+  classified: { label: "Diagnosed", actionHint: "Evaluating recovery policy", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
+  awaiting_action: { label: "Action Pending", actionHint: "Ready for payment reminder", color: "#0284c7", bg: "rgba(2, 132, 199, 0.1)" },
+  contacted: { label: "Debtor Contacted", actionHint: "WhatsApp delivery sent", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+  awaiting_response: { label: "Awaiting Reply", actionHint: "Waiting on customer commitment", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
+  promise_recorded: { label: "Promise Committed", actionHint: "Debtor scheduled payment", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
+  human_review: { label: "Needs Operator Review", actionHint: "Dispute or manual escalation", color: "#f97316", bg: "rgba(249, 115, 22, 0.1)" },
+  paused: { label: "Temporarily Paused", actionHint: "Debtor requested grace period", color: "var(--text-muted)", bg: "var(--bg-elevated)" },
+  blocked: { label: "Compliance Blocked", actionHint: "Exceeded 3 contacts / 7d cap", color: "#ef4444", bg: "rgba(239, 68, 68, 0.1)" },
+  recovered: { label: "Settled & Verified", actionHint: "Bank remittance matched", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
+  unrecoverable: { label: "Marked Bad Debt", actionHint: "Exhausted statutory rails", color: "var(--color-disallowed)", bg: "rgba(239, 68, 68, 0.1)" },
+};
+
 const TERMINAL_STATES = new Set(["recovered", "unrecoverable", "cancelled"]);
 const CAN_SEND_REMINDER = new Set(["awaiting_action", "awaiting_response"]);
 
@@ -254,6 +268,10 @@ export default function CasePage() {
   const [payAmount, setPayAmount] = useState("");
   const [payUtr, setPayUtr] = useState("UTR" + Math.floor(1000000000 + Math.random() * 9000000000));
   const [copiedUpi, setCopiedUpi] = useState(false);
+
+  // Progressive Disclosure Trays
+  const [showRawPayload, setShowRawPayload] = useState(false);
+  const [showDecisionDag, setShowDecisionDag] = useState(false);
 
   async function loadCase() {
     try {
@@ -284,7 +302,7 @@ export default function CasePage() {
         body: JSON.stringify({ action, reason, expected_version: data.version }),
       });
       setData(payload.case);
-      setActionSuccess(`Action ${action.toUpperCase()} successfully applied.`);
+      setActionSuccess(`Action successfully applied: ${action.replace("_", " ")}`);
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Action failed");
     } finally {
@@ -378,14 +396,14 @@ export default function CasePage() {
 
   if (isUnauthorized) {
     return (
-      <div className={styles.shell}>
-        <div className={styles.authNoticeBanner}>
-          <div>
-            <strong>Operator Authentication Required.</strong> Please log in to inspect this case dossier.
-          </div>
-          <Link href="/login" className={styles.signInBtn}>
-            Sign In to Console →
-          </Link>
+      <div className={styles.caseShell}>
+        <div className={styles.unauthorizedBox}>
+          <span className={styles.unauthTag}>OPERATOR SESSION REQUIRED</span>
+          <h2 className={styles.unauthTitle}>Authentication Needed</h2>
+          <p className={styles.unauthBody}>
+            You must be signed in with an active operator account to inspect confidential debtor records.
+          </p>
+          <Link href="/login" className={styles.unauthBtn}>Sign In With Demo Account →</Link>
         </div>
       </div>
     );
@@ -393,12 +411,10 @@ export default function CasePage() {
 
   if (error) {
     return (
-      <div className={styles.shell}>
-        <div className={styles.errorBanner}>
-          <span>Notice: {error}</span>
-          <Link href="/queue" className={styles.backLink}>
-            Return to Queue
-          </Link>
+      <div className={styles.caseShell}>
+        <div className={styles.errorBox}>
+          <span>Error loading case dossier: {error}</span>
+          <Link href="/queue" className={styles.backBtn}>← Return to Portfolio Queue</Link>
         </div>
       </div>
     );
@@ -406,955 +422,708 @@ export default function CasePage() {
 
   if (!data) {
     return (
-      <div className={styles.shell}>
-        <div className={styles.loadingState}>
-          INITIALIZING DOSSIER TELEMETRY...
-        </div>
+      <div className={styles.caseShell}>
+        <div className={styles.loadingBox}>Loading recovery dossier...</div>
       </div>
     );
   }
 
-  const isTerminal = TERMINAL_STATES.has(data.state);
-  const canRemind = CAN_SEND_REMINDER.has(data.state);
-  const prob = data.recovery_probability;
-  const probPct = prob !== null ? Math.round(prob * 100) : null;
-  const probColor =
-    probPct !== null
-      ? probPct >= 65
-        ? "var(--color-recovered)"
-        : probPct >= 40
-        ? "var(--color-warning)"
-        : "var(--color-disallowed)"
-      : "var(--text-muted)";
-
   const stat = data.statutory_status;
-  const latestPromise = data.promises.length > 0 ? data.promises[data.promises.length - 1] : null;
-  const lang = data.language_analysis;
+  const isTerminal = TERMINAL_STATES.has(data.state);
+  const probPct = data.recovery_probability != null ? Math.round(data.recovery_probability * 100) : null;
+  const stateMeta = HUMAN_STATE_DESCRIPTIONS[data.state] || {
+    label: data.state,
+    actionHint: "In progress",
+    color: "var(--text-secondary)",
+    bg: "var(--bg-elevated)",
+  };
 
   return (
-    <div className={styles.shell}>
-      {/* ── Top Console Nav ── */}
-      <nav className={styles.topNav}>
+    <div className={styles.caseShell}>
+      {/* ── Top Header Bar ── */}
+      <nav className={styles.caseNav}>
         <div className={styles.navLeft}>
-          <Link href="/queue" className={styles.navBackLink}>
-            ← QUEUE
-          </Link>
+          <Link href="/queue" className={styles.backLink}>← Portfolio Queue</Link>
           <span className={styles.navDivider}>/</span>
-          <span className={styles.navDossierId}>CASE {data.id.slice(0, 8)}...</span>
-          <span className={styles.navDivider}>/</span>
-          <span className={styles.navInvoice}>{data.invoice_number ?? "UNKNOWN INVOICE"}</span>
+          <span className={styles.caseInvoiceId}>{data.invoice_number ?? data.id.slice(0, 8)}</span>
+          <span
+            className={styles.statusPill}
+            style={{ color: stateMeta.color, backgroundColor: stateMeta.bg }}
+          >
+            {stateMeta.label}
+          </span>
         </div>
-        <div className={styles.navTabs}>
-          <button
-            className={`${styles.navTab} ${activeTab === "dossier" ? styles.navTabActive : ""}`}
-            onClick={() => setActiveTab("dossier")}
-          >
-            Investigation Dossier
-          </button>
-          <button
-            className={`${styles.navTab} ${activeTab === "notices" ? styles.navTabActive : ""}`}
-            onClick={() => setActiveTab("notices")}
-          >
-            Statutory Notices ({data.notices.length})
-          </button>
-          <button
-            className={`${styles.navTab} ${activeTab === "reconcile" ? styles.navTabActive : ""}`}
-            onClick={() => setActiveTab("reconcile")}
-          >
-            Reconciliation ({data.reconciliations.length})
-          </button>
-          <button
-            className={`${styles.navTab} ${activeTab === "audit" ? styles.navTabActive : ""}`}
-            onClick={() => setActiveTab("audit")}
-          >
-            Audit Trail ({data.audit.length})
-          </button>
+
+        <div className={styles.navRight}>
+          <span className={styles.contactsRemaining}>
+            {data.contact_attempt_count} of 3 Allowed Weekly Contacts
+          </span>
         </div>
       </nav>
 
-      {/* ── Financial Context & Statutory Clock ── */}
-      <section className={styles.telemetryBar}>
-        <div className={styles.telemetryCard}>
-          <span className={styles.telemetryLabel}>PRINCIPAL RECEIVABLE</span>
-          <div className={styles.telemetryPrincipal}>{formatCurrency(data.amount_minor)}</div>
-          {data.net_payable_minor && data.net_payable_minor !== data.amount_minor && (
-            <div className={styles.telemetrySub}>
-              Net Payable (Post-TDS): <strong>{formatCurrency(data.net_payable_minor)}</strong>
-            </div>
-          )}
+      {/* ── Permanent Financial Telemetry Strip ── */}
+      <section className={styles.financialStrip}>
+        <div className={styles.stripItem}>
+          <span className={styles.stripLabel}>PRINCIPAL RECEIVABLE</span>
+          <span className={styles.stripValue}>{formatCurrency(data.amount_minor)}</span>
+          <span className={styles.stripMeta}>Issued: {fmtDate(data.invoice?.issued_at)}</span>
         </div>
 
-        <div className={styles.telemetryCard}>
-          <span className={styles.telemetryLabel}>MSME SECTION 43B(H) CLOCK</span>
-          {stat && stat.is_msme ? (
-            <div>
-              <div
-                className={styles.statDays}
-                style={{
-                  color: stat.is_disallowed
-                    ? "var(--color-disallowed)"
-                    : stat.days_remaining <= 5
-                    ? "var(--accent)"
-                    : "var(--color-warning)",
-                }}
-              >
-                {stat.is_disallowed ? "DISALLOWED" : `${stat.days_remaining} DAYS REMAINING`}
-              </div>
-              <div className={styles.telemetrySub}>
-                Due: {fmtDate(stat.statutory_due_date)} · Tax Exposure:{" "}
-                <strong>
-                  {formatCurrency(
-                    stat.tax_disallowance_exposure_minor ??
-                      Math.round((data.amount_minor || 0) * 0.312)
-                  )}
-                </strong>
-              </div>
-            </div>
-          ) : (
-            <div>
-              <div className={styles.statDays} style={{ color: "var(--text-muted)" }}>
-                NON-MSME DEBTOR
-              </div>
-              <div className={styles.telemetrySub}>Standard commercial limitation applies</div>
-            </div>
-          )}
+        <div className={styles.stripItem}>
+          <span className={styles.stripLabel}>NET PAYABLE (POST-TDS)</span>
+          <span className={styles.stripValue} style={{ color: "var(--text-primary)" }}>
+            {formatCurrency(data.net_payable_minor ?? data.amount_minor)}
+          </span>
+          <span className={styles.stripMeta}>
+            {data.invoice?.tds_minor ? `Less ${data.invoice.tds_rate_percent}% Form 16A TDS` : "Zero TDS Deducted"}
+          </span>
         </div>
 
-        <div className={styles.telemetryCard}>
-          <span className={styles.telemetryLabel}>3× RBI BANK RATE PENAL INTEREST</span>
-          <div className={styles.statDays}>
-            {formatCurrency(data.statutory_interest_minor ?? stat?.statutory_interest_minor ?? 0)}
-          </div>
-          <div className={styles.telemetrySub}>
-            MSMED Act Sec 16 · Monthly rests @ {stat?.interest_rate_percent ?? 20.25}%
-          </div>
+        <div className={styles.stripItem}>
+          <span className={styles.stripLabel}>SECTION 43B(H) STATUTORY CLOCK</span>
+          <span
+            className={styles.stripValue}
+            style={{
+              color: stat?.is_disallowed
+                ? "var(--color-disallowed)"
+                : stat?.days_remaining != null && stat.days_remaining <= 5
+                ? "var(--color-warning)"
+                : "var(--accent)",
+            }}
+          >
+            {stat?.is_disallowed
+              ? "Disallowed (Tax Penalty)"
+              : stat?.days_remaining != null
+              ? `${stat.days_remaining} Days Remaining`
+              : "Non-MSME Buyer"}
+          </span>
+          <span className={styles.stripMeta}>
+            {stat?.is_disallowed
+              ? "31.2% Corporate Tax Penalty Triggered"
+              : `Statutory Cure Cutoff: ${fmtDate(stat?.statutory_due_date)}`}
+          </span>
         </div>
 
-        <div className={styles.telemetryCard}>
-          <span className={styles.telemetryLabel}>RECOVERY PROBABILITY</span>
-          <div className={styles.probRow}>
-            <span className={styles.probVal} style={{ color: probColor }}>
-              {probPct !== null ? `${probPct}%` : "—"}
-            </span>
-            <span className={styles.riskBadge}>{data.credit_risk_tier ?? "TIER 2"}</span>
-          </div>
-          <div className={styles.probTrack}>
-            <div
-              className={styles.probFill}
-              style={{ width: `${probPct ?? 0}%`, backgroundColor: probColor }}
-            />
-          </div>
+        <div className={styles.stripItem}>
+          <span className={styles.stripLabel}>3× PENAL INTEREST (SEC 16)</span>
+          <span className={styles.stripValue} style={{ color: "var(--color-recovered)" }}>
+            {formatCurrency(stat?.statutory_interest_minor ?? data.statutory_interest_minor ?? 0)}
+          </span>
+          <span className={styles.stripMeta}>
+            {stat?.interest_rate_percent ? `${stat.interest_rate_percent}% p.a. Compounded Monthly` : "Statutory Accrual"}
+          </span>
+        </div>
+
+        <div className={styles.stripItem}>
+          <span className={styles.stripLabel}>ESTIMATED RECOVERY</span>
+          <span className={styles.stripValue} style={{ color: "var(--color-recovered)" }}>
+            {probPct != null ? `${probPct}%` : "—"}
+          </span>
+          <span className={styles.stripMeta}>
+            {probPct != null && probPct >= 65 ? "High Confidence" : "Moderate Risk"}
+          </span>
         </div>
       </section>
 
-      {/* Action Banners */}
+      {/* Notifications */}
       {actionSuccess && (
         <div className={styles.successBanner}>
-          {actionSuccess}
+          <span>✓ {actionSuccess}</span>
+          <button onClick={() => setActionSuccess("")} className={styles.closeBannerBtn}>×</button>
         </div>
       )}
       {actionError && (
-        <div className={styles.actionErrorBanner}>
-          {actionError}
+        <div className={styles.errorBanner}>
+          <span>✕ {actionError}</span>
+          <button onClick={() => setActionError("")} className={styles.closeBannerBtn}>×</button>
         </div>
       )}
 
-      {/* ── Main Layout: Stream + Operator Deck ── */}
-      <div className={styles.mainSplit}>
-        {/* Left: Investigation Stream */}
-        <main className={styles.investigationStream}>
+      {/* ── Main Investigation Suite ── */}
+      <div className={styles.suiteLayout}>
+        <div className={styles.suiteMain}>
+          {/* Investigation Tabs */}
+          <div className={styles.tabBar}>
+            <button
+              className={`${styles.tabBtn} ${activeTab === "dossier" ? styles.tabActive : ""}`}
+              onClick={() => setActiveTab("dossier")}
+            >
+              Receivable Lifecycle & Narrative
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === "notices" ? styles.tabActive : ""}`}
+              onClick={() => setActiveTab("notices")}
+            >
+              Statutory Notices ({data.notices?.length || 0})
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === "reconcile" ? styles.tabActive : ""}`}
+              onClick={() => setActiveTab("reconcile")}
+            >
+              Tax & Remittance Ledger ({data.reconciliations?.length || 0})
+            </button>
+            <button
+              className={`${styles.tabBtn} ${activeTab === "audit" ? styles.tabActive : ""}`}
+              onClick={() => setActiveTab("audit")}
+            >
+              Audit Trail ({data.audit?.length || 0})
+            </button>
+          </div>
+
+          {/* Tab 1: Receivable Narrative Journey */}
           {activeTab === "dossier" && (
-            <div className={styles.streamStack}>
-              {/* STATION 01: Tax Registry & Ingestion */}
-              <article className={styles.evidenceNode}>
-                <div className={styles.nodeHead}>
-                  <div className={styles.nodeIndex}>01</div>
+            <div className={styles.narrativeJourney}>
+              {/* Chapter 1: The Commercial Receivable & Debtor */}
+              <div className={styles.narrativeCard}>
+                <div className={styles.cardHeader}>
                   <div>
-                    <h3 className={styles.nodeTitle}>Event Ingestion & Tax Registry</h3>
-                    <span className={styles.nodeMeta}>
-                      Source: {data.event?.source ?? "razorpay_webhook"} · Provider Event ID:{" "}
-                      {data.event?.provider_event_id ?? "evt_live_01"}
+                    <span className={styles.chapterNum}>CHAPTER 1 · THE COMMERCIAL RECEIVABLE</span>
+                    <h3 className={styles.cardTitle}>Enterprise Buyer & Contractual Invoice</h3>
+                  </div>
+                  {data.customer?.is_msme && (
+                    <span className={styles.msmeBadge}>
+                      MSME Registered · {data.customer.msme_category ?? "Small"} Enterprise
                     </span>
-                  </div>
-                  <span className={styles.nodeTag}>INGEST</span>
+                  )}
                 </div>
 
-                <div className={styles.nodeBody}>
-                  <div className={styles.specGrid}>
-                    <div className={styles.specItem}>
-                      <span className={styles.specKey}>Enterprise Buyer</span>
-                      <span className={styles.specVal}>{data.customer?.display_name ?? "—"}</span>
-                    </div>
-                    <div className={styles.specItem}>
-                      <span className={styles.specKey}>GSTIN</span>
-                      <span className={styles.specVal} style={{ color: "var(--accent)" }}>
-                        {data.customer?.gstin ?? "UNREGISTERED"}
-                      </span>
-                    </div>
-                    <div className={styles.specItem}>
-                      <span className={styles.specKey}>MSME Status</span>
-                      <span className={styles.specVal}>
-                        {data.customer?.is_msme
-                          ? `Registered (${data.customer.msme_category ?? "Micro"})`
-                          : "Non-MSME"}
-                      </span>
-                    </div>
-                    <div className={styles.specItem}>
-                      <span className={styles.specKey}>Udyam Registration</span>
-                      <span className={styles.specVal}>{data.customer?.udyam_reg_number ?? "—"}</span>
-                    </div>
-                    <div className={styles.specItem}>
-                      <span className={styles.specKey}>E-Invoice IRN</span>
-                      <span className={styles.specValMono}>
-                        {data.invoice?.e_invoice_irn ?? "—"}
-                      </span>
-                    </div>
-                    <div className={styles.specItem}>
-                      <span className={styles.specKey}>Dispute / Deduction</span>
-                      <span className={styles.specVal}>
-                        {data.invoice?.dispute_status === "tds_deducted"
-                          ? "TDS Deducted (Sec 194C/J)"
-                          : data.invoice?.dispute_status ?? "None"}
-                      </span>
-                    </div>
+                <div className={styles.cardGrid}>
+                  <div className={styles.gridItem}>
+                    <span className={styles.itemLabel}>ENTERPRISE BUYER</span>
+                    <span className={styles.itemValue}>{data.customer?.display_name ?? "—"}</span>
+                    <span className={styles.itemSub}>{data.customer?.contact_value}</span>
+                  </div>
+                  <div className={styles.gridItem}>
+                    <span className={styles.itemLabel}>GSTIN IDENTITY</span>
+                    <span className={styles.itemValue}>{data.customer?.gstin ?? "Unregistered"}</span>
+                    <span className={styles.itemSub}>PAN: {data.customer?.pan ?? "—"}</span>
+                  </div>
+                  <div className={styles.gridItem}>
+                    <span className={styles.itemLabel}>INVOICE & E-INVOICE IRN</span>
+                    <span className={styles.itemValue}>{data.invoice?.invoice_number ?? "—"}</span>
+                    <span className={styles.itemSub}>{data.invoice?.e_invoice_irn ? "Government IRN Verified" : "Standard Tax Invoice"}</span>
+                  </div>
+                  <div className={styles.gridItem}>
+                    <span className={styles.itemLabel}>DISPUTE STATUS</span>
+                    <span className={styles.itemValue} style={{ color: "var(--color-recovered)" }}>
+                      {data.invoice?.dispute_status === "clean" ? "Clean — Zero Commercial Dispute" : data.invoice?.dispute_status}
+                    </span>
+                    <span className={styles.itemSub}>Due Date: {fmtDate(data.invoice?.due_at)}</span>
                   </div>
                 </div>
-              </article>
+              </div>
 
-              {/* STATION 02: Payment Diagnosis & Razorpay Taxonomy */}
-              <article className={styles.evidenceNode}>
-                <div className={styles.nodeHead}>
-                  <div className={styles.nodeIndex}>02</div>
+              {/* Chapter 2: The Gateway Payment Event */}
+              <div className={styles.narrativeCard}>
+                <div className={styles.cardHeader}>
                   <div>
-                    <h3 className={styles.nodeTitle}>Payment Diagnosis & Recovery Intelligence</h3>
-                    <span className={styles.nodeMeta}>
-                      Official Razorpay Taxonomy v2026-09 · Deterministic Match
-                    </span>
+                    <span className={styles.chapterNum}>CHAPTER 2 · PAYMENT GATEWAY DIAGNOSIS</span>
+                    <h3 className={styles.cardTitle}>Why The Payment Failed on Razorpay</h3>
                   </div>
-                  <span className={styles.nodeTag}>CLASSIFY</span>
+                  <span className={styles.officialPill}>Official Gateway Specification</span>
                 </div>
 
-                <div className={styles.nodeBody}>
-                  <div className={styles.diagSubNav}>
-                    <button
-                      className={`${styles.diagTabBtn} ${diagTab === "official" ? styles.diagTabBtnActive : ""}`}
-                      onClick={() => setDiagTab("official")}
-                    >
-                      Official Gateway Specification
-                    </button>
-                    <button
-                      className={`${styles.diagTabBtn} ${diagTab === "policy" ? styles.diagTabBtnActive : ""}`}
-                      onClick={() => setDiagTab("policy")}
-                    >
-                      Vaada Recovery Policy
-                    </button>
-                    <button
-                      className={`${styles.diagTabBtn} ${diagTab === "raw" ? styles.diagTabBtnActive : ""}`}
-                      onClick={() => setDiagTab("raw")}
-                    >
-                      Raw Diagnostic Payload
-                    </button>
-                  </div>
-
-                  {diagTab === "official" && (
-                    <div className={styles.diagContent}>
-                      <div className={styles.specGrid}>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Error Code</span>
-                          <span className={styles.specVal} style={{ color: "var(--accent)" }}>
-                            {data.payment_diagnosis?.code ?? data.root_cause ?? "BAD_REQUEST_ERROR"}
-                          </span>
-                        </div>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Failure Reason</span>
-                          <span className={styles.specVal}>
-                            {data.payment_diagnosis?.reason ?? data.root_cause ?? "insufficient_funds"}
-                          </span>
-                        </div>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Rail / Method</span>
-                          <span className={styles.specVal}>
-                            {data.payment_diagnosis?.payment_method ?? "UPI / Mandate"}
-                          </span>
-                        </div>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Failure Source / Step</span>
-                          <span className={styles.specVal}>
-                            {data.payment_diagnosis?.source ?? "customer"} /{" "}
-                            {data.payment_diagnosis?.step ?? "payment_authorization"}
-                          </span>
-                        </div>
+                {data.payment_diagnosis ? (
+                  <div className={styles.diagnosisBody}>
+                    <div className={styles.diagSummaryRow}>
+                      <div className={styles.diagCodeCol}>
+                        <span className={styles.itemLabel}>RAZORPAY ERROR CODE & ROOT CAUSE</span>
+                        <span className={styles.diagCodeText}>
+                          {data.payment_diagnosis.code} : {data.payment_diagnosis.reason}
+                        </span>
+                        <p className={styles.diagDescText}>{data.payment_diagnosis.description}</p>
                       </div>
 
-                      <div className={styles.calloutCard}>
-                        <div className={styles.calloutTitle}>Official Gateway Description</div>
-                        <p className={styles.calloutText}>
-                          {data.payment_diagnosis?.description ??
-                            "The transaction failed due to insufficient funds in the debtor account or customer bank decline."}
-                        </p>
-                      </div>
-
-                      <div className={styles.calloutCard}>
-                        <div className={styles.calloutTitle}>Official Recommended Next Step</div>
-                        <p className={styles.calloutText}>
-                          {data.payment_diagnosis?.official_next_step ??
-                            "Prompt customer to replenish account funds or provide alternate corporate payment method (UPI / Corporate Netbanking)."}
+                      <div className={styles.diagPolicyCol}>
+                        <span className={styles.itemLabel}>VAADA DERIVED RECOVERY ACTION</span>
+                        <span className={styles.policyText}>
+                          {data.recovery_interpretation?.policy_decision ?? "Autonomous Reminder Dispatch"}
+                        </span>
+                        <p className={styles.policyDescText}>
+                          {data.recovery_interpretation?.merchant_action ?? "Contact customer during 08:00–19:00 IST window via WhatsApp HSM."}
                         </p>
                       </div>
                     </div>
-                  )}
 
-                  {diagTab === "policy" && (
-                    <div className={styles.diagContent}>
-                      <div className={styles.specGrid}>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Recoverability</span>
-                          <span className={styles.specVal} style={{ color: "var(--color-recovered)" }}>
-                            {data.recovery_interpretation?.recoverability?.toUpperCase() ?? "RECOVERABLE"}
-                          </span>
-                        </div>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Instant Retryable</span>
-                          <span className={styles.specVal}>
-                            {data.recovery_interpretation?.retryable ? "YES" : "NO (Switch Payment Rail)"}
-                          </span>
-                        </div>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Recovery Urgency</span>
-                          <span className={styles.specVal} style={{ color: "var(--accent)" }}>
-                            {data.recovery_interpretation?.urgency?.toUpperCase() ?? "URGENT"}
-                          </span>
-                        </div>
-                        <div className={styles.specItem}>
-                          <span className={styles.specKey}>Human Review Required</span>
-                          <span className={styles.specVal}>
-                            {data.recovery_interpretation?.requires_human_review ? "YES" : "NO (Automated)"}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className={styles.calloutCard}>
-                        <div className={styles.calloutTitle}>Recommended Merchant Action</div>
-                        <p className={styles.calloutText}>
-                          {data.recovery_interpretation?.merchant_action ??
-                            "Dispatch automated WhatsApp promise-to-pay intent link with dynamic UPI QR code."}
-                        </p>
-                      </div>
+                    {/* Level 5 Progressive Disclosure Trigger */}
+                    <div className={styles.progressiveTriggerRow}>
+                      <button
+                        onClick={() => setShowRawPayload(!showRawPayload)}
+                        className={styles.progressiveBtn}
+                      >
+                        {showRawPayload ? "Hide Raw Gateway Payload ↑" : "Inspect Raw Gateway Diagnostic JSON (Level 5) ↓"}
+                      </button>
                     </div>
-                  )}
 
-                  {diagTab === "raw" && (
-                    <pre className={styles.rawJsonBlock}>
-                      {JSON.stringify(
-                        data.payment_diagnosis?.raw_payload ?? {
-                          error_code: data.payment_diagnosis?.code ?? data.root_cause,
-                          reason: data.payment_diagnosis?.reason ?? data.root_cause,
-                          method: data.payment_diagnosis?.payment_method ?? "upi",
-                          provider: "razorpay",
-                        },
-                        null,
-                        2
-                      )}
-                    </pre>
-                  )}
-                </div>
-              </article>
+                    {showRawPayload && (
+                      <pre className={styles.rawJsonPre}>
+                        {JSON.stringify(data.payment_diagnosis.raw_payload || data.payment_diagnosis, null, 2)}
+                      </pre>
+                    )}
+                  </div>
+                ) : (
+                  <div className={styles.emptyNote}>Zero payment failures logged for this invoice.</div>
+                )}
+              </div>
 
-              {/* STATION 03 & 04: Scoring & FSM Trajectory */}
-              <article className={styles.evidenceNode}>
-                <div className={styles.nodeHead}>
-                  <div className={styles.nodeIndex}>03/04</div>
+              {/* Chapter 3: The Debtor's Commitment (Hinglish Intelligence) */}
+              <div className={styles.narrativeCard}>
+                <div className={styles.cardHeader}>
                   <div>
-                    <h3 className={styles.nodeTitle}>Scoring & Finite State Machine Trajectory</h3>
-                    <span className={styles.nodeMeta}>
-                      Calibrated Tabular GBDT · Optimistic Concurrency v{data.version}
-                    </span>
+                    <span className={styles.chapterNum}>CHAPTER 3 · DEBTOR CONVERSATION & COMMITMENT</span>
+                    <h3 className={styles.cardTitle}>What The Customer Stated (Hinglish NLP)</h3>
                   </div>
-                  <span className={styles.nodeTag}>ORCHESTRATE</span>
+                  {data.promises?.length > 0 && (
+                    <button
+                      onClick={checkPromiseAdherence}
+                      disabled={busy === "check_adherence"}
+                      className={styles.checkPromiseBtn}
+                    >
+                      {busy === "check_adherence" ? "Verifying..." : "Verify Adherence Against Bank Records"}
+                    </button>
+                  )}
                 </div>
 
-                <div className={styles.nodeBody}>
-                  <div className={styles.dagRail}>
-                    {data.decision_trace.map((tr, idx) => (
-                      <div key={idx} className={styles.dagNode}>
-                        <div className={styles.dagStateRow}>
-                          <span className={styles.dagDot} />
-                          <span className={styles.dagStateName}>
-                            {tr.to_state.replace(/_/g, " ").toUpperCase()}
-                          </span>
+                {data.promises?.length > 0 ? (
+                  <div className={styles.promisesList}>
+                    {data.promises.map((p, idx) => (
+                      <div key={idx} className={styles.promiseBox}>
+                        <div className={styles.rawMessageQuote}>
+                          &ldquo;{p.raw_text}&rdquo;
                         </div>
-                        <div className={styles.dagDetails}>
-                          <span className={styles.dagActor}>{tr.actor_type}</span>
-                          <span className={styles.dagReason}>{tr.reason}</span>
-                          <span className={styles.dagTime}>{fmtDateTime(tr.created_at)}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </article>
 
-              {/* STATION 05: Hinglish Linguistic Workspace */}
-              <article className={styles.evidenceNode}>
-                <div className={styles.nodeHead}>
-                  <div className={styles.nodeIndex}>05</div>
-                  <div>
-                    <h3 className={styles.nodeTitle}>Structured Linguistic & Financial Extraction</h3>
-                    <span className={styles.nodeMeta}>
-                      L3Cube-HingCorpus Linguistic Pipeline · Code-Mixed NLP
-                    </span>
-                  </div>
-                  <span className={styles.nodeTag}>EXTRACT</span>
-                </div>
-
-                <div className={styles.nodeBody}>
-                  {latestPromise || lang ? (
-                    <div className={styles.linguisticGrid}>
-                      <div className={styles.transcriptBox}>
-                        <div className={styles.boxHeader}>
-                          <span>Raw Debtor Communication</span>
-                          <span className={styles.subTag}>Code-Switching Detected</span>
-                        </div>
-                        <blockquote className={styles.quoteMsg}>
-                          “{lang?.raw_text ?? latestPromise?.raw_text ?? "No communication logged."}”
-                        </blockquote>
-                        {lang && (
-                          <div className={styles.langStats}>
-                            <div className={styles.langStatItem}>
-                              <span>Hindi Ratio:</span>
-                              <strong>{Math.round(lang.hindi_ratio * 100)}%</strong>
-                            </div>
-                            <div className={styles.langStatItem}>
-                              <span>English Ratio:</span>
-                              <strong>{Math.round(lang.english_ratio * 100)}%</strong>
-                            </div>
-                            <div className={styles.langStatItem}>
-                              <span>Intent:</span>
-                              <strong>{lang.intent}</strong>
-                            </div>
+                        <div className={styles.promiseDetailsGrid}>
+                          <div>
+                            <span className={styles.itemLabel}>PROMISED SETTLEMENT DATE</span>
+                            <span className={styles.itemValue}>{fmtDate(p.promised_date)}</span>
                           </div>
-                        )}
-                      </div>
-
-                      <div className={styles.promiseBox}>
-                        <div className={styles.boxHeader}>
-                          <span>Structured Promise-to-Pay</span>
-                          <span className={styles.subTag} style={{ color: "var(--color-recovered)" }}>
-                            Extracted
-                          </span>
-                        </div>
-
-                        <div className={styles.promiseMetrics}>
-                          <div className={styles.specItem}>
-                            <span className={styles.specKey}>Promised Amount</span>
-                            <span className={styles.specVal} style={{ color: "var(--accent)" }}>
-                              {latestPromise
-                                ? formatCurrency(latestPromise.amount_minor)
-                                : "—"}
+                          <div>
+                            <span className={styles.itemLabel}>BINDING PROMISED AMOUNT</span>
+                            <span className={styles.itemValue} style={{ color: "var(--accent)" }}>
+                              {formatCurrency(p.amount_minor)}
                             </span>
                           </div>
-                          <div className={styles.specItem}>
-                            <span className={styles.specKey}>Promise Due Date</span>
-                            <span className={styles.specVal}>
-                              {latestPromise ? fmtDate(latestPromise.promised_date) : "—"}
+                          <div>
+                            <span className={styles.itemLabel}>COMMITMENT CONFIDENCE</span>
+                            <span className={styles.itemValue} style={{ color: "var(--color-recovered)" }}>
+                              {Math.round(p.confidence * 100)}% Intent Strength
                             </span>
                           </div>
-                          <div className={styles.specItem}>
-                            <span className={styles.specKey}>Confidence</span>
-                            <span className={styles.specVal}>
-                              {latestPromise ? `${Math.round(latestPromise.confidence * 100)}%` : "—"}
-                            </span>
-                          </div>
-                          <div className={styles.specItem}>
-                            <span className={styles.specKey}>Adherence Status</span>
-                            <span className={styles.specVal}>
-                              {latestPromise?.is_broken ? (
-                                <strong style={{ color: "var(--color-disallowed)" }}>BROKEN</strong>
+                          <div>
+                            <span className={styles.itemLabel}>ADHERENCE STATUS</span>
+                            <span className={styles.itemValue}>
+                              {p.is_broken ? (
+                                <span style={{ color: "var(--color-disallowed)" }}>Broken Commitment</span>
                               ) : (
-                                <strong style={{ color: "var(--color-recovered)" }}>ACTIVE / HONORED</strong>
+                                <span style={{ color: "var(--color-recovered)" }}>Active Scheduled Promise</span>
                               )}
                             </span>
                           </div>
                         </div>
-
-                        <div style={{ marginTop: 16 }}>
-                          <button
-                            onClick={checkPromiseAdherence}
-                            disabled={busy === "check_adherence"}
-                            className={styles.secondaryActionBtn}
-                          >
-                            {busy === "check_adherence"
-                              ? "Evaluating Adherence..."
-                              : "Check Promise Adherence"}
-                          </button>
-                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className={styles.emptyStateBox}>
-                      <span>No inbound debtor communications logged for this dossier yet.</span>
-                    </div>
-                  )}
+                    ))}
+                  </div>
+                ) : (
+                  <div className={styles.emptyNote}>
+                    No WhatsApp promise recorded yet. Dispatch a payment reminder from the action deck.
+                  </div>
+                )}
+              </div>
+
+              {/* Chapter 4: Outbound Channels (WhatsApp HSM & NPCI UPI Intent) */}
+              <div className={styles.narrativeCard}>
+                <div className={styles.cardHeader}>
+                  <div>
+                    <span className={styles.chapterNum}>CHAPTER 4 · DISPATCHED CHANNELS</span>
+                    <h3 className={styles.cardTitle}>Payment Rails & Outbound Artifacts</h3>
+                  </div>
                 </div>
-              </article>
 
-              {/* Dynamic NPCI UPI & WhatsApp Preview */}
-              {data.whatsapp_payload?.preview_data && (
-                <article className={styles.evidenceNode}>
-                  <div className={styles.nodeHead}>
-                    <div className={styles.nodeIndex}>07</div>
-                    <div>
-                      <h3 className={styles.nodeTitle}>Outbound Channel Artifacts (WhatsApp & NPCI UPI)</h3>
-                      <span className={styles.nodeMeta}>
-                        Deterministic HSM Template · Corporate Virtual Account (VAN)
-                      </span>
-                    </div>
-                    <span className={styles.nodeTag}>CHANNELS</span>
-                  </div>
-
-                  <div className={styles.nodeBody}>
-                    <div className={styles.channelGrid}>
-                      <div className={styles.whatsappCard}>
-                        <div className={styles.boxHeader}>
-                          <span>WHATSAPP OUTBOUND TEMPLATE</span>
-                          <span className={styles.subTag}>HSM APPROVED</span>
-                        </div>
-                        <div className={styles.waContent}>
-                          <p><strong>{data.whatsapp_payload.preview_data.header}</strong></p>
-                          <p>{data.whatsapp_payload.preview_data.body}</p>
-                        </div>
+                <div className={styles.channelsGrid}>
+                  {/* WhatsApp HSM Preview */}
+                  <div className={styles.whatsappCard}>
+                    <span className={styles.channelLabel}>WHATSAPP BUSINESS HSM TEMPLATE</span>
+                    <div className={styles.whatsappBubble}>
+                      <div className={styles.waHeader}>
+                        {data.whatsapp_payload?.preview_data?.header ?? "Invoice Settlement Notice"}
                       </div>
-
-                      {data.upi_payload && (
-                        <div className={styles.upiCard}>
-                          <div className={styles.boxHeader}>
-                            <span>NPCI DYNAMIC UPI INTENT</span>
-                            <span className={styles.subTag}>REAL-TIME RAILS</span>
-                          </div>
-                          <div className={styles.specGrid}>
-                            <div className={styles.specItem}>
-                              <span className={styles.specKey}>Payee VPA</span>
-                              <span className={styles.specVal}>{data.upi_payload.vpa}</span>
-                            </div>
-                            <div className={styles.specItem}>
-                              <span className={styles.specKey}>Corporate VAN</span>
-                              <span className={styles.specVal}>{data.upi_payload.van}</span>
-                            </div>
-                            <div className={styles.specItem}>
-                              <span className={styles.specKey}>Bank & IFSC</span>
-                              <span className={styles.specVal}>
-                                {data.upi_payload.bank_name} ({data.upi_payload.ifsc})
-                              </span>
-                            </div>
-                            <div className={styles.specItem}>
-                              <span className={styles.specKey}>Payable Amount</span>
-                              <span className={styles.specVal} style={{ color: "var(--accent)" }}>
-                                ₹{data.upi_payload.amount_inr.toLocaleString("en-IN")}
-                              </span>
-                            </div>
-                          </div>
-                          <div className={styles.upiUriRow}>
-                            <code>{data.upi_payload.upi_intent_uri}</code>
-                            <button
-                              onClick={() => {
-                                navigator.clipboard.writeText(data.upi_payload?.upi_intent_uri ?? "");
-                                setCopiedUpi(true);
-                                setTimeout(() => setCopiedUpi(false), 2000);
-                              }}
-                              className={styles.copyBtn}
-                            >
-                              {copiedUpi ? "COPIED" : "COPY URI"}
-                            </button>
-                          </div>
-                        </div>
-                      )}
+                      <p className={styles.waBody}>
+                        {data.whatsapp_payload?.preview_data?.body ??
+                          `Dear ${data.customer?.display_name}, your invoice ${data.invoice?.invoice_number} of ${formatCurrency(data.amount_minor)} is pending. Please click below to settle via instant UPI.`}
+                      </p>
+                      <div className={styles.waButton}>
+                        Pay {formatCurrency(data.amount_minor)} via UPI
+                      </div>
                     </div>
                   </div>
-                </article>
-              )}
+
+                  {/* NPCI UPI Dynamic QR & Intent */}
+                  <div className={styles.upiCard}>
+                    <span className={styles.channelLabel}>NPCI DYNAMIC UPI INTENT</span>
+                    <div className={styles.upiDetails}>
+                      <div>
+                        <span className={styles.itemLabel}>VIRTUAL PAYMENT ADDRESS (VPA)</span>
+                        <span className={styles.upiMonoText}>
+                          {data.upi_payload?.vpa ?? "vaada.syn1001@icici"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className={styles.itemLabel}>VIRTUAL ACCOUNT NUMBER (VAN)</span>
+                        <span className={styles.upiMonoText}>
+                          {data.upi_payload?.van ?? "VAADAYN1001"}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(data.upi_payload?.upi_intent_uri || "");
+                          setCopiedUpi(true);
+                          setTimeout(() => setCopiedUpi(false), 2000);
+                        }}
+                        className={styles.copyUpiBtn}
+                      >
+                        {copiedUpi ? "✓ Copied Intent URI" : "Copy UPI Intent Link"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
-          {/* TAB: Statutory Notices */}
+          {/* Tab 2: Statutory Notices */}
           {activeTab === "notices" && (
-            <div className={styles.tabPanel}>
-              <div className={styles.tabPanelHeader}>
-                <h3 className={styles.tabPanelTitle}>Statutory Legal Notices Generated</h3>
+            <div className={styles.noticesTab}>
+              <div className={styles.noticesHeader}>
+                <div>
+                  <h3 className={styles.tabTitle}>Formal Statutory Legal Notices</h3>
+                  <p className={styles.tabSubtitle}>
+                    Drafted under Indian commercial statutes: MSMED Act 2006, Section 43B(h), and Negotiable Instruments Act Section 138.
+                  </p>
+                </div>
                 <button
                   onClick={() => setShowNoticeGen(true)}
-                  className={styles.primaryActionBtn}
+                  className={styles.generateNoticeBtn}
                 >
                   + Generate Formal Notice
                 </button>
               </div>
 
-              {data.notices.length === 0 ? (
-                <div className={styles.emptyStateBox}>
-                  <span>No statutory legal notices generated for this dossier yet.</span>
-                </div>
-              ) : (
-                <div className={styles.noticesList}>
-                  {data.notices.map((notice) => (
-                    <div key={notice.id} className={styles.noticeCard}>
-                      <div className={styles.noticeHead}>
+              {data.notices?.length > 0 ? (
+                <div className={styles.noticesGrid}>
+                  {data.notices.map((n) => (
+                    <div key={n.id} className={styles.noticeCard}>
+                      <div className={styles.noticeCardTop}>
+                        <span className={styles.noticeTypeTag}>{n.notice_type.replace(/_/g, " ").toUpperCase()}</span>
+                        <span className={styles.noticeDate}>{fmtDate(n.created_at)}</span>
+                      </div>
+                      <h4 className={styles.noticeTitle}>{n.title}</h4>
+                      <span className={styles.noticeStatRef}>{n.statutory_reference}</span>
+                      <div className={styles.noticeAmounts}>
                         <div>
-                          <h4 className={styles.noticeTitle}>{notice.title}</h4>
-                          <span className={styles.noticeMeta}>
-                            Ref: {notice.statutory_reference} · Cure Period: {notice.cure_period_days} Days ·{" "}
-                            {fmtDateTime(notice.created_at)}
+                          <span className={styles.itemLabel}>CLAIM AMOUNT</span>
+                          <span className={styles.itemValue}>{formatCurrency(n.claim_amount_minor)}</span>
+                        </div>
+                        <div>
+                          <span className={styles.itemLabel}>3× PENAL INTEREST</span>
+                          <span className={styles.itemValue} style={{ color: "var(--color-recovered)" }}>
+                            {formatCurrency(n.statutory_interest_minor)}
                           </span>
                         </div>
-                        <span className={styles.noticeStatusTag}>{notice.status.toUpperCase()}</span>
                       </div>
-                      <pre className={styles.noticeContent}>{notice.content_markdown}</pre>
+                      <pre className={styles.noticeMarkdown}>{n.content_markdown}</pre>
                     </div>
                   ))}
                 </div>
+              ) : (
+                <div className={styles.emptyNote}>
+                  Zero legal notices served. Click &quot;+ Generate Formal Notice&quot; to issue a statutory demand.
+                </div>
               )}
             </div>
           )}
 
-          {/* TAB: Payment Reconciliations */}
+          {/* Tab 3: Tax & Reconciliation Ledger */}
           {activeTab === "reconcile" && (
-            <div className={styles.tabPanel}>
-              <div className={styles.tabPanelHeader}>
-                <h3 className={styles.tabPanelTitle}>Settlement & Reconciliations</h3>
-                <div style={{ display: "flex", gap: 12 }}>
-                  <button
-                    onClick={() => setShowTDSModal(true)}
-                    className={styles.secondaryActionBtn}
-                  >
+            <div className={styles.reconcileTab}>
+              <div className={styles.reconcileHeader}>
+                <div>
+                  <h3 className={styles.tabTitle}>Statutory Tax & Remittance Ledger</h3>
+                  <p className={styles.tabSubtitle}>
+                    Form 16A withholding tax (Section 194C/194J) and bank inward RTGS/NEFT settlement matching.
+                  </p>
+                </div>
+                <div className={styles.reconcileActions}>
+                  <button onClick={() => setShowTDSModal(true)} className={styles.reconcileBtn}>
                     Reconcile TDS (Form 16A)
                   </button>
-                  <button
-                    onClick={() => setShowPaymentModal(true)}
-                    className={styles.primaryActionBtn}
-                  >
-                    Record Bank Remittance
+                  <button onClick={() => setShowPaymentModal(true)} className={styles.settleBtn}>
+                    Match Bank Remittance
                   </button>
                 </div>
               </div>
 
-              {data.reconciliations.length === 0 ? (
-                <div className={styles.emptyStateBox}>
-                  <span>No settlement or TDS reconciliations recorded yet.</span>
+              {data.reconciliations?.length > 0 ? (
+                <div className={styles.reconcileList}>
+                  {data.reconciliations.map((r) => (
+                    <div key={r.id} className={styles.reconcileItem}>
+                      <div>
+                        <span className={styles.itemLabel}>RECONCILIATION TYPE</span>
+                        <span className={styles.itemValue}>{r.reconciliation_type.toUpperCase()}</span>
+                      </div>
+                      <div>
+                        <span className={styles.itemLabel}>AMOUNT SETTLED</span>
+                        <span className={styles.itemValue} style={{ color: "var(--color-recovered)" }}>
+                          {formatCurrency(r.amount_minor)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className={styles.itemLabel}>REFERENCE / UTR</span>
+                        <span className={styles.itemValue}>{r.reference_number}</span>
+                      </div>
+                      <div>
+                        <span className={styles.itemLabel}>RECONCILED BY</span>
+                        <span className={styles.itemValue}>{r.reconciled_by}</span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <div className={styles.reconcileTableWrap}>
-                  <table className={styles.reconcileTable}>
-                    <thead>
-                      <tr>
-                        <th>RECONCILIATION TYPE</th>
-                        <th>AMOUNT</th>
-                        <th>REFERENCE / CERTIFICATE #</th>
-                        <th>RECONCILED BY</th>
-                        <th>TIMESTAMP</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.reconciliations.map((rec) => (
-                        <tr key={rec.id}>
-                          <td>
-                            <strong>{rec.reconciliation_type.toUpperCase()}</strong>
-                          </td>
-                          <td style={{ color: "var(--color-recovered)", fontWeight: 600 }}>
-                            {formatCurrency(rec.amount_minor)}
-                          </td>
-                          <td>
-                            <code>{rec.reference_number}</code>
-                          </td>
-                          <td>{rec.reconciled_by}</td>
-                          <td>{fmtDateTime(rec.created_at)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className={styles.emptyNote}>
+                  Zero reconciliations recorded. Reconcile TDS or match bank remittances using the controls above.
                 </div>
               )}
             </div>
           )}
 
-          {/* TAB: Audit Trail */}
+          {/* Tab 4: Audit Trail */}
           {activeTab === "audit" && (
-            <div className={styles.tabPanel}>
-              <div className={styles.tabPanelHeader}>
-                <h3 className={styles.tabPanelTitle}>Tamper-Evident Dossier Audit Trail</h3>
-                <span className={styles.noticeMeta}>Immutable append-only ledger</span>
-              </div>
+            <div className={styles.auditTab}>
+              <h3 className={styles.tabTitle}>Cryptographic Immutable Audit Trail</h3>
+              <p className={styles.tabSubtitle}>
+                Every state transition, model inference, and operator action is cryptographically recorded.
+              </p>
 
               <div className={styles.auditList}>
-                {data.audit.map((item, idx) => (
-                  <div key={idx} className={styles.auditItem}>
-                    <div className={styles.auditHead}>
-                      <span className={styles.auditAction}>{item.action}</span>
-                      <span className={styles.auditActor}>{item.actor_type}</span>
-                      <span className={styles.auditTime}>{fmtDateTime(item.created_at)}</span>
-                    </div>
-                    <pre className={styles.auditPayload}>
-                      {JSON.stringify(JSON.parse(item.payload_json || "{}"), null, 2)}
-                    </pre>
+                {data.audit?.map((item, idx) => (
+                  <div key={idx} className={styles.auditRow}>
+                    <span className={styles.auditTime}>{fmtDateTime(item.created_at)}</span>
+                    <span className={styles.auditAction}>{item.action}</span>
+                    <span className={styles.auditActor}>{item.actor_type}</span>
+                    <span className={styles.auditPayload}>{item.payload_json}</span>
                   </div>
                 ))}
               </div>
             </div>
           )}
-        </main>
+        </div>
 
-        {/* Right: Operator Action Deck */}
+        {/* ── Operator Action Deck (Sidebar) ── */}
         <aside className={styles.actionDeck}>
-          <div className={styles.deckCard}>
-            <div className={styles.deckHeader}>
-              <span className={styles.deckTitle}>OPERATOR ACTION DECK</span>
-              <span className={styles.deckState}>{data.state.toUpperCase()}</span>
-            </div>
+          <div className={styles.deckHeader}>
+            <span className={styles.deckTag}>OPERATOR CONTROLS</span>
+            <h4 className={styles.deckTitle}>Recovery Actions</h4>
+          </div>
 
-            <div className={styles.deckBody}>
-              <div className={styles.reasonField}>
-                <label className={styles.fieldLabel}>Intervention Justification:</label>
-                <input
-                  type="text"
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  className={styles.reasonInput}
-                />
-              </div>
+          <div className={styles.reasonField}>
+            <label className={styles.reasonLabel}>AUDIT JUSTIFICATION</label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className={styles.reasonInput}
+              placeholder="State reason for operator action..."
+            />
+          </div>
 
-              <div className={styles.btnGrid}>
-                {canRemind && (
-                  <button
-                    onClick={() => act("send_reminder")}
-                    disabled={!!busy}
-                    className={styles.deckPrimaryBtn}
-                  >
-                    {busy === "send_reminder" ? "Dispatching..." : "Send Reminder (T-1 Notice)"}
-                  </button>
-                )}
+          <div className={styles.actionButtonsList}>
+            {CAN_SEND_REMINDER.has(data.state) && (
+              <button
+                onClick={() => act("send_reminder")}
+                disabled={busy !== null}
+                className={styles.primaryActionBtn}
+              >
+                {busy === "send_reminder" ? "Dispatching..." : "Dispatch WhatsApp Reminder"}
+              </button>
+            )}
 
-                {canRemind && (
-                  <button
-                    onClick={() => act("request_promise")}
-                    disabled={!!busy}
-                    className={styles.deckSecondaryBtn}
-                  >
-                    {busy === "request_promise" ? "Queuing..." : "Request Binding Promise"}
-                  </button>
-                )}
+            {data.state === "awaiting_action" && (
+              <button
+                onClick={() => act("request_promise")}
+                disabled={busy !== null}
+                className={styles.secondaryActionBtn}
+              >
+                {busy === "request_promise" ? "Sending..." : "Request Formal Commitment"}
+              </button>
+            )}
 
-                <button
-                  onClick={() => setShowNoticeGen(true)}
-                  disabled={!!busy}
-                  className={styles.deckSecondaryBtn}
-                >
-                  Generate Statutory Notice
-                </button>
+            {!isTerminal && (
+              <button
+                onClick={() => setShowNoticeGen(true)}
+                className={styles.secondaryActionBtn}
+              >
+                Generate Legal Notice
+              </button>
+            )}
 
-                <button
-                  onClick={() => setShowTDSModal(true)}
-                  disabled={!!busy}
-                  className={styles.deckSecondaryBtn}
-                >
-                  Reconcile Section 194C/J TDS
-                </button>
+            {!isTerminal && (
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className={styles.settleActionBtn}
+              >
+                Match Bank Remittance (Settle)
+              </button>
+            )}
 
-                <button
-                  onClick={() => setShowPaymentModal(true)}
-                  disabled={!!busy}
-                  className={styles.deckSecondaryBtn}
-                >
-                  Record Bank Remittance
-                </button>
+            {!isTerminal && data.state !== "human_review" && (
+              <button
+                onClick={() => act("escalate")}
+                disabled={busy !== null}
+                className={styles.escalateBtn}
+              >
+                {busy === "escalate" ? "Escalating..." : "Escalate to Human Review"}
+              </button>
+            )}
 
-                <button
-                  onClick={() => act("escalate")}
-                  disabled={!!busy || isTerminal || data.state === "human_review"}
-                  className={styles.deckWarningBtn}
-                >
-                  Escalate to Human Review
-                </button>
-
-                {!isTerminal && (
-                  <button
-                    onClick={() => act("mark_recovered")}
-                    disabled={!!busy}
-                    className={styles.deckSuccessBtn}
-                  >
-                    Mark As Recovered
-                  </button>
-                )}
-
-                {!isTerminal && (
-                  <button
-                    onClick={() => act("mark_unrecoverable")}
-                    disabled={!!busy}
-                    className={styles.deckDangerBtn}
-                  >
-                    Mark Unrecoverable
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className={styles.deckSummary}>
-              <div className={styles.deckSumItem}>
-                <span>Customer Channel</span>
-                <strong>{data.customer?.contact_channel ?? "whatsapp"}</strong>
-              </div>
-              <div className={styles.deckSumItem}>
-                <span>Contact Phone</span>
-                <strong>{data.customer?.contact_value ?? "—"}</strong>
-              </div>
-              <div className={styles.deckSumItem}>
-                <span>Contact Attempts</span>
-                <strong>{data.contact_attempt_count} of 3 (Rolling 7d)</strong>
-              </div>
-              <div className={styles.deckSumItem}>
-                <span>Dossier Concurrency</span>
-                <strong>Version {data.version}</strong>
-              </div>
-            </div>
+            {!isTerminal && (
+              <button
+                onClick={() => act("mark_unrecoverable")}
+                disabled={busy !== null}
+                className={styles.badDebtBtn}
+              >
+                {busy === "mark_unrecoverable" ? "Recording..." : "Mark Bad Debt"}
+              </button>
+            )}
           </div>
         </aside>
       </div>
 
-      {/* ── MODALS ── */}
-
-      {/* Notice Generation Modal */}
+      {/* ── Modal: Formal Statutory Notice Generator ── */}
       {showNoticeGen && (
-        <div className={styles.modalOverlay} onClick={() => setShowNoticeGen(false)}>
-          <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>Generate Formal Statutory Legal Notice</h3>
-              <button className={styles.modalCloseBtn} onClick={() => setShowNoticeGen(false)}>
-                ✕
-              </button>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Generate Formal Statutory Notice</h3>
+              <button onClick={() => setShowNoticeGen(false)} className={styles.closeModalBtn}>×</button>
             </div>
-            <div className={styles.modalBody}>
-              <p className={styles.modalDesc}>
-                Select the formal statutory legal notice format according to Indian commercial code:
-              </p>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Notice Format:</label>
-                <select
-                  value={noticeType}
-                  onChange={(e) => setNoticeType(e.target.value)}
-                  className={styles.modalSelect}
-                >
-                  <option value="msme_43b_h">MSME Section 43B(h) Tax Disallowance Notice (7-Day Cure)</option>
-                  <option value="section_138_ni">Section 138 NI Act / Sec 25 PSSA Legal Demand Notice</option>
-                  <option value="msefc_samadhaan">MSEFC Samadhaan Form 1 Pre-Filing Dispute Notice</option>
-                  <option value="statement_of_account">Formal Statement of Account & Balance Confirmation</option>
-                </select>
-              </div>
+            <p className={styles.modalSub}>
+              Select the governing statute to compile a legally enforceable demand letter citing Indian law.
+            </p>
+
+            <div className={styles.modalField}>
+              <label className={styles.modalLabel}>STATUTORY FRAMEWORK</label>
+              <select
+                value={noticeType}
+                onChange={(e) => setNoticeType(e.target.value)}
+                className={styles.modalSelect}
+              >
+                <option value="msme_43b_h">Income Tax Act Section 43B(h) — 45-Day Disallowance</option>
+                <option value="sec_138_ni_act">Negotiable Instruments Act Section 138 — Dishonour Demand</option>
+                <option value="msme_samadhaan_form_1">MSEFC Samadhaan Form 1 — Statutory Conciliation</option>
+              </select>
             </div>
+
             <div className={styles.modalFooter}>
+              <button onClick={() => setShowNoticeGen(false)} className={styles.cancelBtn}>Cancel</button>
               <button
                 onClick={generateStatutoryNotice}
                 disabled={busy === "generate_notice"}
-                className={styles.primaryActionBtn}
+                className={styles.confirmBtn}
               >
-                {busy === "generate_notice" ? "Generating Notice..." : "Generate Formal Notice"}
-              </button>
-              <button onClick={() => setShowNoticeGen(false)} className={styles.cancelBtn}>
-                Cancel
+                {busy === "generate_notice" ? "Compiling..." : "Generate Notice Draft"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* TDS Reconciliation Modal */}
+      {/* ── Modal: Section 194C/J TDS Reconciliation ── */}
       {showTDSModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowTDSModal(false)}>
-          <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>Reconcile Section 194C/J TDS Deduction</h3>
-              <button className={styles.modalCloseBtn} onClick={() => setShowTDSModal(false)}>
-                ✕
-              </button>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Reconcile Section 194C/J TDS</h3>
+              <button onClick={() => setShowTDSModal(false)} className={styles.closeModalBtn}>×</button>
             </div>
-            <div className={styles.modalBody}>
-              <p className={styles.modalDesc}>
-                Indian corporate buyers routinely withhold 1% (194C individual), 2% (194C corporate), or 10% (194J professional). Record Form 16A acknowledgement to update the net recoverable balance without default classification.
-              </p>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>TDS Rate (%):</label>
-                <input
-                  type="text"
-                  value={tdsRate}
-                  onChange={(e) => setTdsRate(e.target.value)}
-                  className={styles.modalInput}
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Form 16A Certificate / Ack #:</label>
-                <input
-                  type="text"
-                  value={form16aAck}
-                  onChange={(e) => setForm16aAck(e.target.value)}
-                  className={styles.modalInput}
-                />
-              </div>
+            <p className={styles.modalSub}>
+              Enter the corporate buyer&apos;s Tax Deducted at Source (TDS) percentage and Form 16A acknowledgment.
+            </p>
+
+            <div className={styles.modalField}>
+              <label className={styles.modalLabel}>TDS WITHHOLDING RATE (%)</label>
+              <input
+                type="number"
+                step="0.1"
+                value={tdsRate}
+                onChange={(e) => setTdsRate(e.target.value)}
+                className={styles.modalInput}
+              />
             </div>
+
+            <div className={styles.modalField}>
+              <label className={styles.modalLabel}>FORM 16A ACKNOWLEDGMENT NUMBER</label>
+              <input
+                type="text"
+                value={form16aAck}
+                onChange={(e) => setForm16aAck(e.target.value)}
+                className={styles.modalInput}
+              />
+            </div>
+
             <div className={styles.modalFooter}>
+              <button onClick={() => setShowTDSModal(false)} className={styles.cancelBtn}>Cancel</button>
               <button
                 onClick={submitTDSReconcile}
                 disabled={busy === "reconcile_tds"}
-                className={styles.primaryActionBtn}
+                className={styles.confirmBtn}
               >
-                {busy === "reconcile_tds" ? "Reconciling TDS..." : "Confirm TDS Reconciliation"}
-              </button>
-              <button onClick={() => setShowTDSModal(false)} className={styles.cancelBtn}>
-                Cancel
+                {busy === "reconcile_tds" ? "Recording..." : "Apply TDS Deduction"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Bank Remittance Modal */}
+      {/* ── Modal: Bank Remittance Match ── */}
       {showPaymentModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowPaymentModal(false)}>
-          <div className={styles.modalDialog} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHead}>
-              <h3 className={styles.modalTitle}>Record Inward Bank Remittance</h3>
-              <button className={styles.modalCloseBtn} onClick={() => setShowPaymentModal(false)}>
-                ✕
-              </button>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Match Bank Inward Remittance</h3>
+              <button onClick={() => setShowPaymentModal(false)} className={styles.closeModalBtn}>×</button>
             </div>
-            <div className={styles.modalBody}>
-              <p className={styles.modalDesc}>
-                Record verified RTGS/NEFT/UPI inward funds received in the merchant bank account:
-              </p>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Remitted Amount (₹ INR):</label>
-                <input
-                  type="text"
-                  placeholder="180000"
-                  value={payAmount}
-                  onChange={(e) => setPayAmount(e.target.value)}
-                  className={styles.modalInput}
-                />
-              </div>
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>Bank UTR / Transaction Reference:</label>
-                <input
-                  type="text"
-                  value={payUtr}
-                  onChange={(e) => setPayUtr(e.target.value)}
-                  className={styles.modalInput}
-                />
-              </div>
+            <p className={styles.modalSub}>
+              Match verified RTGS, NEFT, or IMPS funds from your bank statement against this invoice.
+            </p>
+
+            <div className={styles.modalField}>
+              <label className={styles.modalLabel}>REMITTANCE AMOUNT (₹ INR)</label>
+              <input
+                type="number"
+                placeholder={String((data.net_payable_minor ?? data.amount_minor ?? 0) / 100)}
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                className={styles.modalInput}
+              />
             </div>
+
+            <div className={styles.modalField}>
+              <label className={styles.modalLabel}>BANK TRANSACTION UTR</label>
+              <input
+                type="text"
+                value={payUtr}
+                onChange={(e) => setPayUtr(e.target.value)}
+                className={styles.modalInput}
+              />
+            </div>
+
             <div className={styles.modalFooter}>
+              <button onClick={() => setShowPaymentModal(false)} className={styles.cancelBtn}>Cancel</button>
               <button
                 onClick={submitPaymentReconcile}
                 disabled={busy === "reconcile_payment"}
-                className={styles.primaryActionBtn}
+                className={styles.confirmBtn}
               >
-                {busy === "reconcile_payment" ? "Matching Remittance..." : "Confirm Remittance"}
-              </button>
-              <button onClick={() => setShowPaymentModal(false)} className={styles.cancelBtn}>
-                Cancel
+                {busy === "reconcile_payment" ? "Reconciling..." : "Confirm Bank Remittance"}
               </button>
             </div>
           </div>

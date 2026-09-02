@@ -1,37 +1,38 @@
 :root {
-  /* 70/20/10 Clean High-Contrast Dark Palette */
-  --bg-deep: #0a0c10;
-  --bg-surface: #11141a;
-  --bg-elevated: #181c24;
-  --bg-highlight: #202530;
+  /* 70/20/10 Dark Luxury Product Palette */
+  --bg-deep: #08090c;
+  --bg-surface: #0e1014;
+  --bg-elevated: #15181f;
+  --bg-highlight: #1d222b;
   
-  /* Typography Colors */
-  --text-primary: #f0f2f5;
-  --text-secondary: #9aa1ad;
-  --text-muted: #626978;
+  /* Typography Hierarchy */
+  --text-primary: #f2f4f8;
+  --text-secondary: #9aa1b0;
+  --text-muted: #5e6677;
   
-  /* Borders (Structured & Clean) */
-  --border-subtle: #1d222c;
-  --border-strong: #282f3d;
-  --border-focus: #3e4659;
+  /* Subtle, Structured Architectural Borders */
+  --border-subtle: #1a1e27;
+  --border-strong: #252b38;
+  --border-focus: #3b4457;
   
-  /* Domain Financial Status Tokens (High Contrast, Purposeful) */
-  --accent: #d97706;
-  --color-accent: #d97706;
+  /* Financial Domain Tokens */
+  --accent: #e09f3e;
+  --accent-hover: #c98829;
   --color-recovered: #10b981;
   --color-disallowed: #ef4444;
   --color-warning: #f59e0b;
-  --color-neutral: #0284c7;
+  --color-info: #0284c7;
   
-  /* Typography: Modern Sans-Serif Default (No Trendy Serif AI-Tells) */
-  --sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --display: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* Typography System */
+  --display: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Fast, Purposeful Timing */
-  --ease-fast: cubic-bezier(0.16, 1, 0.3, 1);
-  --duration-fast: 150ms;
-  --duration-normal: 250ms;
+  /* Motion & Interaction Curves */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 160ms;
+  --duration-normal: 280ms;
 }
 
 * {
@@ -48,10 +49,10 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle Scrollbar */
+/* Subtle, Polished Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -77,9 +78,31 @@ button, input, textarea, select {
   color: inherit;
 }
 
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 ::selection {
-  background: rgba(217, 119, 6, 0.25);
+  background: rgba(224, 159, 62, 0.25);
   color: var(--text-primary);
+}
+
+/* Lenis Smooth Scroll Integration */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
 }
 
 /* Reduced Motion Override */

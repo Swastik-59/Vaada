@@ -18,17 +18,33 @@ type AuditEvent = {
 };
 
 const ACTION_PREFIXES = [
-  { label: "All Events", value: "" },
-  { label: "Case Events", value: "case." },
-  { label: "Ingestion", value: "event." },
-  { label: "Auth", value: "auth." },
+  { label: "All Activity", value: "" },
+  { label: "Case Transitions", value: "case." },
+  { label: "Payment Ingestion", value: "event." },
+  { label: "Operator Security", value: "auth." },
 ];
+
+const HUMAN_ACTION_MAP: Record<string, string> = {
+  "case.transitioned": "Case State Transitioned",
+  "case.outbound_sent": "Debtor WhatsApp Reminder Dispatched",
+  "case.notice_generated": "Statutory Legal Notice Served",
+  "case.reconciled_tds": "Section 194C/J TDS Reconciled",
+  "case.reconciled_payment": "Bank Remittance Matched",
+  "case.human_override": "Operator Adjudication Applied",
+  "case.p2p_recorded": "Debtor Promise-to-Pay Recorded",
+  "event.ingested": "Payment Failure Event Ingested",
+  "auth.login_succeeded": "Operator Authentication Succeeded",
+  "auth.login_failed": "Authentication Attempt Rejected",
+  "auth.logout": "Operator Session Terminated",
+  "auth.refresh": "Session Token Rotated",
+};
 
 function fmt(dateStr: string | null): string {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleString("en-IN", {
     day: "numeric",
     month: "short",
+    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -36,10 +52,11 @@ function fmt(dateStr: string | null): string {
 }
 
 function exportCsv(items: AuditEvent[]) {
-  const header = "timestamp,action,actor_type,actor_id,resource_type,resource_id,correlation_id";
+  const header = "timestamp,human_action,raw_action,actor_type,actor_id,resource_type,resource_id,correlation_id";
   const rows = items.map((i) =>
     [
       i.created_at ?? "",
+      HUMAN_ACTION_MAP[i.action] || i.action,
       i.action,
       i.actor_type,
       i.actor_id ?? "",
@@ -55,7 +72,7 @@ function exportCsv(items: AuditEvent[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `vaada-audit-${Date.now()}.csv`;
+  a.download = `vaada-audit-trail-${Date.now()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -84,17 +101,19 @@ export default function AuditPage() {
 
   return (
     <div className={styles.shell}>
+      {/* Top Console Navigation */}
       <nav className={styles.topNav}>
         <div className={styles.navLeft}>
           <Link href="/queue" className={styles.navBrand}>
-            VAADA <span className={styles.navDevanagari}>वादा</span>
+            <span>VAADA</span>
+            <span className={styles.navDevanagari}>वादा</span>
           </Link>
           <span className={styles.navDivider}>/</span>
-          <span className={styles.navTitle}>IMMUTABLE AUDIT TRAIL</span>
+          <span className={styles.navTitle}>Activity Ledger</span>
         </div>
         <div className={styles.navRight}>
           <Link href="/queue" className={styles.navLink}>Queue</Link>
-          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>Audit Trail</Link>
+          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>Activity Ledger</Link>
           <Link href="/settings" className={styles.navLink}>Compliance</Link>
           <Link href="/razorpay-taxonomy" className={styles.navLink}>Taxonomy</Link>
         </div>
@@ -102,10 +121,10 @@ export default function AuditPage() {
 
       <div className={styles.header}>
         <div>
-          <div className={styles.headerTag}>TAMPER-EVIDENT APPEND-ONLY LOG</div>
-          <h1 className={styles.headerTitle}>System Audit Trail</h1>
+          <div className={styles.headerTag}>IMMUTABLE SYSTEM PROVENANCE</div>
+          <h1 className={styles.headerTitle}>Activity & Audit History</h1>
           <p className={styles.headerSubtitle}>
-            Cryptographically verifiable audit log tracking every autonomous state transition, human escalation, and statutory notice.
+            Verifiable ledger recording every automated recovery action, statutory notice compilation, and operator adjudication.
           </p>
         </div>
         <button className={styles.exportBtn} onClick={() => exportCsv(items)}>
@@ -137,7 +156,7 @@ export default function AuditPage() {
 
       {error && <div className={styles.errorNotice}>Notice: {error}</div>}
 
-      {loading && <div className={styles.statusState}>Fetching Audit Log...</div>}
+      {loading && <div className={styles.statusState}>Fetching audit ledger...</div>}
 
       {!loading && !isUnauthorized && items.length === 0 && (
         <div className={styles.statusState}>No audit events recorded for this category.</div>
@@ -149,37 +168,43 @@ export default function AuditPage() {
             <thead>
               <tr>
                 <th>TIMESTAMP</th>
-                <th>ACTION</th>
-                <th>ACTOR TYPE</th>
-                <th>RESOURCE</th>
+                <th>OPERATIONAL ACTIVITY</th>
+                <th>INITIATOR</th>
+                <th>RESOURCE SCOPE</th>
                 <th>CORRELATION ID</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((item) => (
-                <tr key={item.id} className={styles.tableRow}>
-                  <td className={styles.monoCell}>{fmt(item.created_at)}</td>
-                  <td className={styles.actionCell}>{item.action}</td>
-                  <td>
-                    <span className={styles.actorBadge}>{item.actor_type}</span>
-                  </td>
-                  <td>
-                    <div className={styles.monoCell}>{item.resource_type}</div>
-                    {item.resource_id && item.resource_type === "recovery_case" ? (
-                      <Link href={`/cases/${item.resource_id}`} className={styles.resourceLink}>
-                        {item.resource_id.slice(0, 8)}...
-                      </Link>
-                    ) : (
-                      <span className={styles.monoCell}>
-                        {item.resource_id ? item.resource_id.slice(0, 8) + "..." : "—"}
-                      </span>
-                    )}
-                  </td>
-                  <td className={styles.monoCell}>
-                    {item.correlation_id ? item.correlation_id.slice(0, 16) + "..." : "—"}
-                  </td>
-                </tr>
-              ))}
+              {items.map((item) => {
+                const humanLabel = HUMAN_ACTION_MAP[item.action] || item.action;
+                return (
+                  <tr key={item.id} className={styles.tableRow}>
+                    <td className={styles.monoCell}>{fmt(item.created_at)}</td>
+                    <td className={styles.actionCell}>
+                      <div className={styles.actionHumanText}>{humanLabel}</div>
+                      <span className={styles.actionRawCode}>{item.action}</span>
+                    </td>
+                    <td>
+                      <span className={styles.actorBadge}>{item.actor_type.toUpperCase()}</span>
+                    </td>
+                    <td>
+                      <div className={styles.resourceTypeText}>{item.resource_type}</div>
+                      {item.resource_id && item.resource_type === "recovery_case" ? (
+                        <Link href={`/cases/${item.resource_id}`} className={styles.resourceLink}>
+                          {item.resource_id.slice(0, 8)}...
+                        </Link>
+                      ) : (
+                        <span className={styles.monoCell}>
+                          {item.resource_id ? item.resource_id.slice(0, 8) + "..." : "—"}
+                        </span>
+                      )}
+                    </td>
+                    <td className={styles.monoCell}>
+                      {item.correlation_id ? item.correlation_id.slice(0, 16) + "..." : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

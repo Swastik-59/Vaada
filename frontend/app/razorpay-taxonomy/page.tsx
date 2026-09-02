@@ -279,7 +279,7 @@ export default function RazorpayTaxonomyPage() {
 
         {error && (
           <div style={{ padding: 20, background: "rgba(239, 68, 68, 0.1)", border: "1px solid #ef4444", color: "#f87171", fontFamily: "var(--mono)", marginBottom: 24 }}>
-            ⚠️ Error: {error}
+            Error: {error}
           </div>
         )}
 
@@ -605,7 +605,7 @@ export default function RazorpayTaxonomyPage() {
             <div className={styles.simResult}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10, borderBottom: "1px solid var(--line)", paddingBottom: 6 }}>
                 <span style={{ color: simResult.matched ? "#4ade80" : "#fbbf24", fontWeight: 600 }}>
-                  {simResult.matched ? "✓ OFFICIAL TAXONOMY MATCHED" : "⚠️ UNMAPPED RAZORPAY ERROR (FLAGGED FOR HUMAN REVIEW)"}
+                  {simResult.matched ? "OFFICIAL TAXONOMY MATCHED" : "UNMAPPED — FLAGGED FOR HUMAN REVIEW"}
                 </span>
                 <span style={{ color: "var(--muted)" }}>Provider: {simResult.provider}</span>
               </div>

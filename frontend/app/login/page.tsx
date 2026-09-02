@@ -27,10 +27,23 @@ export default function LoginPage() {
     }
   }
 
-  const fillDemo = () => {
+  async function quickDemoLogin() {
     setEmail("operator@vaada.local");
     setPassword("123456789");
-  };
+    setError("");
+    setLoading(true);
+    try {
+      await apiFetch("/api/v1/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: "operator@vaada.local", password: "123456789" }),
+      });
+      window.location.href = "/queue";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  }
 
   return (
     <div
@@ -60,7 +73,7 @@ export default function LoginPage() {
         <div>
           <div
             style={{
-              fontFamily: "var(--sans)",
+              fontFamily: "var(--display)",
               fontSize: "1.5rem",
               fontWeight: 800,
               letterSpacing: "-0.03em",
@@ -198,26 +211,28 @@ export default function LoginPage() {
             alignItems: "center",
             paddingTop: 16,
             borderTop: "1px solid var(--border-subtle)",
-            fontSize: 12,
+            fontSize: 12.5,
             fontFamily: "var(--sans)",
           }}
         >
           <button
             type="button"
-            onClick={fillDemo}
+            onClick={quickDemoLogin}
+            disabled={loading}
             style={{
               background: "transparent",
               border: "none",
               color: "var(--accent)",
+              fontWeight: 600,
               cursor: "pointer",
               padding: 0,
             }}
           >
-            Pre-fill Demo Account
+            Instant Demo Sign In →
           </button>
 
           <Link href="/" style={{ color: "var(--text-secondary)" }}>
-            ← Public Machine
+            ← Back to Home
           </Link>
         </div>
       </main>
