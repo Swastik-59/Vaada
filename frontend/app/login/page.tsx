@@ -21,7 +21,7 @@ export default function LoginPage() {
       });
       window.location.href = "/queue";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Authentication failed");
     } finally {
       setLoading(false);
     }
@@ -46,52 +46,60 @@ export default function LoginPage() {
     >
       <main
         style={{
-          maxWidth: 440,
+          maxWidth: 420,
           width: "100%",
-          padding: 48,
+          backgroundColor: "var(--bg-surface)",
+          border: "1px solid var(--border-subtle)",
+          borderRadius: 8,
+          padding: 40,
           display: "flex",
           flexDirection: "column",
-          gap: 32,
+          gap: 24,
         }}
       >
-        <div style={{ textAlign: "center" }}>
+        <div>
           <div
             style={{
-              fontFamily: "var(--display)",
-              fontSize: "3.5rem",
-              fontWeight: 300,
-              lineHeight: 1,
-              letterSpacing: "-0.02em",
-              marginBottom: 16,
+              fontFamily: "var(--sans)",
+              fontSize: "1.5rem",
+              fontWeight: 800,
+              letterSpacing: "-0.03em",
+              color: "var(--text-primary)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 8,
             }}
           >
-            Vaada.
+            <span>VAADA</span>
+            <span style={{ color: "var(--accent)", fontSize: "1.1rem" }}>वादा</span>
           </div>
-          <h1
+          <p
             style={{
               fontFamily: "var(--sans)",
-              fontSize: "16px",
-              fontWeight: 400,
+              fontSize: "14px",
               color: "var(--text-secondary)",
               margin: 0,
             }}
           >
-            Sign in to the Operations Console
-          </h1>
+            Operator authentication for recovery console
+          </p>
         </div>
 
-        <form onSubmit={onSubmit} style={{ display: "grid", gap: 24 }}>
+        <form onSubmit={onSubmit} style={{ display: "grid", gap: 18 }}>
           <div>
             <label
               style={{
                 display: "block",
-                fontFamily: "var(--sans)",
-                fontSize: 13,
-                color: "var(--text-secondary)",
-                marginBottom: 8,
+                fontFamily: "var(--mono)",
+                fontSize: 10.5,
+                letterSpacing: "0.08em",
+                color: "var(--text-muted)",
+                textTransform: "uppercase",
+                marginBottom: 6,
               }}
             >
-              Email Address
+              Operator Email
             </label>
             <input
               value={email}
@@ -100,18 +108,15 @@ export default function LoginPage() {
               required
               style={{
                 width: "100%",
-                padding: "12px 16px",
-                backgroundColor: "var(--bg-surface)",
+                padding: "10px 14px",
+                backgroundColor: "var(--bg-elevated)",
                 color: "var(--text-primary)",
                 border: "1px solid var(--border-subtle)",
                 borderRadius: 4,
                 fontFamily: "var(--sans)",
-                fontSize: 14,
+                fontSize: 13.5,
                 outline: "none",
-                transition: "border-color 0.2s",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "var(--text-primary)")}
-              onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}
             />
           </div>
 
@@ -119,13 +124,15 @@ export default function LoginPage() {
             <label
               style={{
                 display: "block",
-                fontFamily: "var(--sans)",
-                fontSize: 13,
-                color: "var(--text-secondary)",
-                marginBottom: 8,
+                fontFamily: "var(--mono)",
+                fontSize: 10.5,
+                letterSpacing: "0.08em",
+                color: "var(--text-muted)",
+                textTransform: "uppercase",
+                marginBottom: 6,
               }}
             >
-              Password
+              Master Password
             </label>
             <input
               type="password"
@@ -135,18 +142,15 @@ export default function LoginPage() {
               required
               style={{
                 width: "100%",
-                padding: "12px 16px",
-                backgroundColor: "var(--bg-surface)",
+                padding: "10px 14px",
+                backgroundColor: "var(--bg-elevated)",
                 color: "var(--text-primary)",
                 border: "1px solid var(--border-subtle)",
                 borderRadius: 4,
                 fontFamily: "var(--sans)",
-                fontSize: 14,
+                fontSize: 13.5,
                 outline: "none",
-                transition: "border-color 0.2s",
               }}
-              onFocus={(e) => (e.target.style.borderColor = "var(--text-primary)")}
-              onBlur={(e) => (e.target.style.borderColor = "var(--border-subtle)")}
             />
           </div>
 
@@ -154,34 +158,32 @@ export default function LoginPage() {
             type="submit"
             disabled={loading}
             style={{
-              padding: "16px 24px",
+              padding: "12px",
               backgroundColor: "var(--accent)",
-              color: "var(--bg-deep)",
+              color: "#000",
               border: "none",
-              borderRadius: 100,
+              borderRadius: 4,
               fontFamily: "var(--sans)",
-              fontSize: 15,
-              fontWeight: 500,
+              fontSize: 14,
+              fontWeight: 600,
               cursor: "pointer",
-              transition: "transform 0.2s ease, background-color 0.2s",
-              marginTop: 8,
+              marginTop: 6,
+              opacity: loading ? 0.7 : 1,
             }}
-            onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.02)")}
-            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
           >
-            {loading ? "Authenticating..." : "Sign In"}
+            {loading ? "Authenticating..." : "Enter Operations Console →"}
           </button>
 
           {error && (
             <div
               style={{
-                padding: "12px 16px",
-                backgroundColor: "rgba(138, 54, 54, 0.1)",
+                padding: "10px 14px",
+                backgroundColor: "rgba(239, 68, 68, 0.1)",
+                border: "1px solid var(--color-disallowed)",
                 color: "var(--color-disallowed)",
                 fontFamily: "var(--sans)",
-                fontSize: 13,
+                fontSize: 12.5,
                 borderRadius: 4,
-                textAlign: "center",
               }}
             >
               {error}
@@ -191,11 +193,13 @@ export default function LoginPage() {
 
         <div
           style={{
-            marginTop: 16,
-            textAlign: "center",
-            fontFamily: "var(--sans)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: 16,
+            borderTop: "1px solid var(--border-subtle)",
             fontSize: 12,
-            color: "var(--text-muted)",
+            fontFamily: "var(--sans)",
           }}
         >
           <button
@@ -204,18 +208,16 @@ export default function LoginPage() {
             style={{
               background: "transparent",
               border: "none",
-              color: "var(--text-secondary)",
+              color: "var(--accent)",
               cursor: "pointer",
-              textDecoration: "underline",
+              padding: 0,
             }}
           >
-            Use Demo Account
+            Pre-fill Demo Account
           </button>
-        </div>
 
-        <div style={{ textAlign: "center", marginTop: 32 }}>
-          <Link href="/" style={{ textDecoration: "none", color: "var(--text-secondary)", fontFamily: "var(--sans)", fontSize: 13 }}>
-            ← Back to Public Site
+          <Link href="/" style={{ color: "var(--text-secondary)" }}>
+            ← Public Machine
           </Link>
         </div>
       </main>

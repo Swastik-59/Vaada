@@ -5,50 +5,34 @@ import { motion, AnimatePresence } from "motion/react";
 
 export default function Preloader() {
   const [visible, setVisible] = useState(false);
-  const [phase, setPhase] = useState<"intro" | "reveal" | "exit">("intro");
 
   useEffect(() => {
-    // Check if previously seen in this session
-    const seen = sessionStorage.getItem("vaada_seal_passed");
-    if (seen) {
-      return;
-    }
+    const seen = sessionStorage.getItem("vaada_visited");
+    if (seen) return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
-      sessionStorage.setItem("vaada_seal_passed", "1");
+      sessionStorage.setItem("vaada_visited", "1");
       return;
     }
 
     setVisible(true);
-
-    const t1 = setTimeout(() => {
-      setPhase("reveal");
-    }, 400);
-
-    const t2 = setTimeout(() => {
-      setPhase("exit");
-    }, 1200);
-
-    const t3 = setTimeout(() => {
+    const timer = setTimeout(() => {
       setVisible(false);
-      sessionStorage.setItem("vaada_seal_passed", "1");
-    }, 2000);
+      sessionStorage.setItem("vaada_visited", "1");
+    }, 450);
 
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    return () => clearTimeout(timer);
   }, []);
 
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          key="preloader-overlay"
+          key="preloader"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.8, ease: "easeInOut" } }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           style={{
             position: "fixed",
             inset: 0,
@@ -57,33 +41,23 @@ export default function Preloader() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            overflow: "hidden",
-            pointerEvents: phase === "exit" ? "none" : "auto",
+            pointerEvents: "none",
           }}
         >
-          {/* Elegant typographic brand moment */}
-          <div style={{ overflow: "hidden" }}>
-            <motion.div
-              initial={{ y: "100%", opacity: 0 }}
-              animate={
-                phase === "intro" 
-                  ? { y: "100%", opacity: 0 } 
-                  : phase === "reveal" 
-                  ? { y: "0%", opacity: 1 } 
-                  : { y: "-100%", opacity: 0 }
-              }
-              transition={{ duration: 1, ease: [0.2, 0.8, 0.2, 1] }}
-              style={{
-                fontFamily: "var(--display)",
-                fontSize: "clamp(3rem, 10vw, 6rem)",
-                fontWeight: 300,
-                letterSpacing: "-0.02em",
-                color: "var(--text-primary)",
-                lineHeight: 1,
-              }}
-            >
-              Vaada.
-            </motion.div>
+          <div
+            style={{
+              fontFamily: "var(--sans)",
+              fontSize: "1.75rem",
+              fontWeight: 700,
+              letterSpacing: "-0.03em",
+              color: "var(--text-primary)",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            <span>VAADA</span>
+            <span style={{ color: "var(--accent)", fontSize: "1rem", fontWeight: 600 }}>वादा</span>
           </div>
         </motion.div>
       )}

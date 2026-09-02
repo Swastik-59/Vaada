@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import gsap from "gsap";
 import styles from "./audit.module.css";
 
 type AuditEvent = {
@@ -19,8 +18,8 @@ type AuditEvent = {
 };
 
 const ACTION_PREFIXES = [
-  { label: "All", value: "" },
-  { label: "Case events", value: "case." },
+  { label: "All Events", value: "" },
+  { label: "Case Events", value: "case." },
   { label: "Ingestion", value: "event." },
   { label: "Auth", value: "auth." },
 ];
@@ -28,8 +27,11 @@ const ACTION_PREFIXES = [
 function fmt(dateStr: string | null): string {
   if (!dateStr) return "—";
   return new Date(dateStr).toLocaleString("en-IN", {
-    day: "numeric", month: "short",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
   });
 }
 
@@ -63,82 +65,82 @@ export default function AuditPage() {
   const [prefix, setPrefix] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const tbodyRef = useRef<HTMLTableSectionElement>(null);
+  const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   useEffect(() => {
     setLoading(true);
     apiFetch(`/api/v1/audit?limit=200&action_prefix=${encodeURIComponent(prefix)}`)
       .then((data) => setItems(data.items ?? []))
-      .catch((err) => setError(err.message))
+      .catch((err) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("401") || msg.toLowerCase().includes("unauthorized")) {
+          setIsUnauthorized(true);
+        } else {
+          setError(msg);
+        }
+      })
       .finally(() => setLoading(false));
   }, [prefix]);
-
-  useEffect(() => {
-    if (!loading && tbodyRef.current) {
-      const rows = tbodyRef.current.querySelectorAll("tr");
-      gsap.from(rows, {
-        opacity: 0,
-        x: -16,
-        duration: 0.35,
-        ease: "power2.out",
-        stagger: 0.02,
-      });
-    }
-  }, [loading]);
 
   return (
     <div className={styles.shell}>
       <nav className={styles.topNav}>
         <div className={styles.navLeft}>
-          <Link href="/queue" className={styles.navMark}>
+          <Link href="/queue" className={styles.navBrand}>
             VAADA <span className={styles.navDevanagari}>वादा</span>
           </Link>
-          <span className={styles.navSlash}>/</span>
-          <span className={styles.navSectionTitle}>IMMUTABLE AUDIT TRAIL</span>
+          <span className={styles.navDivider}>/</span>
+          <span className={styles.navTitle}>IMMUTABLE AUDIT TRAIL</span>
         </div>
-        <div className={styles.navLinks}>
-          <Link href="/queue" className={styles.navLink}>
-            ← Queue
-          </Link>
-          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>
-            Audit Trail
-          </Link>
-          <Link href="/settings" className={styles.navLink}>
-            Compliance Config
-          </Link>
-          <Link href="/razorpay-taxonomy" className={styles.navLink}>
-            Error Intelligence
-          </Link>
+        <div className={styles.navRight}>
+          <Link href="/queue" className={styles.navLink}>Queue</Link>
+          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>Audit Trail</Link>
+          <Link href="/settings" className={styles.navLink}>Compliance</Link>
+          <Link href="/razorpay-taxonomy" className={styles.navLink}>Taxonomy</Link>
         </div>
       </nav>
 
       <div className={styles.header}>
-        <div className={styles.headerLeft}>
-          <p className={styles.headerLabel}>● Tamper-Evident Immutable Log</p>
+        <div>
+          <div className={styles.headerTag}>TAMPER-EVIDENT APPEND-ONLY LOG</div>
           <h1 className={styles.headerTitle}>System Audit Trail</h1>
+          <p className={styles.headerSubtitle}>
+            Cryptographically verifiable audit log tracking every autonomous state transition, human escalation, and statutory notice.
+          </p>
         </div>
         <button className={styles.exportBtn} onClick={() => exportCsv(items)}>
-          Export CSV ({items.length} events)
+          Export CSV ({items.length})
         </button>
       </div>
 
       <div className={styles.filterBar}>
         <span className={styles.filterLabel}>Filter Event Class:</span>
-        {ACTION_PREFIXES.map((p) => (
-          <button
-            key={p.value}
-            className={`${styles.filterChip} ${prefix === p.value ? styles.filterChipActive : ""}`}
-            onClick={() => setPrefix(p.value)}
-          >
-            {p.label}
-          </button>
-        ))}
+        <div className={styles.filterGroup}>
+          {ACTION_PREFIXES.map((p) => (
+            <button
+              key={p.value}
+              className={`${styles.filterChip} ${prefix === p.value ? styles.filterChipActive : ""}`}
+              onClick={() => setPrefix(p.value)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {loading && <p className={styles.statusRow}>FETCHING AUDIT LOG…</p>}
-      {error && <p className={styles.statusRow} style={{ color: "#c02020" }}>{error}</p>}
-      {!loading && items.length === 0 && (
-        <p className={styles.statusRow}>No audit events found.</p>
+      {isUnauthorized && (
+        <div className={styles.authNotice}>
+          <span>Operator authentication required to view immutable audit events.</span>
+          <Link href="/login" className={styles.signInBtn}>Sign In →</Link>
+        </div>
+      )}
+
+      {error && <div className={styles.errorNotice}>Notice: {error}</div>}
+
+      {loading && <div className={styles.statusState}>Fetching Audit Log...</div>}
+
+      {!loading && !isUnauthorized && items.length === 0 && (
+        <div className={styles.statusState}>No audit events recorded for this category.</div>
       )}
 
       {!loading && items.length > 0 && (
@@ -146,38 +148,35 @@ export default function AuditPage() {
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Timestamp</th>
-                <th>Action</th>
-                <th>Actor</th>
-                <th>Resource</th>
-                <th>Correlation ID</th>
+                <th>TIMESTAMP</th>
+                <th>ACTION</th>
+                <th>ACTOR TYPE</th>
+                <th>RESOURCE</th>
+                <th>CORRELATION ID</th>
               </tr>
             </thead>
-            <tbody ref={tbodyRef}>
+            <tbody>
               {items.map((item) => (
-                <tr key={item.id}>
-                  <td className={styles.mutedCell}>{fmt(item.created_at)}</td>
+                <tr key={item.id} className={styles.tableRow}>
+                  <td className={styles.monoCell}>{fmt(item.created_at)}</td>
                   <td className={styles.actionCell}>{item.action}</td>
                   <td>
                     <span className={styles.actorBadge}>{item.actor_type}</span>
                   </td>
                   <td>
-                    <div className={styles.mutedCell}>{item.resource_type}</div>
+                    <div className={styles.monoCell}>{item.resource_type}</div>
                     {item.resource_id && item.resource_type === "recovery_case" ? (
-                      <Link
-                        href={`/cases/${item.resource_id}`}
-                        className={styles.resourceLink}
-                      >
-                        {item.resource_id.slice(0, 8)}…
+                      <Link href={`/cases/${item.resource_id}`} className={styles.resourceLink}>
+                        {item.resource_id.slice(0, 8)}...
                       </Link>
                     ) : (
-                      <span className={styles.mutedCell}>
-                        {item.resource_id ? item.resource_id.slice(0, 8) + "…" : "—"}
+                      <span className={styles.monoCell}>
+                        {item.resource_id ? item.resource_id.slice(0, 8) + "..." : "—"}
                       </span>
                     )}
                   </td>
-                  <td className={styles.mutedCell}>
-                    {item.correlation_id ? item.correlation_id.slice(0, 16) + "…" : "—"}
+                  <td className={styles.monoCell}>
+                    {item.correlation_id ? item.correlation_id.slice(0, 16) + "..." : "—"}
                   </td>
                 </tr>
               ))}

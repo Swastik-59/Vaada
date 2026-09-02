@@ -194,7 +194,7 @@ export default function RazorpayTaxonomyPage() {
         {/* Page Header */}
         <header className={styles.header}>
           <div className={styles.eyebrow}>
-            <span>●</span> Authoritative Payment Failure Taxonomy
+            Authoritative Payment Failure Taxonomy
           </div>
           <h1 className={styles.title}>Razorpay Error Intelligence</h1>
           <p className={styles.subtitle}>

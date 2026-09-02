@@ -1,5 +1,5 @@
 /* ============================================================
-   Queue Workspace — Cinematic Editorial
+   Queue Workspace — Clean, Professional Ledger
    ============================================================ */
 
 .shell {
@@ -8,14 +8,14 @@
   color: var(--text-primary);
 }
 
-/* ── Minimal Top Navigation ── */
+/* ── Top Navigation ── */
 .topNav {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 48px;
-  height: 80px;
-  background-color: var(--bg-deep);
+  padding: 0 40px;
+  height: 64px;
+  background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -25,136 +25,223 @@
   gap: 12px;
 }
 
-.navMark {
-  font-family: var(--display);
-  font-size: 1.5rem;
-  font-weight: 300;
+.navBrand {
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
-}
-
-.navSlash {
-  color: var(--border-strong);
-}
-
-.navSectionTitle {
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.navLinks {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 6px;
+}
+
+.navDevanagari {
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.navDivider {
+  color: var(--border-strong);
+  font-size: 12px;
+}
+
+.navTitle {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
 .navLink {
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--text-secondary);
-  transition: color 0.3s ease;
+  transition: color 0.15s ease;
 }
 
 .navLink:hover {
   color: var(--text-primary);
 }
 
+.navAuthBtn {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.navAuthBtn:hover {
+  background-color: var(--bg-highlight);
+}
+
 /* ── Workspace ── */
 .workspace {
-  padding: 48px;
-  max-width: 1400px;
+  padding: 40px;
+  max-width: 1440px;
   margin: 0 auto;
 }
 
-/* ── Elegant Header ── */
-.telemetryHeader {
+/* ── Header ── */
+.header {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 64px;
+  gap: 32px;
+  margin-bottom: 32px;
 }
 
-.titleColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.pageTitle {
-  font-family: var(--display);
-  font-size: clamp(3rem, 5vw, 4.5rem);
-  font-weight: 300;
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  margin: 0;
-}
-
-.pageSubtitle {
-  font-family: var(--sans);
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-/* ── Metrics Grid (Softened) ── */
-.metricsGrid {
-  display: flex;
-  gap: 48px;
-}
-
-.metricCard {
+.headerInfo {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.metricValue {
-  font-family: var(--display);
-  font-size: 2.5rem;
-  font-weight: 300;
-  color: var(--text-primary);
+.statusTicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
-.metricLabel {
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-recovered);
+}
+
+.title {
   font-family: var(--sans);
-  font-size: 12px;
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.subtitle {
+  font-family: var(--sans);
+  font-size: 14.5px;
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin: 0;
+  max-width: 620px;
+  line-height: 1.5;
 }
 
-.metricRecovered .metricValue {
-  color: var(--color-recovered);
+/* Metrics Grid */
+.metricsGrid {
+  display: flex;
+  gap: 16px;
 }
 
-.metricWarning .metricValue {
-  color: var(--accent);
+.metricCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+  text-align: right;
 }
 
-/* ── Control Bar ── */
-.controlBar {
+.metricVal {
+  font-family: var(--mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.metricLbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+/* ── Banner Alerts ── */
+.authNoticeBanner {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+
+.signInBtn {
+  background-color: var(--accent);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.errorBanner {
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-disallowed);
+  color: var(--color-disallowed);
+  padding: 14px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+/* ── Controls Bar ── */
+.controlsBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  flex: 1;
+  max-width: 400px;
 }
 
 .searchInput {
-  background-color: transparent;
-  border: none;
-  border-bottom: 1px solid var(--border-strong);
-  color: var(--text-primary);
+  width: 100%;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 9px 14px;
   font-family: var(--sans);
-  font-size: 16px;
-  padding: 12px 0;
-  width: 300px;
+  font-size: 13px;
+  color: var(--text-primary);
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.15s ease;
 }
 
 .searchInput:focus {
-  border-color: var(--text-primary);
+  border-color: var(--border-focus);
 }
 
 .searchInput::placeholder {
@@ -163,104 +250,248 @@
 
 .filterPills {
   display: flex;
-  gap: 16px;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .filterPill {
-  padding: 8px 16px;
   background-color: transparent;
-  border: 1px solid transparent;
-  border-radius: 100px;
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.15s ease;
 }
 
 .filterPill:hover {
+  background-color: var(--bg-surface);
   color: var(--text-primary);
 }
 
 .filterPillActive {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: var(--bg-elevated);
+  border-color: var(--border-strong);
   color: var(--text-primary);
-  border-color: var(--border-subtle);
+  font-weight: 600;
 }
 
-/* ── Table Container (No Borders) ── */
-.tableContainer {
+/* ── Table Wrap ── */
+.tableWrap {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
   overflow-x: auto;
 }
 
-.dossierTable {
+.table {
   width: 100%;
   border-collapse: collapse;
+  text-align: left;
 }
 
-.dossierTable th {
-  padding: 16px 24px;
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--text-muted);
-  text-align: left;
-  font-weight: 400;
+.table th {
+  padding: 12px 16px;
+  background-color: var(--bg-elevated);
   border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.sortCol {
+  cursor: pointer;
+}
+
+.sortCol:hover {
+  color: var(--text-primary);
+}
+
+.sortColActive {
+  cursor: pointer;
+  color: var(--accent);
+}
+
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  vertical-align: middle;
 }
 
 .tableRow {
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition: background-color 0.15s ease;
 }
 
 .tableRow:hover {
-  background-color: var(--bg-surface);
+  background-color: var(--bg-elevated);
 }
 
-.dossierTable td {
-  padding: 24px;
-  font-family: var(--sans);
-  font-size: 14px;
-  vertical-align: middle;
+.tableRow:last-child td {
+  border-bottom: none;
 }
 
-.invoiceNumberLink {
+.invoiceLink {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
   color: var(--text-primary);
-  font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
-.buyerCell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.buyerName {
-  color: var(--text-primary);
-}
-
-.buyerGstin {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.amountValue {
-  font-family: var(--display);
-  font-size: 1.25rem;
-  color: var(--text-primary);
-}
-
-.dueText {
-  color: var(--text-secondary);
-}
-
-.stateBadge {
-  font-size: 13px;
+.invoiceLink:hover {
   color: var(--accent);
 }
 
-.emptyRow, .feedbackRow {
-  padding: 48px;
-  text-align: center;
+.debtorCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.debtorNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.debtorName {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.msmeTag {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  background-color: rgba(217, 119, 6, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.debtorGstin {
+  font-family: var(--mono);
+  font-size: 11px;
   color: var(--text-muted);
+}
+
+.stateTag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.riskTierTag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.statDisallowed {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-disallowed);
+}
+
+.statUrgent {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+.statSafe {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.statMuted {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.probMeterWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.probTrack {
+  width: 50px;
+  height: 4px;
+  background-color: var(--border-subtle);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.probBar {
+  height: 100%;
+}
+
+.probNum {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.principalVal {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.dueVal {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.contactsVal {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.emptyState {
+  padding: 64px 32px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-muted);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .metricsGrid {
+    width: 100%;
+    overflow-x: auto;
+  }
 }

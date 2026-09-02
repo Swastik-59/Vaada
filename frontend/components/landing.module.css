@@ -1,207 +1,615 @@
 /* ============================================================
-   Landing Page — Cinematic Editorial
+   Landing Page — Clean, Purposeful, Un-slopped Architecture
    ============================================================ */
 
-.site {
+.page {
   background-color: var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
-  position: relative;
-  overflow-x: hidden;
 }
 
-/* ── Minimal Masthead ── */
+/* ── Top Masthead ── */
 .masthead {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32px 48px;
-  position: fixed;
+  padding: 0 48px;
+  height: 72px;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: var(--bg-deep);
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 50;
-  mix-blend-mode: difference;
+}
+
+.mastheadLeft {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
 }
 
 .brandMark {
-  font-family: var(--display);
-  font-size: 2rem;
-  font-weight: 300;
+  font-family: var(--sans);
+  font-size: 1.25rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
-  color: #fff; /* mix-blend-mode friendly */
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brandDevanagari {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
+.brandTagline {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .mastheadNav {
   display: flex;
-  gap: 32px;
   align-items: center;
+  gap: 28px;
 }
 
-.mastheadNav a {
+.navLink {
   font-family: var(--sans);
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  transition: color 0.3s ease;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: color 0.15s ease;
 }
 
-.mastheadNav a:hover {
-  color: #fff;
+.navLink:hover {
+  color: var(--text-primary);
 }
 
-.consoleLink {
-  padding: 10px 24px;
-  border-radius: 100px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff !important;
-  backdrop-filter: blur(10px);
-  transition: background-color 0.3s ease;
+.consoleBtn {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bg-deep);
+  background-color: var(--accent);
+  padding: 8px 18px;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
 }
 
-.consoleLink:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+.consoleBtn:hover {
+  opacity: 0.9;
 }
 
 /* ── Hero Section ── */
-.hero {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 0 48px;
-  position: relative;
-}
-
-.heroHeadline {
-  font-family: var(--display);
-  font-size: clamp(4rem, 12vw, 10rem);
-  font-weight: 300;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
-  margin: 0 0 32px 0;
-  max-width: 1400px;
-  color: var(--text-primary);
-}
-
-.heroHeadline span {
-  display: inline-block;
-}
-
-.heroSub {
-  font-family: var(--sans);
-  font-size: clamp(1.2rem, 2vw, 1.6rem);
-  color: var(--text-secondary);
-  max-width: 600px;
-  line-height: 1.5;
+.heroSection {
+  padding: 100px 48px 80px;
+  max-width: 1200px;
   margin: 0 auto;
-  font-weight: 300;
-}
-
-.scrollHint {
-  position: absolute;
-  bottom: 48px;
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
 }
 
-.scrollLine {
-  width: 1px;
-  height: 48px;
-  background: linear-gradient(to bottom, var(--text-muted), transparent);
-}
-
-/* ── The Cinematic Pipeline ── */
-.pipelineSection {
-  height: 400vh; /* For scroll-linking */
-  position: relative;
-  background-color: var(--bg-surface);
-}
-
-.pipelineSticky {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  display: flex;
+.heroBadge {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 100px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+  margin-bottom: 28px;
+}
+
+.heroDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-recovered);
+}
+
+.heroTitle {
+  font-family: var(--sans);
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  margin: 0 0 24px;
+  max-width: 900px;
+}
+
+.heroSubtitle {
+  font-family: var(--sans);
+  font-size: clamp(1rem, 1.8vw, 1.25rem);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 760px;
+  margin: 0 0 40px;
+}
+
+.heroActions {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 64px;
+}
+
+.primaryCta {
+  padding: 14px 28px;
+  background-color: var(--accent);
+  color: #000;
+  font-family: var(--sans);
+  font-size: 14.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  transition: opacity 0.15s ease;
+}
+
+.primaryCta:hover {
+  opacity: 0.9;
+}
+
+.secondaryCta {
+  padding: 14px 24px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: 14.5px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: background-color 0.15s ease;
+}
+
+.secondaryCta:hover {
+  background-color: var(--bg-elevated);
+}
+
+/* Telemetry Strip */
+.telemetryStrip {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background-color: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
   overflow: hidden;
 }
 
-/* The central transformable object */
-.invoiceObject {
-  width: 100%;
-  max-width: 800px;
-  aspect-ratio: 16/9;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stageText {
-  font-family: var(--display);
-  font-size: clamp(3rem, 6vw, 5rem);
-  font-weight: 300;
-  color: var(--text-primary);
-  text-align: center;
-  position: absolute;
-  width: 100%;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.stageCaption {
-  font-family: var(--sans);
-  font-size: 16px;
-  color: var(--text-secondary);
-  margin-top: 24px;
-  font-weight: 400;
-}
-
-/* ── Minimal Footer ── */
-.footer {
-  padding: 120px 48px;
-  text-align: center;
-  background-color: var(--bg-deep);
+.telemetryItem {
+  background-color: var(--bg-surface);
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 48px;
+  gap: 6px;
+  text-align: left;
 }
 
-.footerHeadline {
-  font-family: var(--display);
-  font-size: clamp(3rem, 6vw, 4.5rem);
-  font-weight: 300;
+.stripLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.stripValue {
+  font-family: var(--sans);
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
-  max-width: 800px;
+}
+
+/* ── Section General ── */
+.section {
+  padding: 96px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionHeader {
+  margin-bottom: 48px;
+}
+
+.sectionTag {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.sectionTitle {
+  font-family: var(--sans);
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+}
+
+.sectionSubtitle {
+  font-family: var(--sans);
+  font-size: 15px;
+  color: var(--text-secondary);
+  max-width: 680px;
+  line-height: 1.5;
   margin: 0;
-  line-height: 1;
+}
+
+/* ── Pipeline Section ── */
+.pipelineLayout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+}
+
+.stationTabs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stationTab {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stationTab:hover {
+  background-color: var(--bg-surface);
+}
+
+.stationTabActive {
+  background-color: var(--bg-surface);
+  border-color: var(--border-strong);
+}
+
+.stationNum {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.stationTabActive .stationNum {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.stationTabName {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.stationTabActive .stationTabName {
+  color: var(--text-primary);
+}
+
+.stationCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.stationBody {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.stationHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.cardStationBadge {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 6px;
+}
+
+.cardStationTitle {
+  font-family: var(--sans);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.cardStationIndex {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.cardStationDesc {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.stationTelemetryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stationMetric {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stationMetricHighlight {
+  border-color: var(--border-strong);
+}
+
+.metricLabel {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.metricValue {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.metricSub {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--color-recovered);
+}
+
+.verdictBox {
+  background-color: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.verdictStatus {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.verdictExplanation {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.cardFooterNav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 24px;
+  margin-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.stepperBtn {
+  background-color: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.stepperBtn:hover:not(:disabled) {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.stepperBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.stepperCount {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* ── Compliance Ledger Table ── */
+.tableContainer {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.complianceTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.complianceTable th {
+  padding: 14px 20px;
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border-subtle);
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.complianceTable td {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+
+.complianceTable tr:last-child td {
+  border-bottom: none;
+}
+
+.ruleNameCell {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ruleMandateCell {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.ruleActionCell {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.ruleStatusCell {
+  white-space: nowrap;
+}
+
+.statusBadge {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-recovered);
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+/* ── Institutional Footer ── */
+.footer {
+  border-top: 1px solid var(--border-subtle);
+  background-color: var(--bg-surface);
+  padding: 64px 48px 36px;
+}
+
+.footerTop {
+  max-width: 1200px;
+  margin: 0 auto 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+}
+
+.footerTitle {
+  font-family: var(--sans);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0 0 8px;
+}
+
+.footerDesc {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 600px;
 }
 
 .footerCta {
-  display: inline-block;
-  padding: 20px 48px;
+  padding: 14px 28px;
   background-color: var(--accent);
-  color: var(--bg-deep);
+  color: #000;
   font-family: var(--sans);
-  font-size: 16px;
-  font-weight: 500;
-  border-radius: 100px;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
 }
 
 .footerCta:hover {
-  background-color: #d8bd98;
-  transform: scale(1.02);
+  opacity: 0.9;
+}
+
+.footerBottom {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .pipelineLayout {
+    grid-template-columns: 1fr;
+  }
+  .telemetryStrip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .footerTop {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }

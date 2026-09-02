@@ -1,5 +1,5 @@
 /* ============================================================
-   Audit Trail — Cinematic Editorial
+   Audit Trail — Clean, Tamper-Evident Ledger
    ============================================================ */
 
 .shell {
@@ -12,9 +12,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 48px;
-  height: 80px;
-  background-color: var(--bg-deep);
+  padding: 0 40px;
+  height: 64px;
+  background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -24,35 +24,46 @@
   gap: 12px;
 }
 
-.navMark {
-  font-family: var(--display);
-  font-size: 1.5rem;
-  font-weight: 300;
+.navBrand {
+  font-family: var(--sans);
+  font-size: 1.15rem;
+  font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--text-primary);
-}
-
-.navSlash {
-  color: var(--border-strong);
-}
-
-.navSectionTitle {
-  font-family: var(--sans);
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.navLinks {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 6px;
+}
+
+.navDevanagari {
+  color: var(--accent);
+  font-size: 0.95rem;
+}
+
+.navDivider {
+  color: var(--border-strong);
+  font-size: 12px;
+}
+
+.navTitle {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
 }
 
 .navLink {
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--text-secondary);
-  transition: color 0.3s ease;
+  transition: color 0.15s ease;
 }
 
 .navLink:hover,
@@ -61,157 +72,213 @@
 }
 
 .header {
-  padding: 64px 48px 32px;
+  padding: 48px 40px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
   display: flex;
-  align-items: flex-end;
   justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
 }
 
-.headerLabel {
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--text-muted);
-  text-transform: uppercase;
+.headerTag {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--accent);
   letter-spacing: 0.1em;
-  margin: 0 0 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .headerTitle {
-  font-family: var(--display);
-  font-size: clamp(3rem, 5vw, 4.5rem);
-  font-weight: 300;
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  margin: 0;
+  font-family: var(--sans);
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 8px;
 }
 
-.headerActions {
-  display: flex;
-  gap: 16px;
+.headerSubtitle {
+  font-family: var(--sans);
+  font-size: 14.5px;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 680px;
+  line-height: 1.5;
 }
 
 .exportBtn {
-  padding: 10px 24px;
-  background-color: var(--bg-elevated);
-  border: 1px solid transparent;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-strong);
   color: var(--text-primary);
   font-family: var(--sans);
-  font-size: 14px;
-  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
 }
 
 .exportBtn:hover {
-  background-color: var(--bg-highlight);
+  background-color: var(--bg-elevated);
 }
 
-.mainContent {
-  padding: 0 48px 64px;
-}
-
-.filters {
+.filterBar {
+  padding: 0 40px 24px;
+  max-width: 1440px;
+  margin: 0 auto;
   display: flex;
+  align-items: center;
   gap: 16px;
-  margin-bottom: 32px;
+}
+
+.filterLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.filterGroup {
+  display: flex;
+  gap: 8px;
 }
 
 .filterChip {
-  padding: 8px 16px;
   background-color: transparent;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   font-family: var(--sans);
-  font-size: 13px;
-  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .filterChip:hover {
+  background-color: var(--bg-surface);
   color: var(--text-primary);
 }
 
 .filterChipActive {
-  background-color: rgba(255,255,255,0.05);
+  background-color: var(--bg-elevated);
+  border-color: var(--border-strong);
   color: var(--text-primary);
-  border-color: var(--border-subtle);
+  font-weight: 600;
+}
+
+.authNotice {
+  max-width: 1440px;
+  margin: 0 40px 24px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+}
+
+.signInBtn {
+  background-color: var(--accent);
+  color: #000;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.errorNotice {
+  max-width: 1440px;
+  margin: 0 40px 24px;
+  background-color: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--color-disallowed);
+  color: var(--color-disallowed);
+  padding: 14px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.statusState {
+  padding: 80px 40px;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-muted);
 }
 
 .tableWrap {
-  overflow-x: auto;
+  padding: 0 40px 64px;
+  max-width: 1440px;
+  margin: 0 auto;
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  overflow: hidden;
+  text-align: left;
 }
 
 .table th {
-  text-align: left;
-  padding: 16px 24px;
-  font-family: var(--sans);
-  font-size: 12px;
-  color: var(--text-muted);
+  padding: 12px 18px;
+  background-color: var(--bg-elevated);
   border-bottom: 1px solid var(--border-subtle);
-  font-weight: 400;
-}
-
-.tableRow {
-  transition: background-color 0.2s ease;
-}
-
-.tableRow:hover {
-  background-color: var(--bg-surface);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
 }
 
 .table td {
-  padding: 24px;
-  font-family: var(--sans);
-  font-size: 14px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-subtle);
-  vertical-align: top;
+  font-family: var(--sans);
+  font-size: 13px;
+  vertical-align: middle;
 }
 
-.timeCell {
+.tableRow:hover td {
+  background-color: var(--bg-elevated);
+}
+
+.monoCell {
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
 }
 
 .actionCell {
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-.actorCell {
-  color: var(--text-secondary);
-}
-
-.payloadCell pre {
-  margin: 0;
   font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  background: var(--bg-surface);
-  padding: 12px;
-  border-radius: 4px;
-  max-width: 400px;
-  overflow-x: auto;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
 }
 
-.emptyState {
-  padding: 64px;
-  text-align: center;
-  color: var(--text-muted);
-  font-family: var(--sans);
-}
-
-.loader {
-  padding: 64px;
-  text-align: center;
+.actorBadge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-secondary);
+  background-color: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.resourceLink {
+  font-family: var(--mono);
+  color: var(--text-primary);
+  text-decoration: underline;
+}
+
+.resourceLink:hover {
+  color: var(--accent);
 }

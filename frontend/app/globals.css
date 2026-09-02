@@ -1,37 +1,37 @@
 :root {
-  /* Cinematic Editorial Palette */
-  --bg-deep: #050506;
-  --bg-surface: #0a0b0d;
-  --bg-elevated: #111316;
-  --bg-highlight: #181a1f;
+  /* 70/20/10 Clean High-Contrast Dark Palette */
+  --bg-deep: #0a0c10;
+  --bg-surface: #11141a;
+  --bg-elevated: #181c24;
+  --bg-highlight: #202530;
   
-  /* Typography colors */
-  --text-primary: #ededef;
-  --text-secondary: #8c919a;
-  --text-muted: #5e636b;
+  /* Typography Colors */
+  --text-primary: #f0f2f5;
+  --text-secondary: #9aa1ad;
+  --text-muted: #626978;
   
-  /* Borders (Extremely Subtle) */
-  --border-subtle: #17191d;
-  --border-strong: #24272c;
-  --border-focus: #373b43;
+  /* Borders (Structured & Clean) */
+  --border-subtle: #1d222c;
+  --border-strong: #282f3d;
+  --border-focus: #3e4659;
   
-  /* Domain Financial Status Tokens - Softened for Editorial */
-  --accent: #c7a77b; /* Soft luxury amber/sand */
-  --color-accent: #c7a77b;
-  --color-recovered: #2e6047; /* Deep muted emerald */
-  --color-disallowed: #8a3636; /* Deep muted rust */
-  --color-warning: #9e7a46; /* Muted gold */
-  --color-neutral: #4a6785; /* Muted slate */
+  /* Domain Financial Status Tokens (High Contrast, Purposeful) */
+  --accent: #d97706;
+  --color-accent: #d97706;
+  --color-recovered: #10b981;
+  --color-disallowed: #ef4444;
+  --color-warning: #f59e0b;
+  --color-neutral: #0284c7;
   
-  /* Fonts mapped from layout.tsx */
-  --mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
-  --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --display: var(--font-display), "Times New Roman", Times, serif;
+  /* Typography: Modern Sans-Serif Default (No Trendy Serif AI-Tells) */
+  --sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --display: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Transitions & Timing */
-  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out-circ: cubic-bezier(0.85, 0, 0.15, 1);
-  --ease-cinematic: cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Fast, Purposeful Timing */
+  --ease-fast: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
 }
 
 * {
@@ -48,10 +48,10 @@ html, body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom subtle scrollbar */
+/* Subtle Scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -60,7 +60,7 @@ html, body {
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -78,29 +78,8 @@ button, input, textarea, select {
 }
 
 ::selection {
-  background: rgba(199, 167, 123, 0.2);
+  background: rgba(217, 119, 6, 0.25);
   color: var(--text-primary);
-}
-
-/* Lenis Recommended CSS */
-html.lenis, html.lenis body {
-  height: auto;
-}
-
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
-
-.lenis.lenis-stopped {
-  overflow: hidden;
-}
-
-.lenis.lenis-smooth iframe {
-  pointer-events: none;
 }
 
 /* Reduced Motion Override */
