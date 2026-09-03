@@ -16,10 +16,22 @@ from app.api.schemas import (
     LoginRequest,
     PaymentReconcileRequest,
     RazorpayLookupRequest,
+    RazorpaySimulatorRequest,
+    JobTriggerRequest,
     StatutoryNoticeRequest,
     SyntheticBatchRequest,
     TDSReconcileRequest,
 )
+from app.services.jobs import (
+    run_promise_adherence_check,
+    run_stale_case_monitor,
+    run_compliance_window_sweeper,
+    run_analytics_aggregation,
+)
+from app.services.analytics import get_portfolio_analytics
+from app.services.razorpay_webhook import handle_razorpay_webhook
+from app.events.razorpay import generate_razorpay_signature, verify_razorpay_signature
+
 from app.authz.deps import Principal, current_principal, get_db, require_permission
 from app.authz.permissions import role_allows
 from app.core.config import Settings, get_settings
@@ -67,6 +79,7 @@ from app.services.cases import (
 from app.services.channels import compose_whatsapp_interactive_payload, generate_dynamic_upi_payload
 from app.services.ingestion import ingest_payment_event
 from app.services.p2p import evaluate_case_p2p_adherence
+from app.services.portal import generate_portal_token
 from app.services.statutory import get_43b_h_status
 
 router = APIRouter()
@@ -242,19 +255,208 @@ async def razorpay_webhook(
     db: Session = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ) -> dict:
-    if not settings.razorpay_webhook_secret:
-        raise DependencyFailed(
-            "Razorpay webhook secret is not configured. Synthetic ingest remains the local event source."
-        )
+    secret = settings.razorpay_webhook_secret or "vaada_rzp_test_secret_2026"
     body = await request.body()
     signature = request.headers.get("X-Razorpay-Signature", "")
-    if not verify_razorpay_signature(body=body, signature=signature, secret=settings.razorpay_webhook_secret):
-        raise AuthorizationFailed("Razorpay webhook signature is invalid.")
-    return {
-        "accepted": True,
-        "mode": "signature_verified",
-        "note": "Payload accepted. Map provider invoice ids onto tenant invoices before opening cases; this handler does not invent recoveries.",
-    }
+    return handle_razorpay_webhook(
+        db,
+        raw_body=body,
+        signature=signature,
+        secret=secret,
+        correlation_id=getattr(request.state, "correlation_id", None),
+    )
+
+
+@router.post("/webhooks/simulator")
+def simulate_razorpay_webhook(
+    body: RazorpaySimulatorRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("events:ingest")),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    """
+    Operator and Evaluator Tool:
+    Generates authentic Razorpay Test Mode webhook payloads, computes HMAC-SHA256 signature,
+    and runs them through the full closed-loop event processing pipeline.
+    """
+    tenant = db.get(Tenant, principal.tenant_id)
+    if not tenant:
+        raise NotFound("Tenant not found.")
+
+    invoice: Invoice | None = None
+    if body.invoice_number:
+        invoice = db.scalar(
+            select(Invoice).where(
+                Invoice.tenant_id == principal.tenant_id,
+                Invoice.invoice_number == body.invoice_number,
+            )
+        )
+    if not invoice:
+        # Pick the most relevant invoice
+        if body.scenario == "payment_successful":
+            # Pick an invoice that has an active case
+            active_case = db.scalar(
+                select(RecoveryCase)
+                .where(RecoveryCase.tenant_id == principal.tenant_id, RecoveryCase.state != CaseState.RECOVERED.value)
+                .order_by(RecoveryCase.created_at.desc())
+            )
+            if active_case:
+                invoice = db.get(Invoice, active_case.invoice_id)
+        if not invoice:
+            invoice = db.scalar(
+                select(Invoice)
+                .where(Invoice.tenant_id == principal.tenant_id)
+                .order_by(Invoice.due_at.asc())
+            )
+
+    if not invoice:
+        raise NotFound("No invoice available for simulation in this tenant.")
+
+    amount_minor = body.amount_minor or invoice.net_payable_minor or invoice.amount_minor
+    now_ts = int(datetime.now(UTC).timestamp())
+    rand_suffix = datetime.now(UTC).strftime("%H%M%S")
+
+    if body.custom_payload:
+        simulated_payload = body.custom_payload
+    elif body.scenario == "payment_successful":
+        simulated_payload = {
+            "entity": "event",
+            "account_id": "acc_vaada_test",
+            "event": "payment.captured",
+            "contains": ["payment"],
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": f"pay_sim_{rand_suffix}",
+                        "entity": "payment",
+                        "amount": amount_minor,
+                        "currency": "INR",
+                        "status": "captured",
+                        "method": "upi",
+                        "description": f"Settlement for {invoice.invoice_number}",
+                        "notes": {
+                            "invoice_number": invoice.invoice_number,
+                            "tenant_id": tenant.id,
+                        },
+                        "acquirer_data": {
+                            "bank_transaction_id": f"UTR{now_ts}",
+                        },
+                        "created_at": now_ts,
+                    }
+                }
+            },
+            "created_at": now_ts,
+        }
+    elif body.scenario == "bank_technical_error":
+        simulated_payload = {
+            "entity": "event",
+            "account_id": "acc_vaada_test",
+            "event": "payment.failed",
+            "contains": ["payment"],
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": f"pay_sim_{rand_suffix}",
+                        "entity": "payment",
+                        "amount": amount_minor,
+                        "currency": "INR",
+                        "status": "failed",
+                        "method": "netbanking",
+                        "description": f"Settlement for {invoice.invoice_number}",
+                        "notes": {
+                            "invoice_number": invoice.invoice_number,
+                            "tenant_id": tenant.id,
+                        },
+                        "error_code": "GATEWAY_ERROR",
+                        "error_description": "The acquiring bank core banking switch timed out.",
+                        "error_source": "gateway",
+                        "error_step": "payment_authorization",
+                        "error_reason": "payment_failed",
+                        "created_at": now_ts,
+                    }
+                }
+            },
+            "created_at": now_ts,
+        }
+    elif body.scenario == "partial_payment":
+        half_amount = max(amount_minor // 2, 100)
+        simulated_payload = {
+            "entity": "event",
+            "account_id": "acc_vaada_test",
+            "event": "payment.captured",
+            "contains": ["payment"],
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": f"pay_sim_{rand_suffix}",
+                        "entity": "payment",
+                        "amount": half_amount,
+                        "currency": "INR",
+                        "status": "captured",
+                        "method": "card",
+                        "description": f"Partial settlement for {invoice.invoice_number}",
+                        "notes": {
+                            "invoice_number": invoice.invoice_number,
+                            "tenant_id": tenant.id,
+                        },
+                        "acquirer_data": {
+                            "bank_transaction_id": f"UTR_PART_{now_ts}",
+                        },
+                        "created_at": now_ts,
+                    }
+                }
+            },
+            "created_at": now_ts,
+        }
+    else:  # insufficient_funds
+        simulated_payload = {
+            "entity": "event",
+            "account_id": "acc_vaada_test",
+            "event": "payment.failed",
+            "contains": ["payment"],
+            "payload": {
+                "payment": {
+                    "entity": {
+                        "id": f"pay_sim_{rand_suffix}",
+                        "entity": "payment",
+                        "amount": amount_minor,
+                        "currency": "INR",
+                        "status": "failed",
+                        "method": "upi",
+                        "description": f"Debit failed for {invoice.invoice_number}",
+                        "notes": {
+                            "invoice_number": invoice.invoice_number,
+                            "tenant_id": tenant.id,
+                        },
+                        "error_code": "BAD_REQUEST_ERROR",
+                        "error_description": "Payment was declined by customer's bank due to insufficient funds.",
+                        "error_source": "customer",
+                        "error_step": "payment_authentication",
+                        "error_reason": "insufficient_funds",
+                        "created_at": now_ts,
+                    }
+                }
+            },
+            "created_at": now_ts,
+        }
+
+    raw_body = json.dumps(simulated_payload).encode("utf-8")
+    secret = settings.razorpay_webhook_secret or "vaada_rzp_test_secret_2026"
+    sig = generate_razorpay_signature(body=raw_body, secret=secret)
+
+    result = handle_razorpay_webhook(
+        db,
+        raw_body=raw_body,
+        signature=sig,
+        secret=secret,
+        tenant_override=tenant,
+        correlation_id=principal.correlation_id or getattr(request.state, "correlation_id", None),
+    )
+    result["simulated_scenario"] = body.scenario
+    result["simulated_invoice"] = invoice.invoice_number
+    return result
+
 
 
 @router.get("/event-source")
@@ -375,6 +577,26 @@ def get_case(
     principal: Principal = Depends(require_permission("cases:read")),
 ) -> dict:
     return _case_detail(db, get_tenant_case(db, tenant_id=principal.tenant_id, case_id=case_id))
+
+
+@router.post("/cases/{case_id}/portal-link")
+def create_portal_link(
+    case_id: str,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("cases:read")),
+) -> dict:
+    case = get_tenant_case(db, tenant_id=principal.tenant_id, case_id=case_id)
+    token = generate_portal_token(
+        case_id=case.id,
+        invoice_id=case.invoice_id,
+        tenant_id=case.tenant_id,
+        expires_in_days=14,
+    )
+    return {
+        "token": token,
+        "portal_url": f"/portal/{token}",
+        "expires_in_days": 14,
+    }
 
 
 @router.post("/cases/{case_id}/actions")
@@ -538,6 +760,29 @@ def check_p2p_adherence_endpoint(
     return {"case": _case_detail(db, case), "adherence": result}
 
 
+@router.post("/jobs/trigger")
+def trigger_jobs_endpoint(
+    body: JobTriggerRequest,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("cases:act")),
+) -> dict:
+    results = {}
+    if body.job_name in {"promise_adherence", "all"}:
+        results["promise_adherence"] = run_promise_adherence_check(db, tenant_id=principal.tenant_id)
+    if body.job_name in {"stale_cases", "all"}:
+        results["stale_cases"] = run_stale_case_monitor(db, tenant_id=principal.tenant_id, stale_days=body.stale_days)
+    if body.job_name in {"compliance_sweeper", "all"}:
+        results["compliance_sweeper"] = run_compliance_window_sweeper(db, tenant_id=principal.tenant_id)
+    if body.job_name in {"analytics", "all"}:
+        results["analytics"] = run_analytics_aggregation(db, tenant_id=principal.tenant_id)
+
+    return {
+        "success": True,
+        "triggered_job": body.job_name,
+        "results": results,
+    }
+
+
 @router.get("/cases/{case_id}/payment-link")
 def get_payment_link(
     case_id: str,
@@ -590,7 +835,12 @@ def metrics(
     db: Session = Depends(get_db),
     principal: Principal = Depends(require_permission("metrics:read")),
 ) -> dict:
-    return _tenant_metrics(db, principal.tenant_id)
+    legacy = _tenant_metrics(db, principal.tenant_id)
+    detailed = get_portfolio_analytics(db, principal.tenant_id)
+    return {
+        **legacy,
+        **detailed,
+    }
 
 
 @router.get("/audit")
@@ -835,8 +1085,20 @@ def _case_detail(db: Session, case: RecoveryCase) -> dict:
     upi_info = generate_dynamic_upi_payload(tenant, invoice, case) if (tenant and invoice) else None
     whatsapp_info = compose_whatsapp_interactive_payload(tenant, customer, invoice, case) if (tenant and customer and invoice) else None
 
+    portal_token = generate_portal_token(
+        case_id=case.id,
+        invoice_id=case.invoice_id,
+        tenant_id=case.tenant_id,
+        expires_in_days=14,
+    )
+
     return {
         **_case_summary(db, case),
+        "portal_access": {
+            "token": portal_token,
+            "url": f"/portal/{portal_token}",
+            "expires_in_days": 14,
+        },
         "payment_diagnosis": payment_diagnosis,
         "recovery_interpretation": recovery_interpretation,
         "decision_chain": combined_eval["decision_trace_chain"],

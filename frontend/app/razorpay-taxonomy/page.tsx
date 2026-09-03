@@ -178,6 +178,9 @@ export default function RazorpayTaxonomyPage() {
           <Link href="/queue" className={styles.navLink}>
             ← Queue
           </Link>
+          <Link href="/analytics" className={styles.navLink}>
+            Analytics
+          </Link>
           <Link href="/audit" className={styles.navLink}>
             Audit Trail
           </Link>

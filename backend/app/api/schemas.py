@@ -84,3 +84,45 @@ class RazorpayLookupRequest(BaseModel):
     source: str | None = None
     step: str | None = None
     raw_payload: dict[str, Any] | None = None
+
+
+class RazorpaySimulatorRequest(BaseModel):
+    model_config = ConfigDict(extra="allow")
+
+    scenario: str = Field(default="insufficient_funds")
+    invoice_number: str | None = None
+    amount_minor: int | None = None
+    custom_payload: dict[str, Any] | None = None
+
+
+class CustomerPortalPromiseRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    promised_date: str | None = None
+    amount_minor: int | None = None
+    raw_message: str | None = None
+    installments: int = 1
+
+
+class CustomerPortalDisputeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    dispute_type: str
+    notes: str = Field(min_length=3, max_length=2000)
+    tds_rate_percent: float | None = None
+    acknowledgement_ref: str | None = None
+
+
+class CustomerPortalPaymentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    payment_method: str = Field(default="upi")
+    amount_minor: int | None = None
+
+
+class JobTriggerRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    job_name: str = Field(pattern="^(promise_adherence|stale_cases|compliance_sweeper|analytics|all)$")
+    stale_days: int = Field(default=7, ge=1, le=90)
+

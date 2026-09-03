@@ -5,6 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.api.portal_routes import portal_router
 from app.api.routes import router
 from app.authz import deps as authz_deps
 from app.core.config import Settings, get_settings
@@ -49,6 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["Content-Type", "X-CSRF-Token", "X-Vaada-Tenant-Id", "X-Request-ID"],
     )
     app.include_router(router, prefix="/api/v1")
+    app.include_router(portal_router, prefix="/api/v1")
 
     @app.exception_handler(AppError)
     async def handle_app_error(request: Request, exc: AppError) -> JSONResponse:

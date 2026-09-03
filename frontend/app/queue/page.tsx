@@ -170,6 +170,7 @@ export default function QueuePage() {
         </div>
 
         <div className={styles.barRight}>
+          <Link href="/analytics" className={styles.barNavLink}>Portfolio Analytics</Link>
           <Link href="/audit" className={styles.barNavLink}>Audit Log</Link>
           <Link href="/settings" className={styles.barNavLink}>Compliance Rules</Link>
           <Link href="/razorpay-taxonomy" className={styles.barNavLink}>Gateway Taxonomy</Link>

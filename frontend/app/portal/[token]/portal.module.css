@@ -1,0 +1,557 @@
+/* Customer Recovery Portal - Modern Enterprise Invoice Settlement Interface */
+
+.portalContainer {
+  min-height: 100vh;
+  background-color: #0d1117;
+  color: #e6edf3;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.portalHeader {
+  border-bottom: 1px solid #30363d;
+  background: rgba(22, 27, 34, 0.85);
+  backdrop-filter: blur(12px);
+  padding: 16px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.headerInner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brandGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandLogo {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #f0f6fc;
+}
+
+.brandDevanagari {
+  font-size: 0.95rem;
+  color: #8b949e;
+  font-weight: 500;
+}
+
+.badgeSecure {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(35, 134, 54, 0.15);
+  color: #3fb950;
+  border: 1px solid rgba(63, 185, 80, 0.3);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.shieldDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #3fb950;
+}
+
+/* Main Content Area */
+.portalMain {
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+  flex: 1;
+}
+
+/* Loading & Error States */
+.stateBox {
+  padding: 48px 24px;
+  text-align: center;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  margin: 40px auto;
+  max-width: 540px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #30363d;
+  border-top-color: #58a6ff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f85149;
+  margin-bottom: 8px;
+}
+
+.errorText {
+  color: #8b949e;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* Summary Card */
+.summaryCard {
+  background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  padding: 28px;
+  margin-bottom: 24px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.summaryHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #21262d;
+}
+
+.supplierLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b949e;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.supplierName {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f0f6fc;
+}
+
+.supplierLegal {
+  font-size: 0.85rem;
+  color: #8b949e;
+  margin-top: 2px;
+}
+
+.invoicePill {
+  background: #21262d;
+  border: 1px solid #30363d;
+  padding: 8px 14px;
+  border-radius: 8px;
+  text-align: right;
+}
+
+.invoicePillNum {
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #58a6ff;
+}
+
+.invoicePillDate {
+  font-size: 0.75rem;
+  color: #8b949e;
+  margin-top: 2px;
+}
+
+/* Outstanding Balance Banner */
+.balanceStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 24px 0 16px;
+}
+
+.balanceBlock {
+  display: flex;
+  flex-direction: column;
+}
+
+.balanceLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8b949e;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.balanceDue {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #f0f6fc;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.balanceMeta {
+  font-size: 0.8rem;
+  color: #8b949e;
+  margin-top: 4px;
+}
+
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 6px;
+}
+
+.statusOverdue {
+  background: rgba(248, 81, 73, 0.15);
+  color: #f85149;
+  border: 1px solid rgba(248, 81, 73, 0.3);
+}
+
+.statusPaid {
+  background: rgba(63, 185, 80, 0.15);
+  color: #3fb950;
+  border: 1px solid rgba(63, 185, 80, 0.3);
+}
+
+.statusDisputed {
+  background: rgba(210, 153, 34, 0.15);
+  color: #d29922;
+  border: 1px solid rgba(210, 153, 34, 0.3);
+}
+
+/* Statutory Notice Banner (Section 43B(h)) */
+.statutoryBanner {
+  background: rgba(210, 153, 34, 0.1);
+  border: 1px solid rgba(210, 153, 34, 0.3);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-top: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.statutoryIcon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.statutoryTitle {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #e3b341;
+  margin-bottom: 2px;
+}
+
+.statutoryDesc {
+  font-size: 0.8rem;
+  color: #c9d1d9;
+  line-height: 1.4;
+}
+
+/* Action Center Tabs */
+.actionSection {
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.tabNav {
+  display: flex;
+  border-bottom: 1px solid #30363d;
+  background: #0d1117;
+  overflow-x: auto;
+}
+
+.tabBtn {
+  flex: 1;
+  padding: 16px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #8b949e;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.tabBtn:hover {
+  color: #c9d1d9;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tabBtnActive {
+  color: #58a6ff;
+  border-bottom-color: #58a6ff;
+  background: #161b22;
+}
+
+/* Tab Panels */
+.tabContent {
+  padding: 28px;
+}
+
+/* Payment View */
+.payMethodGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.payMethodCard {
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 14px;
+  background: #0d1117;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.payMethodCard:hover {
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.05);
+}
+
+.payMethodCardSelected {
+  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.1);
+}
+
+.methodIcon {
+  font-size: 1.5rem;
+  margin-bottom: 6px;
+}
+
+.methodTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f0f6fc;
+}
+
+.methodDesc {
+  font-size: 0.72rem;
+  color: #8b949e;
+  margin-top: 2px;
+}
+
+.upiDetailsBox {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.upiVpa {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 1rem;
+  color: #58a6ff;
+  font-weight: 600;
+  margin: 8px 0;
+  letter-spacing: 0.02em;
+}
+
+.qrContainer {
+  width: 160px;
+  height: 160px;
+  background: #ffffff;
+  border-radius: 8px;
+  margin: 12px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+.btnPrimary {
+  width: 100%;
+  padding: 14px 20px;
+  background: #238636;
+  border: 1px solid rgba(240, 246, 252, 0.1);
+  border-radius: 8px;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #2ea043;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Form Styles */
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formLabel {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c9d1d9;
+  margin-bottom: 6px;
+}
+
+.formInput {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #f0f6fc;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+}
+
+.formSelect {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #f0f6fc;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+.formTextarea {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #f0f6fc;
+  font-size: 0.95rem;
+  font-family: inherit;
+  min-height: 90px;
+  resize: vertical;
+}
+
+.formHint {
+  font-size: 0.75rem;
+  color: #8b949e;
+  margin-top: 4px;
+}
+
+/* Feedback Box */
+.alertSuccess {
+  background: rgba(35, 134, 54, 0.15);
+  border: 1px solid rgba(63, 185, 80, 0.3);
+  border-radius: 8px;
+  padding: 16px 20px;
+  color: #3fb950;
+  margin-bottom: 20px;
+}
+
+.alertError {
+  background: rgba(248, 81, 73, 0.15);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  border-radius: 8px;
+  padding: 16px 20px;
+  color: #f85149;
+  margin-bottom: 20px;
+}
+
+/* Success Receipt Screen */
+.receiptScreen {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.checkCircle {
+  width: 64px;
+  height: 64px;
+  background: rgba(35, 134, 54, 0.2);
+  border: 2px solid #3fb950;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #3fb950;
+  margin: 0 auto 16px;
+}
+
+.receiptTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f0f6fc;
+  margin-bottom: 8px;
+}
+
+.receiptUtr {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: #21262d;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #58a6ff;
+  display: inline-block;
+  margin-bottom: 24px;
+}
+
+/* Footer */
+.portalFooter {
+  border-top: 1px solid #21262d;
+  padding: 24px 20px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6e7681;
+}
+
+.footerInner {
+  max-width: 960px;
+  margin: 0 auto;
+}

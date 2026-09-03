@@ -61,6 +61,8 @@ def _migrate_sqlite_columns(engine):
                     conn.execute(text("ALTER TABLE invoices ADD COLUMN statutory_due_date DATETIME"))
                 if "dispute_status" not in cols:
                     conn.execute(text("ALTER TABLE invoices ADD COLUMN dispute_status VARCHAR(32) DEFAULT 'none' NOT NULL"))
+                if "dispute_notes" not in cols:
+                    conn.execute(text("ALTER TABLE invoices ADD COLUMN dispute_notes TEXT"))
 
             if "recovery_cases" in tables:
                 cols = [c["name"] for c in inspector.get_columns("recovery_cases")]

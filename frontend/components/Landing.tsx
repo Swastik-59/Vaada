@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
+import HeroScene from "@/components/HeroScene";
 import styles from "./landing.module.css";
 
 // ── Real Razorpay Failure Scenarios for Interactive Comparison ─────────────
@@ -116,18 +117,19 @@ export default function Landing() {
         </div>
 
         <nav className={styles.mastheadNav}>
-          <a href="#narrative" className={styles.navLink}>The Story</a>
-          <a href="#intelligence" className={styles.navLink}>Intelligence</a>
+          <a href="#intelligence" className={styles.navLink}>Gateway Intelligence</a>
+          <a href="#hinglish" className={styles.navLink}>Hinglish NLP</a>
           <a href="#statutory" className={styles.navLink}>Section 43B(h)</a>
-          <a href="#provenance" className={styles.navLink}>Data Provenance</a>
-          <Link href="/login" className={styles.launchConsoleBtn}>
-            Enter Console →
+          <Link href="/analytics" className={styles.navLink}>Analytics</Link>
+          <Link href="/queue" className={styles.launchConsoleBtn}>
+            Operations Console →
           </Link>
         </nav>
       </header>
 
-      {/* ── Scene 1: The Opening Statement (Split Composition) ── */}
+      {/* ── Scene 1: The Opening Statement (Split Composition) with Three.js WebGL Rails ── */}
       <section className={styles.heroScene}>
+        <HeroScene />
         <div className={styles.container}>
           <div className={styles.heroSplitGrid}>
             {/* Left Column: Opening Thesis & Action */}
@@ -537,13 +539,40 @@ export default function Landing() {
             <h3 className={styles.launchpadPrompt}>
               Ready to inspect active recovery dossiers?
             </h3>
-            <Link href="/login" className={styles.launchpadCta}>
-              Launch Operations Console →
-            </Link>
+            <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
+              <Link href="/queue" className={styles.launchpadCta}>
+                Launch Operations Console →
+              </Link>
+              <Link
+                href="/analytics"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  padding: "10px 20px",
+                  borderRadius: "4px",
+                  background: "var(--bg-elevated)",
+                  color: "var(--accent-text)",
+                  border: "1px solid rgba(224, 159, 62, 0.3)",
+                  textDecoration: "none",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                }}
+              >
+                Portfolio Analytics →
+              </Link>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", justifyContent: "center", gap: "2rem", margin: "2.5rem 0 1.5rem", flexWrap: "wrap", fontSize: "0.8125rem" }}>
+            <Link href="/queue" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>Operations Queue</Link>
+            <Link href="/analytics" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>Portfolio Analytics</Link>
+            <Link href="/audit" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>Audit Trail</Link>
+            <Link href="/settings" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>Compliance Rules</Link>
+            <Link href="/razorpay-taxonomy" style={{ color: "var(--text-secondary)", textDecoration: "none" }}>Razorpay Taxonomy</Link>
           </div>
 
           <div className={styles.footerBottomMeta}>
-            <div>VAADA / वादा · RBI-compliant · MSMED Act 2006 · DPDP Act 2023</div>
+            <div>VAADA / वादा · RBI-compliant · MSMED Act 2006 §16 · Income Tax Act §43B(h) · DPDP Act 2023</div>
             <div>{istTime || "09:00:00 IST"} · ASIA/KOLKATA UTC+5:30</div>
           </div>
         </div>

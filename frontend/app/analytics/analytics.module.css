@@ -1,0 +1,591 @@
+.shell {
+  min-height: 100vh;
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Top Executive Navigation ── */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background-color: rgba(13, 15, 19, 0.85);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.barLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+}
+
+.brandMark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  color: var(--text-emphasis);
+  text-decoration: none;
+}
+
+.brandDevanagari {
+  font-family: var(--devanagari);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+.barDivider {
+  color: var(--border-subtle);
+  font-family: var(--mono);
+}
+
+.barTitle {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0.02em;
+}
+
+.barRight {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.barNavLink {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--ease-enter);
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+}
+
+.barNavLink:hover {
+  color: var(--text-emphasis);
+  background-color: var(--bg-elevated);
+}
+
+.barNavLinkActive {
+  color: var(--accent-text);
+  background-color: rgba(224, 159, 62, 0.1);
+  border: 1px solid rgba(224, 159, 62, 0.25);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.userProfilePill {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+}
+
+.userDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--status-recovered);
+  box-shadow: 0 0 6px var(--status-recovered);
+}
+
+.userEmail {
+  font-size: 0.75rem;
+  font-family: var(--mono);
+  color: var(--text-secondary);
+}
+
+.userRoleTag {
+  font-size: 0.6875rem;
+  font-family: var(--mono);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  background-color: var(--bg-surface);
+  color: var(--accent-text);
+  border: 1px solid rgba(224, 159, 62, 0.2);
+  text-transform: uppercase;
+}
+
+.signInLink {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-decoration: none;
+}
+
+/* ── Workspace ── */
+.workspace {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2.25rem 2rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.25rem;
+}
+
+/* ── Header ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 1.75rem;
+}
+
+.pageHeadline {
+  font-family: var(--display);
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-emphasis);
+  margin: 0 0 0.5rem 0;
+}
+
+.pageSubheadline {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  max-width: 680px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.triggerJobsButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: var(--sans);
+  background: linear-gradient(135deg, rgba(224, 159, 62, 0.18), rgba(224, 159, 62, 0.08));
+  color: var(--accent-text);
+  border: 1px solid rgba(224, 159, 62, 0.35);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-enter);
+}
+
+.triggerJobsButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(224, 159, 62, 0.28), rgba(224, 159, 62, 0.16));
+  border-color: rgba(224, 159, 62, 0.6);
+  box-shadow: 0 0 16px rgba(224, 159, 62, 0.2);
+}
+
+.triggerJobsButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Live Banner / Notification ── */
+.jobResultBanner {
+  background: rgba(34, 201, 151, 0.08);
+  border: 1px solid rgba(34, 201, 151, 0.3);
+  border-radius: 8px;
+  padding: 0.875rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+  font-family: var(--mono);
+  color: var(--text-primary);
+  animation: fadeIn 0.3s var(--ease-enter);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Hero Metrics Grid ── */
+.heroGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+.metricCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: border-color var(--duration-normal) var(--ease-enter), transform var(--duration-fast) var(--ease-enter);
+}
+
+.metricCard:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+.metricCardGlowRecovered::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--status-recovered);
+  box-shadow: 0 0 12px var(--status-recovered);
+}
+
+.metricCardGlowRisk::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--status-disallowed);
+  box-shadow: 0 0 12px var(--status-disallowed);
+}
+
+.metricCardGlowAccent::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.cardLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.cardBadge {
+  font-size: 0.6875rem;
+  font-family: var(--mono);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badgeRecovered {
+  background: rgba(34, 201, 151, 0.15);
+  color: var(--status-recovered);
+  border: 1px solid rgba(34, 201, 151, 0.3);
+}
+
+.badgeRisk {
+  background: rgba(232, 80, 80, 0.15);
+  color: var(--status-disallowed);
+  border: 1px solid rgba(232, 80, 80, 0.3);
+}
+
+.badgeAmber {
+  background: rgba(224, 159, 62, 0.15);
+  color: var(--accent-text);
+  border: 1px solid rgba(224, 159, 62, 0.3);
+}
+
+.cardValue {
+  font-family: var(--mono);
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--text-emphasis);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.cardMeta {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ── Main Dual Section ── */
+.dualSection {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 1.5rem;
+}
+
+.panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.panelTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-emphasis);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0;
+}
+
+.panelSubtitle {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  margin-top: 0.25rem;
+  line-height: 1.4;
+}
+
+/* ── Recovery Funnel Visualizer ── */
+.funnelContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.funnelStep {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.funnelStepHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.stepName {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.stepValue {
+  font-family: var(--mono);
+  color: var(--text-emphasis);
+  font-weight: 600;
+}
+
+.funnelBarTrack {
+  height: 28px;
+  background-color: var(--bg-elevated);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.funnelBarFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s var(--ease-spring);
+  display: flex;
+  align-items: center;
+  padding-left: 0.75rem;
+}
+
+.funnelConversionText {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--bg-deep);
+  white-space: nowrap;
+}
+
+/* ── Statutory 43B(h) Disallowance Exposure Meter ── */
+.disallowanceMeterBox {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.meterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.meterLabel {
+  color: var(--text-secondary);
+}
+
+.meterValDanger {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--status-disallowed);
+}
+
+.meterValWarning {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--accent-text);
+}
+
+.meterValSafe {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--status-recovered);
+}
+
+.meterProgressBar {
+  height: 8px;
+  border-radius: 4px;
+  background-color: var(--neutral-4);
+  display: flex;
+  overflow: hidden;
+}
+
+.meterSegmentDanger {
+  background-color: var(--status-disallowed);
+}
+
+.meterSegmentWarning {
+  background-color: var(--accent);
+}
+
+.meterSegmentSafe {
+  background-color: var(--status-recovered);
+}
+
+/* ── Secondary Grid ── */
+.secondaryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* ── High-Density Data Tables ── */
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.dataTable th {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dataTable td {
+  padding: 0.75rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+.dataTable tr:last-child td {
+  border-bottom: none;
+}
+
+.dataTable tr:hover td {
+  background-color: rgba(255, 255, 255, 0.02);
+  color: var(--text-primary);
+}
+
+.monoCol {
+  font-family: var(--mono);
+  font-weight: 500;
+}
+
+.tagPill {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+}
+
+.actionLink {
+  color: var(--accent-text);
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.8125rem;
+  transition: color var(--duration-fast) var(--ease-enter);
+}
+
+.actionLink:hover {
+  color: var(--accent-bright);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1100px) {
+  .heroGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .dualSection,
+  .secondaryGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .heroGrid {
+    grid-template-columns: 1fr;
+  }
+  .topBar {
+    padding: 0.75rem 1rem;
+  }
+  .workspace {
+    padding: 1.5rem 1rem 3rem;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

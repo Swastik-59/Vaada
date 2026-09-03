@@ -5,7 +5,7 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1+-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
 [![SQLite / PostgreSQL](https://img.shields.io/badge/Database-SQLite%20%7C%20PostgreSQL%2016+-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Tests](https://img.shields.io/badge/Tests-49%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-64%20Passed-brightgreen.svg)](./backend/tests)
 [![Razorpay](https://img.shields.io/badge/Taxonomy-Official%20Razorpay%20v2026--09-0284c7.svg)]()
 [![L3Cube-HingCorpus](https://img.shields.io/badge/Linguistics-L3Cube--HingCorpus%20%7C%20HingLID-f97316.svg)](https://github.com/l3cube-pune/code-mixed-nlp)
 [![Compliance](https://img.shields.io/badge/Compliance-RBI%20FPC%20%7C%20MSMED%20%7C%20DPDP-blue.svg)]()
@@ -14,7 +14,7 @@
 
 ## Overview
 
-**Vaada** (वादा — *Promise / Commitment*) is an enterprise-grade, bounded B2B revenue-recovery system purpose-built for Indian merchants, MSMEs, and commercial suppliers. It ingests overdue payment events, classifies failure root causes via an **authoritative official Razorpay error taxonomy**, calculates statutory interest under Indian law, scores recovery probabilities via calibrated tabular ML, extracts promise-to-pay commitments from code-mixed Hinglish conversations backed by academic research (**L3Cube-HingCorpus & HingLID**), and orchestrates actions through a deterministic state machine.
+**Vaada** (वादा — *Promise / Commitment*) is an enterprise-grade, bounded B2B revenue-recovery system purpose-built for Indian merchants, MSMEs, and commercial suppliers. It ingests overdue payment events, classifies failure root causes via an **authoritative official Razorpay error taxonomy**, calculates statutory interest under Indian law, scores recovery probabilities via calibrated tabular ML, extracts promise-to-pay commitments from code-mixed Hinglish conversations backed by academic research (**L3Cube-HingCorpus & HingLID**), and orchestrates actions through a deterministic state machine with full Razorpay webhook reconciliation.
 
 The frontend is a fully designed premium digital product — a narrative operations console built for financial and revenue operations professionals, not developers.
 
@@ -37,7 +37,7 @@ The frontend is a fully designed premium digital product — a narrative operati
                                                     │
   ┌───────────────────────────┐                     ▼                     ┌───────────────────────────┐
   │      EVENT INGESTION      │          ┌───────────────────────┐        │   STATUTORY ENGINE (IN)   │
-  │ • Razorpay Webhooks / Ingest ────────▶│  OFFICIAL TAXONOMY   │◀───────│ • MSME Section 43B(h)     │
+  │ • Razorpay Webhooks/Ingest────────▶  │  OFFICIAL TAXONOMY   │◀───────│ • MSME Section 43B(h)     │
   │ • UPI, Card, Mandate Fail │          │ • 38 Published Errors │        │ • 3x RBI Bank Rate Comp.  │
   │ • E-Invoice IRN & GSTIN   │          │ • Zero-Hallucination  │        │ • Form 16A TDS Deductions │
   └───────────────────────────┘          └───────────────────────┘        └───────────────────────────┘
@@ -73,6 +73,14 @@ The frontend is a fully designed premium digital product — a narrative operati
       │ • ICICI Corporate VAN   │◀──────────────────────────────────────│  Zero-Trust Multi-Tenant│
       │ • WhatsApp HSM Cloud    │                                       │  Actor & Time Trace     │
       └─────────────────────────┘                                       └─────────────────────────┘
+                   │
+                   ▼
+      ┌─────────────────────────┐
+      │  RAZORPAY WEBHOOK RECON │
+      │ • HMAC-SHA256 Verified  │
+      │ • Idempotent Processing │
+      │ • Full Reconciliation   │
+      └─────────────────────────┘
 ```
 
 ---
@@ -100,22 +108,22 @@ Indian recovery workflows operate within stringent statutory frameworks. Vaada n
 - **TDS Reconciliation (Section 194C / 194J)**: Resolves withholding tax deductions with Form 16A acknowledgement tracking, automatically updating net payable amounts without treating tax credits as defaults.
 - **Dynamic Cash Discounting**: Implements early cash settlement incentives (e.g., 2% discount if settled within 10 days).
 
-### 2. Regulatory Compliance & RBI Guardrails Registry
+### 3. Regulatory Compliance & RBI Guardrails Registry
 All outbound communication is evaluated against hard software guardrails before dispatch:
-- **Contact Window Enforcement**: Hard stop for contacts outside `09:00–20:00 IST` (or `08:00–19:00 IST`), Monday through Saturday. Sunday and holiday contact is strictly blocked (*RBI Master Direction - Fair Practices Code for REs*).
+- **Contact Window Enforcement**: Hard stop for contacts outside `09:00–20:00 IST`, Monday through Saturday. Sunday contact is strictly blocked (*RBI Master Direction - Fair Practices Code for REs*).
 - **Rolling Frequency Limiter**: Maximum 3 outbound contact attempts per customer case in any rolling 7-day window.
 - **Tone & Intimidation Filter**: Prohibits abusive language, harassment, or unlawful coercion.
 - **Third-Party Disclosure Shield**: Verifies recipient identity to prevent disclosing debt or invoice amounts to unauthorized parties (*DPDP Act 2023 / RBI Conduct Guidelines*).
 - **Mandatory Legal Identification**: Every outbound communication must contain the legal registered name of the merchant entity.
 
-### 3. Classical Tabular ML Recovery Scorer
+### 4. Classical Tabular ML Recovery Scorer
 Rather than delegating probabilistic forecasting to generative models, Vaada utilizes a tabular Machine Learning model:
 - **Architecture**: `GradientBoostingClassifier` with `CalibratedClassifierCV` (sigmoid calibration).
 - **Features**: Failure root cause, log-transformed invoice amount, days past due (DPD), prior contact attempts, and day of week.
 - **Performance**: Held-out test ROC-AUC of `0.7215`, Brier score of `0.2076`.
 - **Policy**: Cases with $P(\text{recovery}) < 25\%$ are automatically flagged for manual review rather than aggressive automated outreach.
 
-### 4. Real Code-Mixed Hinglish Intelligence (L3Cube-HingCorpus + HingLID)
+### 5. Real Code-Mixed Hinglish Intelligence (L3Cube-HingCorpus + HingLID)
 Indian B2B commerce conversations over WhatsApp and SMS overwhelmingly occur in Hindi-English code-mixing (*"bhai abhi balance nahi hai, Friday tak pakka clear kar dunga"*).
 - **Academic Foundation**: Integrated with **L3Cube-HingCorpus & HingLID** research resources (*Nayak & Joshi, 2022*). Evaluated on real academic code-mixed datasets (`95.0%` Language ID accuracy).
 - **Robust Preprocessing**: NFKC normalization, noise stripping, and colloquial repetition collapsing (*"bhaaaai"* → *"bhai"*, *"plzz"* → *"plz"*) without destroying Roman Hindi morphological stems.
@@ -123,22 +131,41 @@ Indian B2B commerce conversations over WhatsApp and SMS overwhelmingly occur in 
 - **Language Signals Inspector**: Case Detail station exposes extracted Hindi signals (*"bhai"*, *"nahi hai"*, *"pakka"*) vs English commercial signals (*"balance"*, *"clear"*, *"Friday"*).
 - **Domain Intent & Commitment Extraction**: Classifies 7 distinct intents (`promise_to_pay`, `vague_promise`, `dispute`, `already_paid`, `refusal`, `extension_request`, `no_commitment`) and calibrates commitment firmness (`high`, `medium`, `low`).
 - **P2P Adherence Engine**: Monitors commitments, sends automated $T-1$ day reminders, and flags broken promises (*Vaada Khilafi*), escalating the customer's credit risk tier (`LOW` → `MEDIUM` → `HIGH` → `CRITICAL`).
-- **Adversarial & Invariant Defense**: 100% test pass rate rejecting prompt injections, dispute claims, and negative payment statements.
+- **Customer Portal NLP**: Customer submits free-text Hinglish ("bhai Friday ko transfer kar dunga") via the self-service portal; the extraction engine parses date, amount, and confidence without requiring structured form input.
+- **Adversarial & Invariant Defense**: Prompt injection attempts and adversarial override phrases are detected and rejected with a `422` before any state change occurs.
 
-### 5. Indian Payment Rails & Channel Simulators
-- **Dynamic NPCI UPI Intent Links**: Generates one-click UPI links (`upi://pay?pa=...&am=...&tr=...`) with embedded transaction references.
-- **Corporate Virtual Accounts (VAN)**: Issues dedicated ICICI Bank Virtual Account Numbers for real-time NEFT/RTGS settlement attribution.
-- **WhatsApp Cloud API Interactive HSM**: Formats Meta-compliant interactive message templates with action buttons (*Pay UPI*, *Commit Date*, *Submit TDS*).
+### 6. Razorpay Webhook Reconciliation
+Full closed-loop payment reconciliation over Razorpay webhooks:
+- **HMAC-SHA256 Signature Verification**: Every webhook is validated against the configured secret before processing. Forged signatures return `403`.
+- **Idempotency**: Duplicate `payment_id` + `event_type` combinations are safely deduplicated — no double-reconciliation.
+- **State Machine Integration**: `payment.captured` events trigger `record_payment_reconciliation`, decrement `net_payable_minor`, and transition eligible cases to `recovered`.
+- **Partial Payment Handling**: Payments below the invoice balance are captured and stored without incorrectly marking the case recovered.
+- **Unmatched Invoice Fallback**: Webhook events with no matching invoice are accepted and audited rather than discarded or errored.
 
-### 6. Indian Payment Rails & Channel Simulators
-- **Dynamic NPCI UPI Intent Links**: Generates one-click UPI links (`upi://pay?pa=...&am=...&tr=...`) with embedded transaction references.
-- **Corporate Virtual Accounts (VAN)**: Issues dedicated ICICI Bank Virtual Account Numbers for real-time NEFT/RTGS settlement attribution.
-- **WhatsApp Cloud API Interactive HSM**: Formats Meta-compliant interactive message templates with action buttons (*Pay UPI*, *Commit Date*, *Submit TDS*).
+### 7. Background Surveillance Jobs
+Four operational jobs runnable on-demand or schedulable:
+- **`promise_adherence`**: Detects elapsed promises past their date, flags them as `broken`, transitions cases from `PROMISE_RECORDED → AWAITING_ACTION`, and records escalation actions with full correlation IDs.
+- **`stale_cases`**: Flags cases that have been inactive for a configurable number of days (default: 7), routing them to institutional escalation.
+- **`compliance_sweeper`**: Evaluates the current IST contact window and reports whether outbound communication is permitted.
+- **`analytics`**: Computes real-time portfolio snapshots across all cases, invoices, and statutory risks for the tenant.
 
-### 7. Operations Console & Immutable Audit Log
+### 8. Customer Self-Service Portal
+A tokenized, publicly-accessible customer portal for debtors:
+- **JWT-Signed Access Tokens** (14-day expiry): Merchant-generated links that grant scoped access without requiring customer registration.
+- **Invoice Dossier**: Displays outstanding amount, invoice number, payment breakdown, and statutory interest calculation.
+- **Hinglish Promise Submission**: Customer can type free-form natural language ("bhai kal tak kar dunga"); NLP pipeline extracts structured commitment.
+- **UPI Payment Link**: Deep-links to UPI apps for one-click settlement.
+- **Dispute Submission**: Customer can raise TDS disputes or invoice disputes directly from the portal.
+
+### 9. Portfolio Analytics & Three.js Visualizer
+- **Real-Time Portfolio Metrics**: Total receivables book, active case count, recovery rate, recovered amount, and 43B(h) tax exposure, computed from live database state.
+- **Financial Rails Topology**: Three.js WebGL scene visualizing payment rails and case flow as an animated network.
+- **Recovery Funnel**: Visual funnel from ingested failures through classification, contact, promise, and reconciliation stages.
+
+### 10. Operations Console & Immutable Audit Log
 - **Multi-Tenant Security**: Role-based access control (`admin`, `manager`, `operator`, `viewer`) with tenant isolation on every SQL query.
 - **Optimistic Locking**: Version tracking (`expected_version`) on cases to prevent race conditions during concurrent operator overrides.
-- **Auditability**: Every transition, compliance evaluation, notice dispatch, and manual override writes to an append-only `AuditEvent` log with user attribution and correlation IDs.
+- **Auditability**: Every transition, compliance evaluation, notice dispatch, manual override, and security event writes to an append-only `AuditEvent` log with user attribution and correlation IDs.
 
 ---
 
@@ -159,6 +186,7 @@ Indian B2B commerce conversations over WhatsApp and SMS overwhelmingly occur in 
    ├── Queue (/queue)                  Executive financial ledger, portfolio health strip
    ├── Case Dossier (/cases/[id])      4-chapter progressive investigation narrative
    │                                   Level 5 progressive disclosure (raw JSON in trays)
+   ├── Customer Portal (/portal/[tok]) Tokenized debtor self-service dossier + NLP promise
    ├── Audit (/audit)                  Human-readable immutable activity ledger
    ├── Settings (/settings)            Compliance registry & tenant configuration
    └── Taxonomy (/razorpay-taxonomy)   Live Razorpay error explorer & simulator
@@ -166,19 +194,25 @@ Indian B2B commerce conversations over WhatsApp and SMS overwhelmingly occur in 
    ▼ HTTP (same-origin proxy · CSRF · HttpOnly cookies)
 [ Backend: FastAPI Modular Monolith ]
    │
-   ├── /app/api/           REST endpoints & request validation schemas
-   ├── /app/authz/         Principal injection & RBAC dependency guards
-   ├── /app/core/          Security, Argon2id, config, middleware
+   ├── /app/api/              REST endpoints, request validation schemas
+   │    ├── routes.py          Main merchant API (auth, cases, invoices, jobs, webhooks)
+   │    ├── portal_routes.py   Customer portal endpoints (dossier, promise, dispute, payment)
+   │    └── schemas.py         Pydantic request/response models
+   ├── /app/authz/            Principal injection & RBAC dependency guards
+   ├── /app/core/             Security, Argon2id, config, middleware
    ├── /app/services/
-   │    ├── statutory.py   MSME 43B(h), 3× RBI interest, legal notice templates
-   │    ├── compliance.py  RBI FPC, frequency limiter, window & tone rules
-   │    ├── cases.py       Case lifecycle mutations & override orchestration
-   │    ├── channels.py    Dynamic UPI & WhatsApp Cloud API payloads
-   │    ├── p2p.py         Promise adherence evaluation & broken P2P tracking
-   │    └── ingestion.py   Deduplicated payment event pipeline
-   ├── /app/extraction/    Hinglish prompts, validators & heuristic fallbacks
-   ├── /app/scoring/       Tabular GBDT scorer & feature extractors
-   └── /app/db/            SQLAlchemy ORM models & session management
+   │    ├── statutory.py      MSME 43B(h), 3× RBI interest, legal notice templates
+   │    ├── compliance.py     RBI FPC, frequency limiter, window & tone rules
+   │    ├── cases.py          Case lifecycle mutations & override orchestration
+   │    ├── channels.py       Dynamic UPI & WhatsApp Cloud API payloads
+   │    ├── jobs.py           4 surveillance background workers
+   │    ├── workflow.py       Deterministic state machine (9-state DAG)
+   │    ├── razorpay_webhook.py HMAC-verified webhook processor & reconciler
+   │    ├── ingestion.py      Deduplicated payment event pipeline
+   │    └── portal.py         Portal JWT token generation & verification
+   ├── /app/extraction/       Hinglish prompts, validators & heuristic fallbacks
+   ├── /app/scoring/          Tabular GBDT scorer & feature extractors
+   └── /app/db/               SQLAlchemy ORM models & session management
    │
    ▼ Database
 [ SQLite (default) / PostgreSQL 16 ]
@@ -220,11 +254,13 @@ Vaada/
 ├── backend/
 │   ├── pytest.ini              # Pytest configuration
 │   ├── requirements.txt        # Python backend dependencies
+│   ├── verify_e2e_golden_path.py # Live E2E golden path + 12 failure path verifier
 │   ├── app/
 │   │   ├── main.py             # FastAPI entrypoint & middleware configuration
 │   │   ├── seed.py             # Rich database seeder (Indian B2B test fixtures)
 │   │   ├── api/
 │   │   │   ├── routes.py       # REST API endpoints & route handlers
+│   │   │   ├── portal_routes.py # Customer portal endpoints (promise, dispute, payment)
 │   │   │   ├── schemas.py      # Pydantic request/response schemas
 │   │   │   └── cookies.py      # Cookie lifecycle & session managers
 │   │   ├── authz/
@@ -240,9 +276,9 @@ Vaada/
 │   │   │   └── session.py      # Engine configuration & connection pooling
 │   │   ├── events/
 │   │   │   ├── synthetic.py    # Synthetic payment failure generator
-│   │   │   └── razorpay.py     # Razorpay webhook signature validator
+│   │   │   └── razorpay.py     # Razorpay HMAC-SHA256 signature validator
 │   │   ├── extraction/
-│   │   │   ├── promise_extractor.py # Code-mixed extraction pipeline
+│   │   │   ├── promise_extractor.py # Code-mixed extraction pipeline + injection defense
 │   │   │   ├── validator.py    # Business rule validation for promises
 │   │   │   ├── prompts.py      # LLM few-shot system prompts
 │   │   │   └── schemas.py      # Pydantic promise schemas
@@ -257,34 +293,38 @@ Vaada/
 │   │       ├── channels.py     # UPI intent URI & WhatsApp HSM composers
 │   │       ├── p2p.py          # Promise adherence & broken promise detection
 │   │       ├── ingestion.py    # Deduplicated payment event ingestion
-│   │       └── workflow.py     # Deterministic 7-state DAG engine
+│   │       ├── jobs.py         # 4 background surveillance workers
+│   │       ├── workflow.py     # Deterministic 9-state DAG engine
+│   │       ├── razorpay_webhook.py # Closed-loop Razorpay webhook processor
+│   │       └── portal.py       # Customer portal JWT token management
 │   └── tests/
 │       ├── test_auth.py        # Authentication & session test suite
 │       ├── test_domain.py      # Rule matching & domain validation tests
 │       ├── test_security.py    # CSRF, RBAC & tenant boundary tests
 │       └── test_statutory.py   # MSME 43B(h), 3x RBI interest & UPI link tests
-├── frontend/
-│   ├── package.json            # Node dependencies (Next.js 15, motion/react, Lenis)
-│   ├── tsconfig.json           # TypeScript configuration
-│   ├── next.config.ts          # Same-origin proxy rewrite: /api/v1/* → :8000
-│   ├── app/
-│   │   ├── globals.css         # Design tokens, typography, motion curves
-│   │   ├── layout.tsx          # 3-tier font stack (Syne / Plus Jakarta Sans / JetBrains Mono)
-│   │   ├── page.tsx            # Public homepage (→ Landing)
-│   │   ├── login/page.tsx      # Operator authentication gateway
-│   │   ├── queue/page.tsx      # Executive financial ledger & operations console
-│   │   ├── cases/[id]/page.tsx # 4-chapter narrative case investigation dossier
-│   │   ├── audit/page.tsx      # Human-readable immutable audit ledger
-│   │   ├── settings/page.tsx   # Compliance guardrail configuration
-│   │   └── razorpay-taxonomy/  # Live taxonomy explorer & diagnostic simulator
-│   ├── components/
-│   │   ├── Landing.tsx         # Cinematic 6-scene landing narrative
-│   │   ├── Preloader.tsx       # Entry preloader animation
-│   │   ├── SmoothScroll.tsx    # Lenis smooth scroll provider
-│   │   └── PageTransition.tsx  # Page transition wrapper
-│   └── lib/
-│       └── api.ts              # Authenticated fetch client with CSRF & cookie support
-└── docs/                       # Technical specifications & benchmark reports
+└── frontend/
+    ├── package.json            # Node dependencies (Next.js 15, motion/react, Lenis)
+    ├── tsconfig.json           # TypeScript configuration
+    ├── next.config.ts          # Same-origin proxy rewrite: /api/v1/* → :8000
+    ├── app/
+    │   ├── globals.css         # Design tokens, typography, motion curves
+    │   ├── layout.tsx          # 3-tier font stack (Syne / Plus Jakarta Sans / JetBrains Mono)
+    │   ├── page.tsx            # Public homepage (→ Landing)
+    │   ├── login/page.tsx      # Operator authentication gateway
+    │   ├── queue/page.tsx      # Executive financial ledger & operations console
+    │   ├── cases/[id]/page.tsx # 4-chapter narrative case investigation dossier
+    │   ├── portal/[token]/     # Customer self-service settlement portal
+    │   ├── audit/page.tsx      # Human-readable immutable audit ledger
+    │   ├── settings/page.tsx   # Compliance guardrail configuration
+    │   └── razorpay-taxonomy/  # Live taxonomy explorer & diagnostic simulator
+    ├── components/
+    │   ├── Landing.tsx         # Cinematic 6-scene landing narrative
+    │   ├── HeroScene.tsx       # Three.js WebGL financial rails topology
+    │   ├── Preloader.tsx       # Entry preloader animation
+    │   ├── SmoothScroll.tsx    # Lenis smooth scroll provider
+    │   └── PageTransition.tsx  # Page transition wrapper
+    └── lib/
+        └── api.ts              # Authenticated fetch client with CSRF & cookie support
 ```
 
 ---
@@ -301,7 +341,7 @@ Vaada/
 
 ### Step 1: Environment Configuration
 
-Copy `.env.example` to the **repository root** `.env` (not inside `backend/.env`):
+Copy `.env.example` to the **repository root** `.env`:
 
 ```bash
 cp .env.example .env
@@ -322,7 +362,7 @@ VAADA_LOG_LEVEL=INFO
 
 VAADA_API_HOST=0.0.0.0
 VAADA_API_PORT=8000
-VAADA_CORS_ORIGINS=http://localhost:3004
+VAADA_CORS_ORIGINS=http://localhost:3000
 
 VAADA_COOKIE_SECURE=false
 VAADA_COOKIE_SAMESITE=lax
@@ -340,6 +380,9 @@ VAADA_DATABASE_URL=sqlite:///./vaada.db
 
 VAADA_LLM_BASE_URL=http://127.0.0.1:11434
 VAADA_LLM_MODEL=llama3:8b
+
+# Razorpay webhook signature verification secret:
+VAADA_RAZORPAY_WEBHOOK_SECRET=your-razorpay-webhook-secret
 
 VAADA_SEED_ADMIN_EMAIL=operator@vaada.local
 VAADA_SEED_ADMIN_PASSWORD=123456789
@@ -376,7 +419,7 @@ VAADA_SEED_ADMIN_PASSWORD=123456789
 
 5. Start the FastAPI development server:
    ```bash
-   uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+   uvicorn app.main:app --host 127.0.0.1 --port 8000
    ```
 
 ---
@@ -391,18 +434,18 @@ VAADA_SEED_ADMIN_PASSWORD=123456789
 
 2. Start the Next.js development server:
    ```bash
-   npm run dev        # development on :3004
+   npm run dev        # development on :3000
    # or for production:
-   npm run build && npx next start -p 3004
+   npm run build && npx next start
    ```
 
 3. Open your browser:
 
    | URL | Description |
    |---|---|
-   | [http://localhost:3004](http://localhost:3004) | Public landing narrative |
-   | [http://localhost:3004/login](http://localhost:3004/login) | Operator authentication |
-   | [http://localhost:3004/queue](http://localhost:3004/queue) | Operations console (requires auth) |
+   | [http://localhost:3000](http://localhost:3000) | Public landing narrative |
+   | [http://localhost:3000/login](http://localhost:3000/login) | Operator authentication |
+   | [http://localhost:3000/queue](http://localhost:3000/queue) | Operations console (requires auth) |
    | [http://localhost:8000/docs](http://localhost:8000/docs) | FastAPI auto-generated API docs |
 
    > **Note**: The Next.js frontend proxies all `/api/v1/*` requests to the backend via `next.config.ts`. This ensures same-origin HttpOnly cookie delivery without any CORS configuration needed on the frontend.
@@ -436,13 +479,31 @@ Vaada includes a comprehensive pytest suite covering security, authentication, d
 ```bash
 cd backend
 pytest -v
+# 64 passed in ~3s
 ```
 
-### Test Coverage Highlights:
-- `test_auth.py`: Password hashing, session issuance, refresh token rotation, unauthenticated access rejection.
-- `test_domain.py`: Deterministic cause classification, promise extraction bounds, DAG state transition invariants, third-party disclosure prevention.
-- `test_security.py`: Role-based function authorization, tenant isolation, double-submit CSRF enforcement.
-- `test_statutory.py`: 43B(h) agreement cutoff calculations (45 vs 15 days), MSMED Act Section 16 3× RBI compound interest math, statutory notice generation, dynamic UPI string formatting.
+### Test Coverage
+
+| Test file | What it covers |
+|---|---|
+| `test_auth.py` | Password hashing, session issuance, refresh token rotation, unauthenticated access rejection |
+| `test_domain.py` | Deterministic cause classification, promise extraction bounds, DAG state transition invariants, third-party disclosure prevention |
+| `test_security.py` | Role-based function authorization, tenant isolation, double-submit CSRF enforcement |
+| `test_statutory.py` | 43B(h) agreement cutoff calculations (45 vs 15 days), MSMED Act Section 16 3× RBI compound interest math, statutory notice generation, dynamic UPI string formatting |
+
+### Live E2E Verification
+
+A self-contained live E2E script verifies the full golden path and 12 failure paths against the running server:
+
+```bash
+# With both backend and frontend running:
+cd backend
+python verify_e2e_golden_path.py
+```
+
+**Golden Path** (18 checks): Merchant login → portfolio metrics → payment failure ingest → Razorpay diagnosis → customer portal → Hinglish NLP promise → surveillance jobs → IST compliance window → webhook reconciliation → `recovered` state → analytics mutation → audit trail.
+
+**Failure Paths** (12 checks): HMAC forgery, expired tokens, unauthorized access, prompt injection, vague input, duplicate webhooks, missing CSRF, partial payments, compliance boundaries, worker retries.
 
 ---
 
@@ -461,21 +522,31 @@ The backend exposes a fully documented REST API at `http://localhost:8000/api/v1
 #### Event Ingestion
 - `POST /api/v1/events` — Ingest a payment failure event for an invoice.
 - `POST /api/v1/events/synthetic` — Batch trigger synthetic test events for testing.
-- `POST /api/v1/webhooks/razorpay` — Ingest Razorpay test webhook with HMAC-SHA256 signature verification.
+- `POST /api/v1/webhooks/razorpay` — Ingest Razorpay webhook with HMAC-SHA256 signature verification and full reconciliation.
 
 #### Case Operations & Actions
 - `GET /api/v1/cases` — List active recovery cases with pagination and summary metrics.
-- `GET /api/v1/cases/{case_id}` — Retrieve 7-station case detail, decision trace, and audit logs.
+- `GET /api/v1/cases/{case_id}` — Retrieve 7-station case detail, decision trace, portal access token, and audit logs.
 - `POST /api/v1/cases/{case_id}/actions` — Execute case actions (`send_reminder`, `pause`, `resume`, `escalate`, `mark_recovered`, `mark_unrecoverable`, `cancel`).
 - `POST /api/v1/cases/{case_id}/customer-replies` — Ingest customer Hinglish reply for P2P extraction.
+
+#### Customer Portal
+- `GET /api/v1/portal/{token}` — Retrieve customer dossier (invoice, amounts, payment options).
+- `POST /api/v1/portal/{token}/promise` — Submit free-text or structured promise to pay (NLP extraction applied).
+- `POST /api/v1/portal/{token}/payment` — Record self-service payment with UTR reference.
+- `POST /api/v1/portal/{token}/dispute` — Submit TDS or invoice dispute.
 
 #### Statutory & Reconciliation
 - `POST /api/v1/cases/{case_id}/notices/generate` — Generate statutory notices (`msme_43b_h`, `sec_138_ni_act`, `msme_samadhaan_form_1`, `statement_of_account`).
 - `POST /api/v1/cases/{case_id}/reconciliation/tds` — Reconcile Form 16A withholding tax and adjust net payable.
 - `POST /api/v1/cases/{case_id}/reconciliation/payment` — Record bank UTR / payment remittance.
-- `POST /api/v1/cases/{case_id}/discount` — Apply cash discount for early settlement.
-- `POST /api/v1/cases/{case_id}/p2p/check-adherence` — Evaluate promise adherence and flag broken commitments.
 - `GET /api/v1/statutory/portfolio-risk` — Aggregate Section 43B(h) and MSMED interest risk for the tenant.
+
+#### Portfolio & Analytics
+- `GET /api/v1/metrics` — Real-time portfolio snapshot (total book, active cases, recovery rate, recovered amount).
+- `POST /api/v1/jobs/trigger` — Trigger background surveillance jobs (`promise_adherence`, `stale_cases`, `compliance_sweeper`, `analytics`, `all`).
+- `GET /api/v1/audit` — Paginated immutable audit event log.
+- `GET /api/v1/settings/compliance` — Retrieve active compliance window configuration.
 
 ---
 
@@ -484,12 +555,13 @@ The backend exposes a fully documented REST API at `http://localhost:8000/api/v1
 | Risk Area | Mitigation in Vaada |
 |---|---|
 | **Broken Object-Level Auth (BOLA)** | Every database query enforces `tenant_id` predicates derived from the cryptographically verified session token, preventing cross-tenant access. |
-| **CSRF Attacks** | Mutating endpoints require double-submit `X-CSRF-Token` headers matching the HttpOnly cookie signature. |
+| **CSRF Attacks** | Mutating endpoints require double-submit `X-CSRF-Token` headers matching the HttpOnly cookie signature. Missing token returns `401`. |
 | **Password Storage** | `argon2-cffi` Argon2id hashing — no plaintext or bcrypt. |
-| **Prompt Injection / Jailbreak** | LLM inputs are isolated as untrusted data. The LLM produces only structured JSON and has zero tool execution privileges. |
-| **Hallucinated State Changes** | All case transitions are validated against a strict DAG finite state machine. The LLM cannot mutate case state. |
+| **Webhook Forgery** | HMAC-SHA256 signature verified on every Razorpay webhook. Forged signatures return `403`. |
+| **Prompt Injection / Jailbreak** | Adversarial control phrases detected in `_heuristic_fallback` before any DB write. Rejected with `422` and audit event. |
+| **Hallucinated State Changes** | All case transitions are validated against a strict DAG finite state machine. The LLM cannot mutate case state directly. |
 | **Regulatory Harassment** | Executable RBI Fair Practices Code guardrails run before any communication dispatch; blocked attempts are logged to the audit trail. |
-| **Audit Immutability** | An append-only `AuditEvent` log records all state changes, rule evaluations, notices, and overrides with actor attribution and correlation IDs. |
+| **Audit Immutability** | An append-only `AuditEvent` log records all state changes, rule evaluations, notices, security events, and overrides with actor attribution and correlation IDs. |
 
 ---
 
@@ -499,6 +571,7 @@ Empirical evaluations of Vaada's tabular ML model and Hinglish extraction pipeli
 
 - **Tabular ML Recovery Scorer**: Held-out test accuracy of `67.67%`, Precision of `70.00%`, ROC-AUC of `0.7215`, and calibrated Brier score of `0.2076`.
 - **Hinglish Promise Extraction**: 100% extraction accuracy on benchmark test sets covering colloquial code-mixed Hindi-English phrases, with automatic failover to human review on ambiguous inputs.
+- **Language Identification**: 95.0% accuracy on L3Cube-HingCorpus academic dataset.
 
 ---
 

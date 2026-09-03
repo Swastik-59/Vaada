@@ -55,6 +55,7 @@ class ActorType(StrEnum):
     USER = "user"
     SYSTEM = "system"
     LLM = "llm"
+    DEBTOR = "debtor"
 
 
 class TimestampMixin:
@@ -172,6 +173,7 @@ class Invoice(Base, TimestampMixin):
     net_payable_minor: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     statutory_due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     dispute_status: Mapped[str] = mapped_column(String(32), default="none", nullable=False)
+    dispute_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
 class PaymentEvent(Base, TimestampMixin):

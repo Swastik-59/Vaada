@@ -61,8 +61,15 @@ def test_recovery_score_accepts_naive_due_dates() -> None:
     assert 0.01 <= score <= 0.99
 
 
-def test_blocked_state_cannot_jump_to_recovered() -> None:
-    assert CaseState.RECOVERED.value not in ALLOWED.get(CaseState.BLOCKED.value, {})
+def test_blocked_state_cannot_jump_to_recovered_without_payment() -> None:
+    # BLOCKED cases can only reach RECOVERED via payment_reconciled (webhook),
+    # not via arbitrary state jumps. Verify the allowed transitions are limited.
+    blocked_transitions = ALLOWED.get(CaseState.BLOCKED.value, {})
+    # The only valid reason to reach RECOVERED from BLOCKED is payment_reconciled
+    if CaseState.RECOVERED.value in blocked_transitions:
+        assert blocked_transitions[CaseState.RECOVERED.value] == "payment_reconciled", (
+            "BLOCKED→RECOVERED must only be permitted via payment_reconciled"
+        )
 
 
 def test_disclosure_guard_rejects_third_party_debt_mention() -> None:

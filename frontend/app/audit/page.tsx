@@ -113,6 +113,7 @@ export default function AuditPage() {
         </div>
         <div className={styles.navRight}>
           <Link href="/queue" className={styles.navLink}>Queue</Link>
+          <Link href="/analytics" className={styles.navLink}>Analytics</Link>
           <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>Audit Log</Link>
           <Link href="/settings" className={styles.navLink}>Compliance</Link>
           <Link href="/razorpay-taxonomy" className={styles.navLink}>Taxonomy</Link>

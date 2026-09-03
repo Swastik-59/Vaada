@@ -1,17 +1,77 @@
 {
   "version": 1,
   "skills": {
+    "agent-browser": {
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "skillPath": "skills/agent-browser/SKILL.md",
+      "computedHash": "a674b7d81066e3cc471a7512ddb4ae724418cbfefa75cbb050b0dc430e4d57a0"
+    },
+    "agent-security-audit": {
+      "source": "owasp/secure-agent-playbook",
+      "sourceType": "github",
+      "skillPath": "plugins/ai-security-skills/skills/agent-security-audit/SKILL.md",
+      "computedHash": "c2fbacb37c953b1d850fbb3d6408d56670776376eb56630b031b5e5c69fcde96"
+    },
+    "fastapi": {
+      "source": "fastapi/fastapi",
+      "sourceType": "github",
+      "skillPath": "fastapi/.agents/skills/fastapi/SKILL.md",
+      "computedHash": "187b2e06c41cdb6c6beeab15e6db4aeb1bf62f57735974646ad5646af8aacc66"
+    },
     "frontend-design": {
       "source": "PracticalSwan/agent-skills",
       "sourceType": "github",
       "skillPath": "frontend-design/SKILL.md",
       "computedHash": "eb642575592351d2c6727243662995a145911fbbdf3a30289c94e08463c2e177"
     },
+    "nextjs": {
+      "source": "ulpi-io/skills",
+      "sourceType": "github",
+      "skillPath": "nextjs/SKILL.md",
+      "computedHash": "4868992afe3448cbab4162c2f2df70e7e6dc93907c3452553036fb379d59483b"
+    },
+    "playwright-testing": {
+      "source": "terminalskills/skills",
+      "sourceType": "github",
+      "skillPath": "skills/playwright-testing/SKILL.md",
+      "computedHash": "66044196f461625e7cbb020f47fe3e9d72047be896f2253ca08d8cc81358d3b9"
+    },
+    "postgres-best-practices": {
+      "source": "neondatabase/postgres-skills",
+      "sourceType": "github",
+      "skillPath": "skills/postgres-best-practices/SKILL.md",
+      "computedHash": "316f8f76c582ff3bf9a6c8e4238867dbdbf70735587f40cb634c4d046ff5db42"
+    },
+    "react-best-practices": {
+      "source": "prisma-labs-dev/skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "dc945f9a79ba858aa93cf928518b9c53db757df1088d030fdea90f8b49d754d2"
+    },
+    "security-guidance": {
+      "source": "owasp/secure-agent-playbook",
+      "sourceType": "github",
+      "skillPath": "plugins/code-security-skills/skills/security-guidance/SKILL.md",
+      "computedHash": "40ae24f8f851fee60298d840a578e0e0e2014fb3648d3010ad8abc8ecca54ec2"
+    },
+    "threejs": {
+      "source": "mengto/skills",
+      "sourceType": "github",
+      "skillPath": "agent-skills/web-design/threejs/SKILL.md",
+      "computedHash": "435a269d796900850b5a3e7b23081451d2535a5a7d4cc2564f0e2048b65c4af1"
+    },
     "ui-ux-concept-implementation": {
       "source": "thienanblog/awesome-ai-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/ui-ux-concept-implementation/SKILL.md",
       "computedHash": "a49deeb7a5ff913ef572922c1e0e3869d7ef5572031b59b1cfbbfe48b5a07c80"
+    },
+    "web-perf": {
+      "source": "cloudflare/skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-perf/SKILL.md",
+      "computedHash": "a411d7a1d052e39069ad7c898d6b7e22100945a3f104794e0b76e3af480d3f44"
     }
   }
 }

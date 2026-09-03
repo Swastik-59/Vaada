@@ -83,6 +83,9 @@ export default function SettingsPage() {
           <Link href="/queue" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-secondary)" }}>
             Queue
           </Link>
+          <Link href="/analytics" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-secondary)" }}>
+            Analytics
+          </Link>
           <Link href="/audit" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-secondary)" }}>
             Audit Trail
           </Link>

@@ -1,0 +1,40 @@
+---
+title: Prevent Waterfall Chains in API Routes
+impact: CRITICAL
+impactDescription: 2-10× improvement
+tags: api-routes, request-handlers, waterfalls, parallelization
+---
+
+## Prevent Waterfall Chains in API Routes
+
+In API routes and other server request handlers, start independent operations
+immediately, even if you do not await them yet.
+
+**Incorrect (config waits for auth, data waits for both):**
+
+```typescript
+export async function GET(request: Request) {
+  const session = await auth();
+  const config = await fetchConfig();
+  const data = await fetchData(session.user.id);
+  return Response.json({ data, config });
+}
+```
+
+**Correct (auth and config start immediately):**
+
+```typescript
+export async function GET(request: Request) {
+  const sessionPromise = auth();
+  const configPromise = fetchConfig();
+  const session = await sessionPromise;
+  const [config, data] = await Promise.all([
+    configPromise,
+    fetchData(session.user.id),
+  ]);
+  return Response.json({ data, config });
+}
+```
+
+For operations with more complex dependency chains, create dependent promises
+early and await them together at the end.

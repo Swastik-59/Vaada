@@ -21,11 +21,13 @@ ALLOWED: dict[str, dict[str, str]] = {
         CaseState.PAUSED.value: "paused",
         CaseState.BLOCKED.value: "compliance_block",
         CaseState.CANCELLED.value: "cancelled",
+        CaseState.RECOVERED.value: "payment_reconciled",
     },
     CaseState.CONTACTED.value: {
         CaseState.AWAITING_RESPONSE.value: "awaiting_customer",
         CaseState.PAUSED.value: "paused",
         CaseState.HUMAN_REVIEW.value: "escalated",
+        CaseState.RECOVERED.value: "payment_reconciled",
     },
     CaseState.AWAITING_RESPONSE.value: {
         CaseState.PROMISE_RECORDED.value: "promise_extracted",
@@ -33,6 +35,7 @@ ALLOWED: dict[str, dict[str, str]] = {
         CaseState.AWAITING_ACTION.value: "retry_contact",
         CaseState.UNRECOVERABLE.value: "closed_unrecoverable",
         CaseState.PAUSED.value: "paused",
+        CaseState.RECOVERED.value: "payment_reconciled",
     },
     CaseState.PROMISE_RECORDED.value: {
         CaseState.RECOVERED.value: "promise_honoured",
@@ -49,10 +52,14 @@ ALLOWED: dict[str, dict[str, str]] = {
     CaseState.PAUSED.value: {
         CaseState.AWAITING_ACTION.value: "resumed",
         CaseState.CANCELLED.value: "cancelled",
+        CaseState.RECOVERED.value: "payment_reconciled",
     },
     CaseState.BLOCKED.value: {
         CaseState.HUMAN_REVIEW.value: "sent_to_review",
         CaseState.AWAITING_ACTION.value: "compliance_cleared",
+        CaseState.PROMISE_RECORDED.value: "debtor_promised",
+        CaseState.RECOVERED.value: "payment_reconciled",
+        CaseState.CANCELLED.value: "cancelled",
     },
 }
 
