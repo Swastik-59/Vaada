@@ -25,19 +25,21 @@
 }
 
 .navBrand {
-  font-family: var(--sans);
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text-primary);
+  color: var(--text-emphasis);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .navDevanagari {
-  color: var(--accent);
-  font-size: 0.95rem;
+  font-family: var(--devanagari);
+  color: var(--accent-text);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .navDivider {
@@ -91,10 +93,11 @@
 }
 
 .headerTitle {
-  font-family: var(--sans);
-  font-size: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-family: var(--display);
+  font-size: var(--t-headline);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-emphasis);
   margin: 0 0 8px;
 }
 

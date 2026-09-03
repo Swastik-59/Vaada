@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, useScroll, useTransform } from "motion/react";
 import styles from "./landing.module.css";
@@ -56,10 +56,43 @@ const HINGLISH_DEMO = {
   ],
 };
 
+const HINGLISH_TOKENS = [
+  { text: "Bhai ", signal: false },
+  { text: "abhi ", signal: false },
+  { text: "balance ", signal: false },
+  { text: "thoda ", signal: false },
+  { text: "tight ", signal: false },
+  { text: "hai, ", signal: false },
+  { text: "Friday shaam 4 baje ", signal: true, label: "Extracted Date: Friday 16:00 IST" },
+  { text: "1.85L ", signal: true, label: "Extracted Value: ₹1,85,000.00" },
+  { text: "RTGS ", signal: true, label: "Recommended Rail: Corporate RTGS" },
+  { text: "kar ", signal: false },
+  { text: "dunga ", signal: false },
+  { text: "pakka.", signal: true, label: "Binding Confidence: 94.2%" },
+];
+
 export default function Landing() {
   const [activeScenario, setActiveScenario] = useState(GATEWAY_SCENARIOS[0]);
   const [calcInvoice, setCalcInvoice] = useState(1850000); // ₹18,50,000 in paise
   const [calcDaysOverdue, setCalcDaysOverdue] = useState(36);
+  const [istTime, setIstTime] = useState("");
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const str = now.toLocaleTimeString("en-GB", {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      });
+      setIstTime(`${str} IST`);
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Section 43B(h) Math
   const statutoryLimitDays = 45;
@@ -93,76 +126,83 @@ export default function Landing() {
         </nav>
       </header>
 
-      {/* ── Scene 1: The Crisis (Money At Risk) ── */}
+      {/* ── Scene 1: The Opening Statement (Split Composition) ── */}
       <section className={styles.heroScene}>
         <div className={styles.container}>
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            className={styles.heroContent}
-          >
-            <div className={styles.kickerBadge}>
-              <span className={styles.kickerDot} />
-              <span>THE COLD REALITY OF INDIAN B2B COMMERCE</span>
-            </div>
-
-            <h1 className={styles.heroTitle}>
-              ₹1,85,000 overdue by 14 days.
-              <br />
-              <span className={styles.heroSubTitle}>
-                The customer isn&apos;t refusing to pay. They&apos;re negotiating on WhatsApp.
-              </span>
-            </h1>
-
-            <p className={styles.heroBody}>
-              In Indian trade, receivables don&apos;t die in courtrooms—they slip through polite delays,
-              broken UPI mandates, and messy WhatsApp promises. Automated spam-emails alienate enterprise clients.
-              Manual lawyer notices take months.
-              <br /><br />
-              <strong>Vaada</strong> bridges the gap: translating informal debtor commitments into legally binding,
-              statutorily enforceable financial reality with zero hallucination.
-            </p>
-
-            <div className={styles.heroActions}>
-              <Link href="/queue" className={styles.primaryAction}>
-                Open Live Operations Console →
-              </Link>
-              <a href="#narrative" className={styles.secondaryAction}>
-                Inspect The Recovery Journey ↓
-              </a>
-            </div>
-
-            {/* Anchored Financial Telemetry Bar */}
-            <div className={styles.financialAnchorBar}>
-              <div className={styles.anchorCol}>
-                <span className={styles.anchorLabel}>TOTAL MONITORED PORTFOLIO</span>
-                <span className={styles.anchorValue}>₹1,24,60,000</span>
-                <span className={styles.anchorMeta}>21 active enterprise cases</span>
+          <div className={styles.heroSplitGrid}>
+            {/* Left Column: Opening Thesis & Action */}
+            <motion.div
+              initial={{ opacity: 0, x: -32 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.7, ease: [0.0, 0.0, 0.2, 1] }}
+              className={styles.heroLeft}
+            >
+              <div className={styles.liveClock}>
+                <span className={styles.clockPulseDot} />
+                <span>{istTime || "09:00:00 IST"} · REGULATORY CONTACT WINDOW</span>
               </div>
-              <div className={styles.anchorCol}>
-                <span className={styles.anchorLabel}>SECTION 43B(H) AT RISK</span>
-                <span className={styles.anchorValue} style={{ color: "var(--color-disallowed)" }}>
+
+              <h1 className={styles.heroTitle}>
+                ₹1,85,000
+                <br />
+                <span className={styles.heroOverdueText}>overdue.</span>
+              </h1>
+
+              <p className={styles.heroSubText}>
+                The customer isn&apos;t refusing to pay.
+                <br />
+                They&apos;re negotiating on WhatsApp.
+              </p>
+
+              <div className={styles.heroActions}>
+                <Link href="/queue" className={styles.primaryAction}>
+                  Enter Operations Console →
+                </Link>
+              </div>
+
+              <div className={styles.heroScrollHint}>
+                <a href="#narrative">Inspect The Recovery Journey ↓</a>
+              </div>
+            </motion.div>
+
+            {/* Right Column: Vertical Financial Instrument Stack */}
+            <motion.div
+              initial={{ opacity: 0, y: 32 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.0, 0.0, 0.2, 1] }}
+              className={styles.instrumentStack}
+            >
+              <div className={styles.instrumentItem}>
+                <span className={styles.instrumentLabel}>PORTFOLIO VALUE</span>
+                <span className={styles.instrumentValue}>₹1,24,60,000</span>
+                <span className={styles.instrumentMeta}>21 active enterprise invoices</span>
+              </div>
+
+              <div className={styles.instrumentItem}>
+                <span className={styles.instrumentLabel}>SECTION 43B(H) EXPOSURE</span>
+                <span className={styles.instrumentValue} style={{ color: "var(--status-disallowed)" }}>
                   13 Debtors
                 </span>
-                <span className={styles.anchorMeta}>31.2% tax deduction threat</span>
+                <span className={styles.instrumentMeta}>31.2% tax disallowance threat</span>
               </div>
-              <div className={styles.anchorCol}>
-                <span className={styles.anchorLabel}>PENAL INTEREST RECOVERABLE</span>
-                <span className={styles.anchorValue} style={{ color: "var(--accent)" }}>
+
+              <div className={styles.instrumentItem}>
+                <span className={styles.instrumentLabel}>PENAL INTEREST CLAIMABLE</span>
+                <span className={styles.instrumentValue} style={{ color: "var(--accent)" }}>
                   ₹1,42,850
                 </span>
-                <span className={styles.anchorMeta}>MSMED Act Sec 16 (3× RBI rate)</span>
+                <span className={styles.instrumentMeta}>3× RBI rate · MSMED Act §16</span>
               </div>
-              <div className={styles.anchorCol}>
-                <span className={styles.anchorLabel}>HISTORICAL RESOLUTION RATE</span>
-                <span className={styles.anchorValue} style={{ color: "var(--color-recovered)" }}>
+
+              <div className={styles.instrumentItem}>
+                <span className={styles.instrumentLabel}>RESOLUTION RATE</span>
+                <span className={styles.instrumentValue} style={{ color: "var(--status-recovered)" }}>
                   89.4%
                 </span>
-                <span className={styles.anchorMeta}>Average 6.8 days to cure</span>
+                <span className={styles.instrumentMeta}>avg. 6.8 days to cure</span>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -170,7 +210,6 @@ export default function Landing() {
       <section id="intelligence" className={styles.sceneSection}>
         <div className={styles.container}>
           <div className={styles.sceneHeader}>
-            <span className={styles.sceneEyebrow}>LEVEL 1 → LEVEL 2 PROGRESSIVE REVELATION</span>
             <h2 className={styles.sceneHeadline}>
               Why did the payment actually fail?
             </h2>
@@ -183,7 +222,7 @@ export default function Landing() {
           <div className={styles.interactiveGatewayBox}>
             {/* Left: Interactive Scenario Selector */}
             <div className={styles.scenarioList}>
-              <span className={styles.selectorHeading}>SELECT PUBLISHED RAZORPAY EVENT</span>
+              <span className={styles.selectorHeading}>PUBLISHED RAZORPAY EVENT</span>
               {GATEWAY_SCENARIOS.map((sc) => (
                 <button
                   key={sc.id}
@@ -204,7 +243,7 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Right: Comparative Diagnostic Canvas */}
+            {/* Right: Comparative Diagnostic Canvas (Sequential Translation Chain) */}
             <div className={styles.diagnosticCanvas}>
               <AnimatePresence mode="wait">
                 <motion.div
@@ -217,7 +256,6 @@ export default function Landing() {
                 >
                   <div className={styles.canvasTop}>
                     <div>
-                      <span className={styles.canvasTag}>OFFICIAL GATEWAY SPECIFICATION</span>
                       <h3 className={styles.canvasCodeTitle}>{activeScenario.code} : {activeScenario.reason}</h3>
                       <p className={styles.canvasOfficialDesc}>{activeScenario.official_desc}</p>
                     </div>
@@ -226,15 +264,21 @@ export default function Landing() {
                     </span>
                   </div>
 
-                  <div className={styles.translationSplit}>
-                    <div className={styles.translationCard}>
-                      <span className={styles.transCardTag}>COMMERCIAL REALITY IN INDIA</span>
-                      <p className={styles.transCardText}>{activeScenario.real_meaning}</p>
+                  <div className={styles.translationChain}>
+                    <div className={styles.chainDivider}>
+                      <span>↓ Commercial interpretation in Indian commerce</span>
                     </div>
 
-                    <div className={styles.translationCardHighlight}>
-                      <span className={styles.transCardTagHighlight}>VAADA AUTONOMOUS RECOVERY POLICY</span>
-                      <p className={styles.transCardTextHighlight}>{activeScenario.vaada_action}</p>
+                    <div className={styles.commercialInterpretationBlock}>
+                      <p className={styles.commercialText}>{activeScenario.real_meaning}</p>
+                    </div>
+
+                    <div className={styles.chainDivider}>
+                      <span>↓ Autonomous recovery policy directive</span>
+                    </div>
+
+                    <div className={styles.policyDirectiveBlock}>
+                      <p className={styles.policyText}>{activeScenario.vaada_action}</p>
                     </div>
                   </div>
                 </motion.div>
@@ -258,61 +302,74 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className={styles.hinglishInteractiveDeck}>
-            {/* Raw Message Box with Word Level Visual Extraction */}
-            <div className={styles.messageVisualContainer}>
-              <span className={styles.boxTag}>LIVE NLP TOKENIZATION STREAM</span>
-              <div className={styles.tokensWrapper}>
-                {HINGLISH_DEMO.tokens.map((token, idx) => (
-                  <span
-                    key={idx}
-                    className={`${styles.tokenSpan} ${styles[`token_${token.type}`]}`}
-                    title={token.label}
-                  >
-                    {token.text}
-                    <span className={styles.tokenTooltip}>{token.label}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
+          <div className={styles.hinglishContainer}>
+            {/* Display Sentence at Prose Scale with Staggered Word Reveal */}
+            <motion.div
+              className={styles.hinglishProse}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.04 },
+                },
+              }}
+            >
+              &ldquo;
+              {HINGLISH_TOKENS.map((token, i) => (
+                <motion.span
+                  key={i}
+                  variants={{
+                    hidden: { opacity: 0, y: 6 },
+                    visible: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+                  }}
+                  className={token.signal ? styles.wordSignal : styles.wordContext}
+                  title={token.label}
+                >
+                  {token.text}
+                </motion.span>
+              ))}
+              &rdquo;
+            </motion.div>
 
-            {/* Extracted Financial Contract Card */}
-            <div className={styles.extractedContractCard}>
-              <div className={styles.contractHeader}>
-                <div>
-                  <span className={styles.contractEyebrow}>SEMANTIC COMMITMENT RECORDED</span>
-                  <h3 className={styles.contractTitle}>Structured Promise-To-Pay</h3>
-                </div>
-                <span className={styles.confidencePill}>94.2% Confidence</span>
+            {/* Extracted Financial Contract Bar */}
+            <motion.div
+              className={styles.structuredContractRow}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5, duration: 0.4 }}
+            >
+              <div className={styles.contractField}>
+                <span className={styles.cFieldLabel}>BINDING AMOUNT</span>
+                <span className={styles.cFieldValue} style={{ color: "var(--accent)" }}>
+                  ₹1,85,000.00
+                </span>
+                <span className={styles.cFieldSub}>Parsed from &ldquo;1.85L&rdquo;</span>
               </div>
 
-              <div className={styles.contractGrid}>
-                <div className={styles.contractItem}>
-                  <span className={styles.cLabel}>BINDING AMOUNT</span>
-                  <span className={styles.cValue} style={{ color: "var(--accent)" }}>
-                    ₹1,85,000.00 INR
-                  </span>
-                  <span className={styles.cSub}>Parsed from &quot;1.85L&quot;</span>
-                </div>
-                <div className={styles.contractItem}>
-                  <span className={styles.cLabel}>SCHEDULED SETTLEMENT</span>
-                  <span className={styles.cValue}>Friday, 16:00 IST</span>
-                  <span className={styles.cSub}>Target cure date established</span>
-                </div>
-                <div className={styles.contractItem}>
-                  <span className={styles.cLabel}>PAYMENT DISPATCH RAIL</span>
-                  <span className={styles.cValue}>Corporate RTGS / IMPS</span>
-                  <span className={styles.cSub}>Switched from failing mandate</span>
-                </div>
-                <div className={styles.contractItem}>
-                  <span className={styles.cLabel}>AUTOMATED CURE ACTION</span>
-                  <span className={styles.cValue} style={{ color: "var(--color-recovered)" }}>
-                    T-24h Friendly Reminder
-                  </span>
-                  <span className={styles.cSub}>Scheduled within 08:00–19:00 window</span>
-                </div>
+              <div className={styles.contractField}>
+                <span className={styles.cFieldLabel}>SCHEDULED SETTLEMENT</span>
+                <span className={styles.cFieldValue}>Friday, 16:00 IST</span>
+                <span className={styles.cFieldSub}>Target cure date established</span>
               </div>
-            </div>
+
+              <div className={styles.contractField}>
+                <span className={styles.cFieldLabel}>PAYMENT DISPATCH RAIL</span>
+                <span className={styles.cFieldValue}>Corporate RTGS / IMPS</span>
+                <span className={styles.cFieldSub}>Switched from failing mandate</span>
+              </div>
+
+              <div className={styles.contractField}>
+                <span className={styles.cFieldLabel}>AUTOMATED CURE ACTION</span>
+                <span className={styles.cFieldValue} style={{ color: "var(--status-recovered)" }}>
+                  T-24h Friendly Reminder
+                </span>
+                <span className={styles.cFieldSub}>94.2% Binding Confidence</span>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -321,7 +378,6 @@ export default function Landing() {
       <section id="statutory" className={styles.sceneSection}>
         <div className={styles.container}>
           <div className={styles.sceneHeader}>
-            <span className={styles.sceneEyebrow}>STATUTORY ENFORCEMENT ARCHITECTURE</span>
             <h2 className={styles.sceneHeadline}>
               The 45-day statutory MSME weapon.
             </h2>
@@ -331,11 +387,12 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className={styles.calculatorCard}>
-            <div className={styles.calculatorControls}>
+          <div className={styles.calculatorSectionLayout}>
+            <div className={styles.calculatorControlsDirect}>
               <div className={styles.calcControl}>
                 <label className={styles.calcLabel}>
-                  INVOICE PRINCIPAL AMOUNT: <strong>₹{(calcInvoice / 100).toLocaleString("en-IN")}</strong>
+                  <span>INVOICE PRINCIPAL AMOUNT</span>
+                  <strong>₹{(calcInvoice / 100).toLocaleString("en-IN")}</strong>
                 </label>
                 <input
                   type="range"
@@ -350,7 +407,8 @@ export default function Landing() {
 
               <div className={styles.calcControl}>
                 <label className={styles.calcLabel}>
-                  DAYS ELAPSED SINCE ACCEPTANCE: <strong>{calcDaysOverdue} DAYS</strong>
+                  <span>DAYS ELAPSED SINCE ACCEPTANCE</span>
+                  <strong>{calcDaysOverdue} DAYS</strong>
                 </label>
                 <input
                   type="range"
@@ -364,52 +422,70 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Calculator Results Grid */}
-            <div className={styles.calcResultsGrid}>
-              <div className={styles.calcResultCol}>
+            {/* Direct Numbers Grid with Crossing Signature Moment */}
+            <div className={styles.calcDirectResults}>
+              <motion.div
+                className={styles.calcDirectCol}
+                animate={
+                  isDisallowed
+                    ? {
+                        backgroundColor: [
+                          "var(--bg-surface)",
+                          "rgba(232, 80, 80, 0.12)",
+                          "rgba(232, 80, 80, 0.04)",
+                        ],
+                        borderColor: ["var(--border-subtle)", "var(--status-disallowed)", "var(--border-subtle)"],
+                      }
+                    : { backgroundColor: "var(--bg-surface)", borderColor: "var(--border-subtle)" }
+                }
+                transition={{ duration: 0.4 }}
+              >
                 <span className={styles.calcResLabel}>STATUTORY CURE WINDOW</span>
-                <span
-                  className={styles.calcResValue}
-                  style={{ color: isDisallowed ? "var(--color-disallowed)" : "var(--accent)" }}
+                <motion.div
+                  key={isDisallowed ? "disallowed" : daysRemaining}
+                  initial={{ y: -6, opacity: 0.6 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.15 }}
+                  className={styles.calcHeroNum}
+                  style={{ color: isDisallowed ? "var(--status-disallowed)" : "var(--accent)" }}
                 >
-                  {isDisallowed ? "DISALLOWED IN CODE" : `${daysRemaining} DAYS REMAINING`}
-                </span>
-                <span className={styles.calcResDesc}>
+                  {isDisallowed ? "DISALLOWED IN CODE" : `${daysRemaining} DAYS`}
+                </motion.div>
+                <p className={styles.calcResDesc}>
                   {isDisallowed
                     ? "Mandatory 45-day MSMED cutoff crossed. Expense deduction revoked."
-                    : "Automated cure alert queued for debtor finance team."}
-                </span>
-              </div>
+                    : "Automated cure reminder dispatched within regulatory window."}
+                </p>
+              </motion.div>
 
-              <div className={styles.calcResultCol}>
+              <div className={styles.calcDirectCol}>
                 <span className={styles.calcResLabel}>DEBTOR TAX EXPOSURE (31.2%)</span>
-                <span className={styles.calcResValue} style={{ color: "var(--color-disallowed)" }}>
+                <div className={styles.calcHeroNum} style={{ color: "var(--status-disallowed)" }}>
                   ₹{Math.round(taxPenaltyExposure).toLocaleString("en-IN")}
-                </span>
-                <span className={styles.calcResDesc}>
+                </div>
+                <p className={styles.calcResDesc}>
                   Direct corporate income tax penalty paid to IT Department if unsettled.
-                </span>
+                </p>
               </div>
 
-              <div className={styles.calcResultCol}>
+              <div className={styles.calcDirectCol}>
                 <span className={styles.calcResLabel}>3× RBI PENAL INTEREST ACCRUED</span>
-                <span className={styles.calcResValue} style={{ color: "var(--color-recovered)" }}>
+                <div className={styles.calcHeroNum} style={{ color: "var(--status-recovered)" }}>
                   ₹{Math.round(accruedInterest).toLocaleString("en-IN")}
-                </span>
-                <span className={styles.calcResDesc}>
+                </div>
+                <p className={styles.calcResDesc}>
                   Compounded with monthly rests under MSMED Act Section 16.
-                </span>
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── Scene 5: Data Provenance & Trust ── */}
+      {/* ── Scene 5: Data Provenance & Trust (Tabular Statement) ── */}
       <section id="provenance" className={styles.sceneSectionAlt}>
         <div className={styles.container}>
           <div className={styles.sceneHeader}>
-            <span className={styles.sceneEyebrow}>ZERO HALLUCINATION & ARCHITECTURAL INTEGRITY</span>
             <h2 className={styles.sceneHeadline}>Honest Data Provenance</h2>
             <p className={styles.sceneSubtitle}>
               We never fabricate data or obscure reality. The system clearly demarcates authoritative external sources
@@ -417,32 +493,38 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className={styles.provenanceGrid}>
-            <div className={styles.provenanceCard}>
+          <div className={styles.provenanceStatementList}>
+            <div className={styles.provenanceRow}>
               <span className={styles.provStatus}>AUTHORITATIVE REAL DATA</span>
-              <h4 className={styles.provTitle}>Razorpay Failure Taxonomy</h4>
-              <p className={styles.provDesc}>
-                Directly versioned representation of Razorpay&apos;s 38 official error codes, root cause mappings,
-                and failure reasons across UPI, Card, Netbanking, and e-Mandate rails.
-              </p>
+              <div className={styles.provContent}>
+                <h4 className={styles.provTitle}>Razorpay Failure Taxonomy</h4>
+                <p className={styles.provDesc}>
+                  Directly versioned representation of Razorpay&apos;s 38 official error codes, root cause mappings,
+                  and failure reasons across UPI, Card, Netbanking, and e-Mandate rails.
+                </p>
+              </div>
             </div>
 
-            <div className={styles.provenanceCard}>
+            <div className={styles.provenanceRow}>
               <span className={styles.provStatus}>ACADEMIC CORPUS RESOURCE</span>
-              <h4 className={styles.provTitle}>L3Cube-HingCorpus NLP</h4>
-              <p className={styles.provDesc}>
-                Trained on peer-reviewed Hindi-English code-mixed datasets for accurate grammatical boundary detection,
-                preventing misinterpretation of Indian monetary colloquiums.
-              </p>
+              <div className={styles.provContent}>
+                <h4 className={styles.provTitle}>L3Cube-HingCorpus NLP</h4>
+                <p className={styles.provDesc}>
+                  Trained on peer-reviewed Hindi-English code-mixed datasets for accurate grammatical boundary detection,
+                  preventing misinterpretation of Indian monetary colloquiums.
+                </p>
+              </div>
             </div>
 
-            <div className={styles.provenanceCard}>
+            <div className={styles.provenanceRow}>
               <span className={styles.provStatus}>SYNTHETIC SAFE DATA</span>
-              <h4 className={styles.provTitle}>Debtor & Invoice Entities</h4>
-              <p className={styles.provDesc}>
-                All corporate names, GSTINs, and phone numbers in the demo database are cryptographically generated
-                synthetic records compliant with Indian Digital Personal Data Protection (DPDP) Act 2023.
-              </p>
+              <div className={styles.provContent}>
+                <h4 className={styles.provTitle}>Debtor & Invoice Entities</h4>
+                <p className={styles.provDesc}>
+                  All corporate names, GSTINs, and phone numbers in the demo database are cryptographically generated
+                  synthetic records compliant with Indian Digital Personal Data Protection (DPDP) Act 2023.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -451,25 +533,18 @@ export default function Landing() {
       {/* ── Scene 6: Institutional Console Launchpad ── */}
       <footer className={styles.footerLaunchpad}>
         <div className={styles.container}>
-          <div className={styles.launchpadBox}>
-            <div className={styles.launchpadLeft}>
-              <span className={styles.launchpadEyebrow}>OPERATIONAL READY</span>
-              <h3 className={styles.launchpadTitle}>
-                Ready to inspect active recovery dossiers?
-              </h3>
-              <p className={styles.launchpadText}>
-                Step into the operational console to review prioritized invoices, inspect Razorpay telemetry,
-                and review deterministic audit events.
-              </p>
-            </div>
+          <div className={styles.launchpadBanner}>
+            <h3 className={styles.launchpadPrompt}>
+              Ready to inspect active recovery dossiers?
+            </h3>
             <Link href="/login" className={styles.launchpadCta}>
               Launch Operations Console →
             </Link>
           </div>
 
-          <div className={styles.footerBottomBar}>
-            <div>VAADA / वादा · Bounded B2B Revenue Recovery Platform</div>
-            <div>COMPLIANT WITH RBI GUIDELINES & MSMED ACT 2006 · TIMEZONE: ASIA/KOLKATA</div>
+          <div className={styles.footerBottomMeta}>
+            <div>VAADA / वादा · RBI-compliant · MSMED Act 2006 · DPDP Act 2023</div>
+            <div>{istTime || "09:00:00 IST"} · ASIA/KOLKATA UTC+5:30</div>
           </div>
         </div>
       </footer>

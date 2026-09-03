@@ -45,18 +45,18 @@ type UserProfile = {
   role: string;
 };
 
-const HUMAN_STATE_DESCRIPTIONS: Record<string, { label: string; actionHint: string; color: string; bg: string }> = {
-  open: { label: "Ingested", actionHint: "Classifying gateway error", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
-  classified: { label: "Diagnosed", actionHint: "Evaluating recovery policy", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
-  awaiting_action: { label: "Action Pending", actionHint: "Ready for payment reminder", color: "#0284c7", bg: "rgba(2, 132, 199, 0.1)" },
-  contacted: { label: "Debtor Contacted", actionHint: "WhatsApp delivery sent", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
-  awaiting_response: { label: "Awaiting Reply", actionHint: "Waiting on customer commitment", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
-  promise_recorded: { label: "Promise Committed", actionHint: "Debtor scheduled payment", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
-  human_review: { label: "Needs Operator Review", actionHint: "Dispute or manual escalation", color: "#f97316", bg: "rgba(249, 115, 22, 0.1)" },
-  paused: { label: "Temporarily Paused", actionHint: "Debtor requested grace period", color: "var(--text-muted)", bg: "var(--bg-elevated)" },
-  blocked: { label: "Compliance Blocked", actionHint: "Exceeded 3 contacts / 7d cap", color: "#ef4444", bg: "rgba(239, 68, 68, 0.1)" },
-  recovered: { label: "Settled & Verified", actionHint: "Bank remittance matched", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
-  unrecoverable: { label: "Marked Bad Debt", actionHint: "Exhausted statutory rails", color: "var(--color-disallowed)", bg: "rgba(239, 68, 68, 0.1)" },
+const HUMAN_STATE_DESCRIPTIONS: Record<string, { label: string; actionHint: string; color: string; bg: string; border: string }> = {
+  open: { label: "Ingested", actionHint: "Classifying gateway error", color: "var(--text-secondary)", bg: "var(--bg-elevated)", border: "var(--border-subtle)" },
+  classified: { label: "Diagnosed", actionHint: "Evaluating recovery policy", color: "var(--text-secondary)", bg: "var(--bg-elevated)", border: "var(--border-subtle)" },
+  awaiting_action: { label: "Action Pending", actionHint: "Ready for payment reminder", color: "var(--status-pending)", bg: "rgba(196, 148, 58, 0.12)", border: "rgba(196, 148, 58, 0.3)" },
+  contacted: { label: "Debtor Contacted", actionHint: "WhatsApp delivery sent", color: "var(--status-pending)", bg: "rgba(196, 148, 58, 0.12)", border: "rgba(196, 148, 58, 0.3)" },
+  awaiting_response: { label: "Awaiting Reply", actionHint: "Waiting on customer commitment", color: "var(--status-pending)", bg: "rgba(196, 148, 58, 0.12)", border: "rgba(196, 148, 58, 0.3)" },
+  promise_recorded: { label: "Promise Committed", actionHint: "Debtor scheduled payment", color: "var(--status-recovered)", bg: "rgba(34, 201, 151, 0.12)", border: "rgba(34, 201, 151, 0.3)" },
+  human_review: { label: "Needs Operator Review", actionHint: "Dispute or manual escalation", color: "var(--status-warning)", bg: "rgba(138, 108, 196, 0.12)", border: "rgba(138, 108, 196, 0.3)" },
+  paused: { label: "Temporarily Paused", actionHint: "Debtor requested grace period", color: "var(--text-muted)", bg: "var(--bg-elevated)", border: "var(--border-subtle)" },
+  blocked: { label: "Compliance Blocked", actionHint: "Exceeded 3 contacts / 7d cap", color: "var(--status-disallowed)", bg: "rgba(232, 80, 80, 0.12)", border: "rgba(232, 80, 80, 0.3)" },
+  recovered: { label: "Settled & Verified", actionHint: "Bank remittance matched", color: "var(--status-recovered)", bg: "rgba(34, 201, 151, 0.12)", border: "rgba(34, 201, 151, 0.3)" },
+  unrecoverable: { label: "Marked Bad Debt", actionHint: "Exhausted statutory rails", color: "var(--status-disallowed)", bg: "rgba(232, 80, 80, 0.12)", border: "rgba(232, 80, 80, 0.3)" },
 };
 
 function formatCurrency(minor: number | null | undefined): string {
@@ -191,7 +191,6 @@ export default function QueuePage() {
         {/* Header Strip */}
         <header className={styles.header}>
           <div>
-            <span className={styles.contextTag}>ACTIVE RECOVERY PORTFOLIO</span>
             <h1 className={styles.pageHeadline}>Commercial Receivables</h1>
             <p className={styles.pageSubheadline}>
               Prioritized invoices under automated surveillance, debtor communication, and Section 43B(h) compliance.
@@ -375,10 +374,10 @@ export default function QueuePage() {
                   const probColor =
                     probPct != null
                       ? probPct >= 65
-                        ? "var(--color-recovered)"
+                        ? "var(--status-recovered)"
                         : probPct >= 40
-                        ? "var(--color-warning)"
-                        : "var(--color-disallowed)"
+                        ? "var(--status-pending)"
+                        : "var(--status-disallowed)"
                       : "var(--text-muted)";
 
                   const stat = item.statutory_status;
@@ -416,7 +415,11 @@ export default function QueuePage() {
                         <div className={styles.statusCell}>
                           <span
                             className={styles.statusBadge}
-                            style={{ color: stateMeta.color, backgroundColor: stateMeta.bg }}
+                            style={{
+                              color: stateMeta.color,
+                              backgroundColor: stateMeta.bg,
+                              border: `1px solid ${stateMeta.border || "transparent"}`,
+                            }}
                           >
                             {stateMeta.label}
                           </span>

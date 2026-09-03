@@ -1,0 +1,292 @@
+.loginContainer {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background-color: var(--neutral-1);
+  color: var(--text-primary);
+}
+
+/* ── Left Column: Editorial & Institutional Precision ── */
+.leftEditorialCol {
+  background-color: var(--neutral-1);
+  border-right: 1px solid var(--border-subtle);
+  padding: 64px 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.leftTopBrand {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brandName {
+  font-family: var(--display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-emphasis);
+}
+
+.brandDevanagari {
+  font-family: var(--devanagari);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--accent-text);
+}
+
+.editorialCenter {
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.editorialHeadline {
+  font-family: var(--display);
+  font-size: var(--t-headline);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--text-emphasis);
+  margin: 0;
+}
+
+.statutoryList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.statutoryItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.statutoryCheck {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--status-recovered);
+  padding-top: 2px;
+}
+
+.statutoryText {
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.leftBottomClock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.clockDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--status-recovered);
+  box-shadow: 0 0 8px var(--status-recovered);
+}
+
+/* ── Right Column: Sign In Form Deck ── */
+.rightFormCol {
+  background-color: var(--neutral-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px;
+}
+
+.formCard {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.formHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formTitle {
+  font-family: var(--display);
+  font-size: var(--t-subhead);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-emphasis);
+  margin: 0;
+}
+
+.formSub {
+  font-family: var(--sans);
+  font-size: var(--t-body-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Demo Credential Pill */
+.demoPillBox {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+}
+
+.demoCreds {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.fillDemoBtn {
+  background: transparent;
+  border: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent-text);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 3px;
+  transition: background-color 0.15s ease;
+}
+
+.fillDemoBtn:hover {
+  background-color: var(--bg-hover);
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formLabel {
+  font-family: var(--sans);
+  font-size: var(--t-label);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.formInput {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: var(--bg-surface);
+  color: var(--text-emphasis);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.formInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(224, 159, 62, 0.2);
+}
+
+.signInBtn {
+  width: 100%;
+  padding: 14px;
+  background-color: var(--accent);
+  color: #07080a;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background-color 0.15s ease, transform 0.15s var(--ease-spring);
+}
+
+.signInBtn:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+  transform: scale(1.01);
+}
+
+.signInBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bypassDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.bypassDivider::before,
+.bypassDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--border-subtle);
+}
+
+.quickBypassBtn {
+  width: 100%;
+  padding: 12px;
+  background-color: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.quickBypassBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.formError {
+  padding: 10px 14px;
+  background-color: rgba(232, 80, 80, 0.1);
+  border: 1px solid rgba(232, 80, 80, 0.3);
+  color: var(--status-disallowed);
+  font-family: var(--sans);
+  font-size: 13px;
+  border-radius: 4px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .loginContainer {
+    grid-template-columns: 1fr;
+  }
+  .leftEditorialCol {
+    display: none;
+  }
+  .rightFormCol {
+    padding: 32px 24px;
+  }
+}

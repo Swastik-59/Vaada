@@ -109,11 +109,11 @@ export default function AuditPage() {
             <span className={styles.navDevanagari}>वादा</span>
           </Link>
           <span className={styles.navDivider}>/</span>
-          <span className={styles.navTitle}>Activity Ledger</span>
+          <span className={styles.navTitle}>Audit Log</span>
         </div>
         <div className={styles.navRight}>
           <Link href="/queue" className={styles.navLink}>Queue</Link>
-          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>Activity Ledger</Link>
+          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>Audit Log</Link>
           <Link href="/settings" className={styles.navLink}>Compliance</Link>
           <Link href="/razorpay-taxonomy" className={styles.navLink}>Taxonomy</Link>
         </div>
@@ -121,10 +121,9 @@ export default function AuditPage() {
 
       <div className={styles.header}>
         <div>
-          <div className={styles.headerTag}>IMMUTABLE SYSTEM PROVENANCE</div>
-          <h1 className={styles.headerTitle}>Activity & Audit History</h1>
+          <h1 className={styles.headerTitle}>Audit Log</h1>
           <p className={styles.headerSubtitle}>
-            Verifiable ledger recording every automated recovery action, statutory notice compilation, and operator adjudication.
+            Deterministic ledger recording every automated recovery action, statutory notice compilation, and operator adjudication.
           </p>
         </div>
         <button className={styles.exportBtn} onClick={() => exportCsv(items)}>

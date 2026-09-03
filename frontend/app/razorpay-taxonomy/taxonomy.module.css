@@ -25,19 +25,21 @@
 }
 
 .navMark {
-  font-family: var(--sans);
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--text-primary);
+  color: var(--text-emphasis);
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .navDevanagari {
-  color: var(--accent);
-  font-size: 0.95rem;
+  font-family: var(--devanagari);
+  color: var(--accent-text);
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .navSlash {
@@ -97,12 +99,12 @@
 }
 
 .title {
-  font-family: var(--sans);
-  font-size: 2.25rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-family: var(--display);
+  font-size: var(--t-headline);
+  font-weight: 700;
+  letter-spacing: -0.02em;
   margin: 0 0 8px;
-  color: var(--text-primary);
+  color: var(--text-emphasis);
 }
 
 .subtitle {
@@ -188,28 +190,28 @@
 }
 
 .filterBtn {
-  background: transparent;
+  background: var(--neutral-2);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
   font-family: var(--mono);
-  font-size: 10.5px;
-  letter-spacing: 0.08em;
-  padding: 5px 10px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .filterBtn:hover {
-  background-color: var(--bg-elevated);
-  color: var(--text-primary);
+  background-color: var(--neutral-3);
+  color: var(--text-emphasis);
 }
 
 .filterBtn.active {
-  background-color: var(--bg-elevated);
-  border-color: var(--border-strong);
-  color: var(--accent);
-  font-weight: 700;
+  background-color: var(--neutral-3);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
 }
 
 /* ── View Grid (Master / Drawer) ── */
@@ -321,18 +323,21 @@
 }
 
 .policyRecoverable {
-  color: var(--color-recovered);
-  background-color: rgba(16, 185, 129, 0.1);
+  color: var(--status-recovered);
+  background-color: rgba(34, 201, 151, 0.12);
+  border: 1px solid rgba(34, 201, 151, 0.25);
 }
 
 .policyUnrecoverable {
-  color: var(--color-disallowed);
-  background-color: rgba(239, 68, 68, 0.1);
+  color: var(--status-disallowed);
+  background-color: rgba(232, 80, 80, 0.12);
+  border: 1px solid rgba(232, 80, 80, 0.25);
 }
 
 .policyInvestigation {
-  color: var(--color-warning);
-  background-color: rgba(245, 158, 11, 0.1);
+  color: var(--status-pending);
+  background-color: rgba(224, 159, 62, 0.12);
+  border: 1px solid rgba(224, 159, 62, 0.25);
 }
 
 .inspectBtn {

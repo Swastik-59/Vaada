@@ -1,38 +1,98 @@
 :root {
-  /* 70/20/10 Dark Luxury Product Palette */
-  --bg-deep: #08090c;
-  --bg-surface: #0e1014;
-  --bg-elevated: #15181f;
-  --bg-highlight: #1d222b;
+  /* Neutral ramp — the backbone (70% of visual surface) */
+  --neutral-1: #07080a;
+  --neutral-2: #0d0f13;
+  --neutral-3: #141820;
+  --neutral-4: #1c2130;
+  --neutral-5: #252c3d;
+  --neutral-6: #1a2035;
+  --neutral-7: #364057;
+  --neutral-8: #5c6a85;
+  --neutral-9: #8a97af;
+  --neutral-10: #c8d0de;
+  --neutral-11: #e8ecf4;
+  --neutral-12: #f5f7fb;
+
+  /* Amber / Interactive (20% accent) */
+  --amber-dim: #6b4a15;
+  --amber-base: #e09f3e;
+  --amber-bright: #f0b95a;
+  --amber-text: #ffd27a;
+
+  /* Status ramps (10% — semantic only) */
+  --status-recovered: #22c997;
+  --status-disallowed: #e85050;
+  --status-pending: #c4943a;
+  --status-warning: #8a6cc4;
+  --status-info: #4a9fd4;
+
+  /* Compatibility aliases */
+  --color-recovered: var(--status-recovered);
+  --color-disallowed: var(--status-disallowed);
+  --color-warning: var(--status-warning);
+  --color-info: var(--status-info);
+
+  /* Semantic Map */
+  --bg-deep: var(--neutral-1);
+  --bg-surface: var(--neutral-2);
+  --bg-elevated: var(--neutral-3);
+  --bg-hover: var(--neutral-4);
   
-  /* Typography Hierarchy */
-  --text-primary: #f2f4f8;
-  --text-secondary: #9aa1b0;
-  --text-muted: #5e6677;
+  --border-subtle: var(--neutral-6);
+  --border-strong: var(--neutral-5);
+  --border-focus: var(--neutral-4);
   
-  /* Subtle, Structured Architectural Borders */
-  --border-subtle: #1a1e27;
-  --border-strong: #252b38;
-  --border-focus: #3b4457;
+  --text-primary: var(--neutral-11);
+  --text-secondary: var(--neutral-9);
+  --text-muted: var(--neutral-8);
+  --text-emphasis: var(--neutral-12);
   
-  /* Financial Domain Tokens */
-  --accent: #e09f3e;
-  --accent-hover: #c98829;
-  --color-recovered: #10b981;
-  --color-disallowed: #ef4444;
-  --color-warning: #f59e0b;
-  --color-info: #0284c7;
-  
+  --accent: var(--amber-base);
+  --accent-hover: var(--amber-bright);
+  --accent-text: var(--amber-text);
+
+  /* Temperature defaults */
+  --temp-surface-tint: rgba(0,0,0,0);
+  --temp-border-cast: rgba(0,0,0,0);
+
   /* Typography System */
   --display: var(--font-display), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --mono: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --devanagari: var(--font-devanagari), "Noto Serif Devanagari", serif;
+
+  /* Type Scale */
+  --t-hero: clamp(3.5rem, 7vw, 7rem);
+  --t-display: clamp(2.5rem, 4.5vw, 4.5rem);
+  --t-headline: clamp(1.5rem, 2.5vw, 2.25rem);
+  --t-subhead: 1.125rem;
+  --t-body-lg: 1.0625rem;
+  --t-body: 0.9375rem;
+  --t-body-sm: 0.8125rem;
+  --t-label: 0.75rem;
+  --t-code: 0.875rem;
+  --t-code-sm: 0.75rem;
+  --t-financial-lg: 2rem;
+  --t-financial: 1.25rem;
 
   /* Motion & Interaction Curves */
-  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-smooth: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0.0, 1.0, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.1);
   --duration-fast: 160ms;
   --duration-normal: 280ms;
+}
+
+/* Active window: 09:00–20:00 IST */
+.window-open {
+  --temp-surface-tint: rgba(224, 159, 62, 0.015);
+  --temp-border-cast: rgba(224, 159, 62, 0.06);
+}
+
+/* Outside window / blocked state */
+.window-closed {
+  --temp-surface-tint: rgba(74, 159, 212, 0.015);
+  --temp-border-cast: rgba(74, 159, 212, 0.06);
 }
 
 * {

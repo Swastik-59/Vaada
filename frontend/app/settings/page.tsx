@@ -21,8 +21,16 @@ export default function SettingsPage() {
   const [config, setConfig] = useState<ComplianceConfig | null>(null);
   const [error, setError] = useState("");
   const [isUnauthorized, setIsUnauthorized] = useState(false);
+  const [currentIstHour, setCurrentIstHour] = useState<number | null>(null);
 
   useEffect(() => {
+    try {
+      const now = new Date();
+      const istString = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+      const istDate = new Date(istString);
+      setCurrentIstHour(istDate.getHours() + istDate.getMinutes() / 60);
+    } catch (e) {}
+
     apiFetch("/api/v1/settings/compliance")
       .then(setConfig)
       .catch((err) => {
@@ -53,22 +61,22 @@ export default function SettingsPage() {
           <Link
             href="/queue"
             style={{
-              fontFamily: "var(--sans)",
-              fontSize: "1.15rem",
-              fontWeight: 800,
+              fontFamily: "var(--display)",
+              fontSize: "1.2rem",
+              fontWeight: 700,
               letterSpacing: "-0.02em",
-              color: "var(--text-primary)",
+              color: "var(--text-emphasis)",
               display: "flex",
               alignItems: "center",
               gap: 6,
             }}
           >
             <span>VAADA</span>
-            <span style={{ color: "var(--accent)", fontSize: "0.95rem" }}>वादा</span>
+            <span style={{ fontFamily: "var(--devanagari)", color: "var(--accent-text)", fontSize: "1rem", fontWeight: 600 }}>वादा</span>
           </Link>
           <span style={{ color: "var(--border-strong)", fontSize: 12 }}>/</span>
-          <span style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", color: "var(--text-muted)" }}>
-            COMPLIANCE REGISTRY
+          <span style={{ fontFamily: "var(--sans)", fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>
+            Compliance Rules
           </span>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
@@ -244,15 +252,57 @@ export default function SettingsPage() {
                       {r.title}
                     </td>
                     <td style={{ padding: "18px 20px", fontSize: 13.5, color: "var(--text-secondary)", lineHeight: 1.5, borderBottom: "1px solid var(--border-subtle)" }}>
-                      {r.description}
+                      <div>{r.description}</div>
+                      {r.id === "contact_window" && (
+                        <div style={{ marginTop: 14, maxWidth: 360 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--mono)", fontSize: 10, color: "var(--text-muted)", marginBottom: 6 }}>
+                            <span>00:00</span>
+                            <span style={{ color: "var(--accent)", fontWeight: 600 }}>09:00–20:00 IST Permitted Slot</span>
+                            <span>24:00</span>
+                          </div>
+                          <div style={{ position: "relative", width: "100%", height: 8, backgroundColor: "var(--border-strong)", borderRadius: 4 }}>
+                            {/* Permitted window slot */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: `${(9 / 24) * 100}%`,
+                                width: `${(11 / 24) * 100}%`,
+                                height: "100%",
+                                backgroundColor: "var(--accent)",
+                                borderRadius: 2,
+                              }}
+                            />
+                            {/* Current time marker */}
+                            {currentIstHour != null && (
+                              <div
+                                title={`Current IST: ${Math.floor(currentIstHour)}:${String(Math.floor((currentIstHour % 1) * 60)).padStart(2, "0")}`}
+                                style={{
+                                  position: "absolute",
+                                  left: `${Math.min(100, Math.max(0, (currentIstHour / 24) * 100))}%`,
+                                  top: -3,
+                                  width: 14,
+                                  height: 14,
+                                  borderRadius: "50%",
+                                  backgroundColor: "var(--status-recovered)",
+                                  border: "2px solid var(--bg-surface)",
+                                  transform: "translateX(-50%)",
+                                  boxShadow: "0 0 8px rgba(34, 201, 151, 0.8)",
+                                  cursor: "pointer",
+                                }}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </td>
                     <td style={{ padding: "18px 20px", borderBottom: "1px solid var(--border-subtle)" }}>
                       <span
                         style={{
                           display: "inline-block",
                           padding: "4px 10px",
-                          color: r.enforced ? "var(--color-recovered)" : "var(--text-muted)",
-                          backgroundColor: r.enforced ? "rgba(16, 185, 129, 0.1)" : "var(--bg-elevated)",
+                          color: r.enforced ? "var(--status-recovered)" : "var(--text-muted)",
+                          backgroundColor: r.enforced ? "rgba(34, 201, 151, 0.12)" : "var(--bg-elevated)",
+                          border: `1px solid ${r.enforced ? "rgba(34, 201, 151, 0.3)" : "var(--border-subtle)"}`,
                           fontFamily: "var(--mono)",
                           fontSize: 10,
                           fontWeight: 600,

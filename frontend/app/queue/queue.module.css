@@ -141,10 +141,10 @@
 
 .pageHeadline {
   font-family: var(--display);
-  font-size: 2.4rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text-primary);
+  font-size: var(--t-headline);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-emphasis);
   margin: 0 0 6px;
 }
 
@@ -212,11 +212,11 @@
 }
 
 .attnTag {
-  font-family: var(--mono);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: var(--accent);
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
   display: block;
   margin-bottom: 4px;
 }
@@ -518,9 +518,9 @@
 
 .likelihoodTrack {
   width: 50px;
-  height: 4px;
-  background-color: var(--border-subtle);
-  border-radius: 2px;
+  height: 6px;
+  background-color: var(--border-strong);
+  border-radius: 3px;
   overflow: hidden;
 }
 

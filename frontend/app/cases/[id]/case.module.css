@@ -52,12 +52,39 @@
   color: var(--text-primary);
 }
 
+.customerHeaderName {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.casePrincipalHeader {
+  font-family: var(--mono);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-emphasis);
+  font-variant-numeric: tabular-nums;
+}
+
 .statusPill {
   font-family: var(--sans);
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 3px;
+}
+
+.riskTierHeaderBadge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background-color: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--status-pending);
 }
 
 .navRight {

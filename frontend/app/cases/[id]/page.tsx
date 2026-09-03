@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 import styles from "./case.module.css";
 
@@ -228,18 +229,18 @@ function formatCurrency(minor: number | null | undefined): string {
   return "₹" + Math.round(minor / 100).toLocaleString("en-IN");
 }
 
-const HUMAN_STATE_DESCRIPTIONS: Record<string, { label: string; actionHint: string; color: string; bg: string }> = {
-  open: { label: "Ingested", actionHint: "Classifying gateway error", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
-  classified: { label: "Diagnosed", actionHint: "Evaluating recovery policy", color: "var(--text-secondary)", bg: "var(--bg-elevated)" },
-  awaiting_action: { label: "Action Pending", actionHint: "Ready for payment reminder", color: "#0284c7", bg: "rgba(2, 132, 199, 0.1)" },
-  contacted: { label: "Debtor Contacted", actionHint: "WhatsApp delivery sent", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
-  awaiting_response: { label: "Awaiting Reply", actionHint: "Waiting on customer commitment", color: "#f59e0b", bg: "rgba(245, 158, 11, 0.1)" },
-  promise_recorded: { label: "Promise Committed", actionHint: "Debtor scheduled payment", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
-  human_review: { label: "Needs Operator Review", actionHint: "Dispute or manual escalation", color: "#f97316", bg: "rgba(249, 115, 22, 0.1)" },
-  paused: { label: "Temporarily Paused", actionHint: "Debtor requested grace period", color: "var(--text-muted)", bg: "var(--bg-elevated)" },
-  blocked: { label: "Compliance Blocked", actionHint: "Exceeded 3 contacts / 7d cap", color: "#ef4444", bg: "rgba(239, 68, 68, 0.1)" },
-  recovered: { label: "Settled & Verified", actionHint: "Bank remittance matched", color: "var(--color-recovered)", bg: "rgba(16, 185, 129, 0.1)" },
-  unrecoverable: { label: "Marked Bad Debt", actionHint: "Exhausted statutory rails", color: "var(--color-disallowed)", bg: "rgba(239, 68, 68, 0.1)" },
+const HUMAN_STATE_DESCRIPTIONS: Record<string, { label: string; actionHint: string; color: string; bg: string; border: string }> = {
+  open: { label: "Ingested", actionHint: "Classifying gateway error", color: "var(--text-secondary)", bg: "var(--bg-elevated)", border: "var(--border-subtle)" },
+  classified: { label: "Diagnosed", actionHint: "Evaluating recovery policy", color: "var(--text-secondary)", bg: "var(--bg-elevated)", border: "var(--border-subtle)" },
+  awaiting_action: { label: "Action Pending", actionHint: "Ready for payment reminder", color: "var(--status-pending)", bg: "rgba(196, 148, 58, 0.12)", border: "rgba(196, 148, 58, 0.3)" },
+  contacted: { label: "Debtor Contacted", actionHint: "WhatsApp delivery sent", color: "var(--status-pending)", bg: "rgba(196, 148, 58, 0.12)", border: "rgba(196, 148, 58, 0.3)" },
+  awaiting_response: { label: "Awaiting Reply", actionHint: "Waiting on customer commitment", color: "var(--status-pending)", bg: "rgba(196, 148, 58, 0.12)", border: "rgba(196, 148, 58, 0.3)" },
+  promise_recorded: { label: "Promise Committed", actionHint: "Debtor scheduled payment", color: "var(--status-recovered)", bg: "rgba(34, 201, 151, 0.12)", border: "rgba(34, 201, 151, 0.3)" },
+  human_review: { label: "Needs Operator Review", actionHint: "Dispute or manual escalation", color: "var(--status-warning)", bg: "rgba(138, 108, 196, 0.12)", border: "rgba(138, 108, 196, 0.3)" },
+  paused: { label: "Temporarily Paused", actionHint: "Debtor requested grace period", color: "var(--text-muted)", bg: "var(--bg-elevated)", border: "var(--border-subtle)" },
+  blocked: { label: "Compliance Blocked", actionHint: "Exceeded 3 contacts / 7d cap", color: "var(--status-disallowed)", bg: "rgba(232, 80, 80, 0.12)", border: "rgba(232, 80, 80, 0.3)" },
+  recovered: { label: "Settled & Verified", actionHint: "Bank remittance matched", color: "var(--status-recovered)", bg: "rgba(34, 201, 151, 0.12)", border: "rgba(34, 201, 151, 0.3)" },
+  unrecoverable: { label: "Marked Bad Debt", actionHint: "Exhausted statutory rails", color: "var(--status-disallowed)", bg: "rgba(232, 80, 80, 0.12)", border: "rgba(232, 80, 80, 0.3)" },
 };
 
 const TERMINAL_STATES = new Set(["recovered", "unrecoverable", "cancelled"]);
@@ -440,29 +441,45 @@ export default function CasePage() {
 
   return (
     <div className={styles.caseShell}>
-      {/* ── Top Header Bar ── */}
+      {/* ── Fixed Chapter Header Bar ── */}
       <nav className={styles.caseNav}>
         <div className={styles.navLeft}>
-          <Link href="/queue" className={styles.backLink}>← Portfolio Queue</Link>
+          <Link href="/queue" className={styles.backLink}>← Commercial Receivables</Link>
           <span className={styles.navDivider}>/</span>
           <span className={styles.caseInvoiceId}>{data.invoice_number ?? data.id.slice(0, 8)}</span>
+          <span className={styles.customerHeaderName}>{data.customer?.display_name ?? "—"}</span>
+          <span className={styles.casePrincipalHeader}>{formatCurrency(data.amount_minor)}</span>
           <span
             className={styles.statusPill}
-            style={{ color: stateMeta.color, backgroundColor: stateMeta.bg }}
+            style={{
+              color: stateMeta.color,
+              backgroundColor: stateMeta.bg,
+              border: `1px solid ${stateMeta.border || "transparent"}`,
+            }}
           >
             {stateMeta.label}
           </span>
+          {data.credit_risk_tier && (
+            <span className={styles.riskTierHeaderBadge}>
+              {data.credit_risk_tier.toUpperCase()} RISK
+            </span>
+          )}
         </div>
 
         <div className={styles.navRight}>
           <span className={styles.contactsRemaining}>
-            {data.contact_attempt_count} of 3 Allowed Weekly Contacts
+            {data.contact_attempt_count} / 3 Contacts (09:00–20:00 Window)
           </span>
         </div>
       </nav>
 
       {/* ── Permanent Financial Telemetry Strip ── */}
-      <section className={styles.financialStrip}>
+      <motion.section
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.25 }}
+        className={styles.financialStrip}
+      >
         <div className={styles.stripItem}>
           <span className={styles.stripLabel}>PRINCIPAL RECEIVABLE</span>
           <span className={styles.stripValue}>{formatCurrency(data.amount_minor)}</span>
@@ -523,7 +540,7 @@ export default function CasePage() {
             {probPct != null && probPct >= 65 ? "High Confidence" : "Moderate Risk"}
           </span>
         </div>
-      </section>
+      </motion.section>
 
       {/* Notifications */}
       {actionSuccess && (
@@ -574,7 +591,13 @@ export default function CasePage() {
           {activeTab === "dossier" && (
             <div className={styles.narrativeJourney}>
               {/* Chapter 1: The Commercial Receivable & Debtor */}
-              <div className={styles.narrativeCard}>
+              <motion.div
+                className={styles.narrativeCard}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35 }}
+              >
                 <div className={styles.cardHeader}>
                   <div>
                     <span className={styles.chapterNum}>CHAPTER 1 · THE COMMERCIAL RECEIVABLE</span>
@@ -611,10 +634,16 @@ export default function CasePage() {
                     <span className={styles.itemSub}>Due Date: {fmtDate(data.invoice?.due_at)}</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Chapter 2: The Gateway Payment Event */}
-              <div className={styles.narrativeCard}>
+              <motion.div
+                className={styles.narrativeCard}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: 0.05 }}
+              >
                 <div className={styles.cardHeader}>
                   <div>
                     <span className={styles.chapterNum}>CHAPTER 2 · PAYMENT GATEWAY DIAGNOSIS</span>
@@ -664,10 +693,16 @@ export default function CasePage() {
                 ) : (
                   <div className={styles.emptyNote}>Zero payment failures logged for this invoice.</div>
                 )}
-              </div>
+              </motion.div>
 
               {/* Chapter 3: The Debtor's Commitment (Hinglish Intelligence) */}
-              <div className={styles.narrativeCard}>
+              <motion.div
+                className={styles.narrativeCard}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: 0.1 }}
+              >
                 <div className={styles.cardHeader}>
                   <div>
                     <span className={styles.chapterNum}>CHAPTER 3 · DEBTOR CONVERSATION & COMMITMENT</span>
@@ -705,7 +740,7 @@ export default function CasePage() {
                           </div>
                           <div>
                             <span className={styles.itemLabel}>COMMITMENT CONFIDENCE</span>
-                            <span className={styles.itemValue} style={{ color: "var(--color-recovered)" }}>
+                            <span className={styles.itemValue} style={{ color: "var(--status-recovered)" }}>
                               {Math.round(p.confidence * 100)}% Intent Strength
                             </span>
                           </div>
@@ -713,9 +748,9 @@ export default function CasePage() {
                             <span className={styles.itemLabel}>ADHERENCE STATUS</span>
                             <span className={styles.itemValue}>
                               {p.is_broken ? (
-                                <span style={{ color: "var(--color-disallowed)" }}>Broken Commitment</span>
+                                <span style={{ color: "var(--status-disallowed)" }}>Broken Commitment</span>
                               ) : (
-                                <span style={{ color: "var(--color-recovered)" }}>Active Scheduled Promise</span>
+                                <span style={{ color: "var(--status-recovered)" }}>Active Scheduled Promise</span>
                               )}
                             </span>
                           </div>
@@ -728,10 +763,16 @@ export default function CasePage() {
                     No WhatsApp promise recorded yet. Dispatch a payment reminder from the action deck.
                   </div>
                 )}
-              </div>
+              </motion.div>
 
               {/* Chapter 4: Outbound Channels (WhatsApp HSM & NPCI UPI Intent) */}
-              <div className={styles.narrativeCard}>
+              <motion.div
+                className={styles.narrativeCard}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.35, delay: 0.15 }}
+              >
                 <div className={styles.cardHeader}>
                   <div>
                     <span className={styles.chapterNum}>CHAPTER 4 · DISPATCHED CHANNELS</span>
@@ -786,7 +827,7 @@ export default function CasePage() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </div>
           )}
 
