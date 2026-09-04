@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { soundbox } from "@/lib/soundbox";
 import styles from "./portal.module.css";
 
 type PortalData = {
@@ -80,6 +81,7 @@ export default function CustomerPortalPage({ params }: { params: Promise<{ token
   // Payment State
   const [payMethod, setPayMethod] = useState<"upi" | "netbanking" | "card">("upi");
   const [paying, setPaying] = useState(false);
+  const [copiedUtr, setCopiedUtr] = useState(false);
   const [payResult, setPayResult] = useState<{
     reference_number: string;
     amount_minor: number;
@@ -140,9 +142,11 @@ export default function CustomerPortalPage({ params }: { params: Promise<{ token
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.message || "Payment reconciliation failed.");
 
+      const settledAmount = resData.amount_minor || data.invoice.net_payable_minor || data.invoice.amount_minor;
+
       setPayResult({
         reference_number: resData.reference_number,
-        amount_minor: resData.amount_minor,
+        amount_minor: settledAmount,
         paid_at: resData.paid_at || new Date().toISOString(),
       });
       // Refresh local invoice status
@@ -158,6 +162,9 @@ export default function CustomerPortalPage({ params }: { params: Promise<{ token
           state: "recovered",
         },
       });
+
+      // Trigger Web Audio harmonic chime + bilingual speech synthesis announcement
+      soundbox.triggerSettlementCelebration(settledAmount, payMethod.toUpperCase());
     } catch (err: any) {
       setError(err.message || "Error processing payment.");
     } finally {
@@ -422,19 +429,79 @@ export default function CustomerPortalPage({ params }: { params: Promise<{ token
         {isFullyPaid ? (
           <section className={styles.actionSection}>
             <div className={styles.receiptScreen}>
-              <div className={styles.checkCircle}>✓</div>
-              <h2 className={styles.receiptTitle}>Invoice Fully Settled</h2>
-              <p style={{ color: "#8b949e", fontSize: "0.95rem", marginBottom: "12px" }}>
-                Commercial remittance has been reconciled and credit file cleared.
-              </p>
-              {payResult && (
-                <div>
-                  <div className={styles.receiptUtr}>UTR: {payResult.reference_number}</div>
-                  <div style={{ fontSize: "0.8rem", color: "#8b949e" }}>
-                    Timestamp: {formatDate(payResult.paid_at)}
-                  </div>
+              <div className={styles.sealContainer}>
+                <div className={styles.settlementSeal}>
+                  <div className={styles.sealIcon}>✓</div>
+                  <div className={styles.sealText}>VAADA VERIFIED</div>
                 </div>
-              )}
+              </div>
+
+              <h2 className={styles.receiptTitle}>Commercial Obligation Discharged</h2>
+              <p className={styles.receiptSubtitle}>
+                Remittance successfully reconciled through the Vaada settlement gateway. Both vendor accounts and debtor credit files are updated in real time.
+              </p>
+
+              <div className={styles.clearanceCard}>
+                <div className={styles.clearanceBadge}>
+                  <span>🏛️</span>
+                  <span>Statutory Compliance Cleared</span>
+                </div>
+                <p className={styles.clearanceText}>
+                  This settlement satisfies all covenants under <strong>Section 43B(h) of the Income Tax Act</strong> and <strong>Section 16 of the MSMED Act, 2006</strong>. Penal compound interest liability is extinguished.
+                </p>
+              </div>
+
+              <div className={styles.receiptMetaBox}>
+                <div className={styles.receiptUtr}>
+                  <span>UTR: {payResult ? payResult.reference_number : "RECON-SETTLED-DIRECT"}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ref = payResult ? payResult.reference_number : "RECON-SETTLED-DIRECT";
+                      navigator.clipboard.writeText(ref);
+                      setCopiedUtr(true);
+                      setTimeout(() => setCopiedUtr(false), 2000);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      color: copiedUtr ? "#3fb950" : "#8b949e",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                    }}
+                  >
+                    {copiedUtr ? "✓ Copied" : "📋 Copy"}
+                  </button>
+                </div>
+                <div className={styles.receiptTimestamp}>
+                  Settled on {formatDate(payResult ? payResult.paid_at : new Date().toISOString())}
+                </div>
+              </div>
+
+              <div className={styles.receiptActionRow}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const amt = payResult?.amount_minor || data.invoice.amount_minor;
+                    soundbox.playPaymentChime();
+                    soundbox.speakSettlementAnnouncement(amt, payMethod.toUpperCase());
+                  }}
+                  className={styles.btnSoundbox}
+                >
+                  <span>🔊</span>
+                  <span>Replay Soundbox Announcement</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className={styles.btnCertificate}
+                >
+                  <span>📄</span>
+                  <span>Download Clearance Certificate</span>
+                </button>
+              </div>
             </div>
           </section>
         ) : (

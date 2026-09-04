@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import DashboardNav from "@/components/DashboardNav";
 import styles from "./audit.module.css";
 
 type AuditEvent = {
@@ -102,23 +103,7 @@ export default function AuditPage() {
   return (
     <div className={styles.shell}>
       {/* Top Console Navigation */}
-      <nav className={styles.topNav}>
-        <div className={styles.navLeft}>
-          <Link href="/queue" className={styles.navBrand}>
-            <span>VAADA</span>
-            <span className={styles.navDevanagari}>वादा</span>
-          </Link>
-          <span className={styles.navDivider}>/</span>
-          <span className={styles.navTitle}>Audit Log</span>
-        </div>
-        <div className={styles.navRight}>
-          <Link href="/queue" className={styles.navLink}>Queue</Link>
-          <Link href="/analytics" className={styles.navLink}>Analytics</Link>
-          <Link href="/audit" className={`${styles.navLink} ${styles.navLinkActive}`}>Audit Log</Link>
-          <Link href="/settings" className={styles.navLink}>Compliance</Link>
-          <Link href="/razorpay-taxonomy" className={styles.navLink}>Taxonomy</Link>
-        </div>
-      </nav>
+      <DashboardNav title="Audit Trail" />
 
       <div className={styles.header}>
         <div>

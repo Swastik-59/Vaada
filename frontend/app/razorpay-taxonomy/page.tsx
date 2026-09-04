@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import DashboardNav from "@/components/DashboardNav";
 import styles from "./taxonomy.module.css";
 
 interface OfficialRecord {
@@ -166,32 +167,7 @@ export default function RazorpayTaxonomyPage() {
   return (
     <div className={styles.shell}>
       {/* Top Navigation */}
-      <nav className={styles.topNav}>
-        <div className={styles.navLeft}>
-          <Link href="/queue" className={styles.navMark}>
-            VAADA <span className={styles.navDevanagari}>वादा</span>
-          </Link>
-          <span className={styles.navSlash}>/</span>
-          <span className={styles.navSectionTitle}>RAZORPAY ERROR INTELLIGENCE</span>
-        </div>
-        <div className={styles.navLinks}>
-          <Link href="/queue" className={styles.navLink}>
-            ← Queue
-          </Link>
-          <Link href="/analytics" className={styles.navLink}>
-            Analytics
-          </Link>
-          <Link href="/audit" className={styles.navLink}>
-            Audit Trail
-          </Link>
-          <Link href="/settings" className={styles.navLink}>
-            Compliance Config
-          </Link>
-          <Link href="/razorpay-taxonomy" className={`${styles.navLink} ${styles.navLinkActive}`}>
-            Error Intelligence
-          </Link>
-        </div>
-      </nav>
+      <DashboardNav title="Gateway Taxonomy" />
 
       <div className={styles.container}>
         {/* Page Header */}

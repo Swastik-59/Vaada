@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
+import DashboardNav from "@/components/DashboardNav";
 
 type ComplianceConfig = {
   contact_window_start_hour: number;
@@ -46,57 +47,7 @@ export default function SettingsPage() {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "var(--bg-deep)", color: "var(--text-primary)" }}>
       {/* Top Console Navigation */}
-      <nav
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 40px",
-          height: 64,
-          borderBottom: "1px solid var(--border-subtle)",
-          backgroundColor: "var(--bg-surface)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "baseline", gap: 12 }}>
-          <Link
-            href="/queue"
-            style={{
-              fontFamily: "var(--display)",
-              fontSize: "1.2rem",
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-              color: "var(--text-emphasis)",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <span>VAADA</span>
-            <span style={{ fontFamily: "var(--devanagari)", color: "var(--accent-text)", fontSize: "1rem", fontWeight: 600 }}>वादा</span>
-          </Link>
-          <span style={{ color: "var(--border-strong)", fontSize: 12 }}>/</span>
-          <span style={{ fontFamily: "var(--sans)", fontSize: 13, fontWeight: 500, color: "var(--text-secondary)" }}>
-            Compliance Rules
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <Link href="/queue" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-secondary)" }}>
-            Queue
-          </Link>
-          <Link href="/analytics" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-secondary)" }}>
-            Analytics
-          </Link>
-          <Link href="/audit" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-secondary)" }}>
-            Audit Trail
-          </Link>
-          <Link href="/settings" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-primary)", fontWeight: 600 }}>
-            Compliance
-          </Link>
-          <Link href="/razorpay-taxonomy" style={{ fontFamily: "var(--sans)", fontSize: 13.5, color: "var(--text-secondary)" }}>
-            Taxonomy
-          </Link>
-        </div>
-      </nav>
+      <DashboardNav title="Compliance Rules" />
 
       <div style={{ padding: "48px 40px 24px", maxWidth: 1200, margin: "0 auto" }}>
         <div style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 600, color: "var(--accent)", letterSpacing: "0.1em", marginBottom: 8 }}>

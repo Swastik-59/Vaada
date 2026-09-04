@@ -1003,6 +1003,180 @@
   border-radius: 4px;
 }
 
+/* Hinglish Intake Test Bench in Chapter 3 */
+.hinglishIntakeBench {
+  margin-top: 24px;
+  padding: 18px 20px;
+  background: rgba(18, 22, 28, 0.7);
+  border: 1px solid rgba(88, 166, 255, 0.2);
+  border-radius: 8px;
+}
+
+.intakeHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.intakeTitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.intakeBadge {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #58a6ff;
+  background: rgba(88, 166, 255, 0.12);
+  border: 1px solid rgba(88, 166, 255, 0.25);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.presetChipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.presetChip {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.presetChip:hover {
+  border-color: #58a6ff;
+  color: #58a6ff;
+}
+
+.presetChipActive {
+  background: rgba(88, 166, 255, 0.18);
+  border-color: #58a6ff;
+  color: #58a6ff;
+  font-weight: 600;
+}
+
+.operatorHinglishTextarea {
+  width: 100%;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: #f0f6fc;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+  min-height: 52px;
+  margin-bottom: 10px;
+}
+
+.operatorHinglishTextarea:focus {
+  outline: none;
+  border-color: #58a6ff;
+}
+
+.tokenHighlightRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.tokenTag {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #8b949e;
+}
+
+.token_date {
+  background: rgba(88, 166, 255, 0.12);
+  border-color: rgba(88, 166, 255, 0.35);
+  color: #58a6ff;
+}
+
+.token_amount {
+  background: rgba(235, 179, 56, 0.12);
+  border-color: rgba(235, 179, 56, 0.35);
+  color: #ebb338;
+}
+
+.token_rail {
+  background: rgba(163, 113, 247, 0.12);
+  border-color: rgba(163, 113, 247, 0.35);
+  color: #a371f7;
+}
+
+.token_intent {
+  background: rgba(63, 185, 80, 0.12);
+  border-color: rgba(63, 185, 80, 0.35);
+  color: #3fb950;
+}
+
+.contractPreviewBox {
+  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid rgba(88, 166, 255, 0.25);
+  border-radius: 6px;
+  padding: 10px 14px;
+}
+
+.contractPreviewLabel {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8b949e;
+  margin-bottom: 4px;
+}
+
+.contractSummaryText {
+  font-size: 0.82rem;
+  color: #e6edf3;
+  line-height: 1.45;
+  margin-bottom: 6px;
+}
+
+.contractConfidenceMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.75rem;
+  color: #8b949e;
+}
+
+.miniVoiceBtn {
+  background: transparent;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.72rem;
+  color: #58a6ff;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.miniVoiceBtn:hover {
+  background: rgba(88, 166, 255, 0.15);
+  border-color: #58a6ff;
+}
+
 /* Responsive */
 @media (max-width: 1200px) {
   .financialStrip {

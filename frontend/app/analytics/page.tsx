@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
+import DashboardNav from "@/components/DashboardNav";
 import styles from "./analytics.module.css";
 
 type FunnelConversion = {
@@ -148,34 +149,7 @@ export default function AnalyticsPage() {
   return (
     <div className={styles.shell}>
       {/* ── Top Executive Navigation ── */}
-      <nav className={styles.topBar}>
-        <div className={styles.barLeft}>
-          <Link href="/" className={styles.brandMark}>
-            <span>VAADA</span>
-            <span className={styles.brandDevanagari}>वादा</span>
-          </Link>
-          <span className={styles.barDivider}>/</span>
-          <span className={styles.barTitle}>Institutional Analytics</span>
-        </div>
-
-        <div className={styles.barRight}>
-          <Link href="/queue" className={styles.barNavLink}>Operations Console</Link>
-          <Link href="/analytics" className={styles.barNavLinkActive}>Portfolio Analytics</Link>
-          <Link href="/audit" className={styles.barNavLink}>Audit Log</Link>
-          <Link href="/settings" className={styles.barNavLink}>Compliance Rules</Link>
-          <Link href="/razorpay-taxonomy" className={styles.barNavLink}>Gateway Taxonomy</Link>
-
-          {user ? (
-            <div className={styles.userProfilePill}>
-              <span className={styles.userDot} />
-              <span className={styles.userEmail}>{user.email}</span>
-              <span className={styles.userRoleTag}>{user.role}</span>
-            </div>
-          ) : (
-            <Link href="/login" className={styles.signInLink}>Sign In</Link>
-          )}
-        </div>
-      </nav>
+      <DashboardNav title="Institutional Analytics" user={user} />
 
       {/* ── Workspace ── */}
       <main className={styles.workspace}>

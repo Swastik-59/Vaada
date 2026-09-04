@@ -3,14 +3,19 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-export default function HeroScene() {
+interface HeroSceneProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export default function HeroScene({ className, style }: HeroSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Detect WebGL support
+    // WebGL support check
     try {
       const testCanvas = document.createElement("canvas");
       const gl = testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl");
@@ -19,20 +24,23 @@ export default function HeroScene() {
       return;
     }
 
+    // Motion preference
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     let isVisible = true;
     let animationFrameId: number;
 
-    // 1. Scene & Camera
+    // 1. Scene, Camera & Tone
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x07080a, 0.045);
+    scene.fog = new THREE.FogExp2(0x07080a, 0.04);
 
     const width = container.clientWidth || window.innerWidth;
-    const height = container.clientHeight || 600;
+    const height = container.clientHeight || 520;
 
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    camera.position.set(0, 0, 14);
+    const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
+    camera.position.set(0, 0, 16.5);
 
-    // 2. Renderer
+    // 2. Renderer with High Dynamic Range Tone Mapping
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
       antialias: true,
@@ -41,158 +49,235 @@ export default function HeroScene() {
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = 1.3;
 
-    // Clear previous children
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
     container.appendChild(renderer.domElement);
 
-    // 3. Financial Network Nodes (Institutions / Rails / Clocks)
-    const nodeCount = 36;
-    const nodePositions: THREE.Vector3[] = [];
-    const group = new THREE.Group();
-    scene.add(group);
+    // 3. Lighting Architecture (Cinematic Warm Gold & Emerald Lighting)
+    const ambientLight = new THREE.AmbientLight(0x0a101d, 1.6);
+    scene.add(ambientLight);
 
-    // Golden / Copper amber and emerald materials
-    const amberMaterial = new THREE.MeshBasicMaterial({
+    const goldCoreLight = new THREE.PointLight(0xe09f3e, 3.2, 22);
+    goldCoreLight.position.set(0, 0, 0);
+    scene.add(goldCoreLight);
+
+    const emeraldRimLight = new THREE.PointLight(0x22c997, 2.2, 24);
+    emeraldRimLight.position.set(5, 4, 6);
+    scene.add(emeraldRimLight);
+
+    const cyanCounterLight = new THREE.PointLight(0x38bdf8, 1.8, 24);
+    cyanCounterLight.position.set(-6, -3, 4);
+    scene.add(cyanCounterLight);
+
+    // 4. Main Scene Root Graph
+    const masterGroup = new THREE.Group();
+    scene.add(masterGroup);
+
+    // ── ASTROLABE GIMBAL RINGS ──────────────────────────────────────
+    const ringsGroup = new THREE.Group();
+    masterGroup.add(ringsGroup);
+
+    const createGimbalRing = (radius: number, tubeRadius: number, colorHex: number, opacity: number) => {
+      const ringGeo = new THREE.TorusGeometry(radius, tubeRadius, 16, 100);
+      const ringMat = new THREE.MeshStandardMaterial({
+        color: colorHex,
+        emissive: colorHex,
+        emissiveIntensity: 0.35,
+        roughness: 0.25,
+        metalness: 0.85,
+        transparent: true,
+        opacity: opacity,
+      });
+      return new THREE.Mesh(ringGeo, ringMat);
+    };
+
+    // Outer Primary Ring (Corporate RTGS Rail)
+    const outerRing = createGimbalRing(6.2, 0.024, 0xe09f3e, 0.85);
+    ringsGroup.add(outerRing);
+
+    // Middle Interlocking Ring (UPI Autopay Rail - Tilted)
+    const midRing = createGimbalRing(5.1, 0.022, 0x22c997, 0.75);
+    midRing.rotation.x = Math.PI / 3.2;
+    midRing.rotation.y = Math.PI / 5;
+    ringsGroup.add(midRing);
+
+    // Inner Regulatory Ring (Section 43B(h) MSME Clock)
+    const innerRing = createGimbalRing(4.0, 0.018, 0x38bdf8, 0.7);
+    innerRing.rotation.x = -Math.PI / 4;
+    innerRing.rotation.z = Math.PI / 6;
+    ringsGroup.add(innerRing);
+
+    // Radial Tick Notches on Outer Ring (Precision Coordinate Marks)
+    const tickMarksGroup = new THREE.Group();
+    ringsGroup.add(tickMarksGroup);
+    const tickMat = new THREE.LineBasicMaterial({
       color: 0xe09f3e,
-      wireframe: false,
+      transparent: true,
+      opacity: 0.45,
+      blending: THREE.AdditiveBlending,
     });
-    const emeraldMaterial = new THREE.MeshBasicMaterial({
-      color: 0x22c997,
-      wireframe: false,
-    });
-    const slateMaterial = new THREE.MeshBasicMaterial({
-      color: 0x4a5568,
-      wireframe: false,
-    });
-
-    const sphereGeo = new THREE.SphereGeometry(0.12, 16, 16);
-    const largeSphereGeo = new THREE.SphereGeometry(0.22, 16, 16);
-
-    for (let i = 0; i < nodeCount; i++) {
-      // Distribute nodes in a toroidal/elliptical cloud
-      const theta = (i / nodeCount) * Math.PI * 2;
-      const radius = 4.2 + (Math.sin(i * 3.5) * 1.5);
-      const x = Math.cos(theta) * radius;
-      const y = (Math.sin(theta * 2.2) * 1.8) + (Math.cos(i * 1.7) * 0.8);
-      const z = (Math.sin(theta) * radius * 0.7) - 2;
-
-      const pos = new THREE.Vector3(x, y, z);
-      nodePositions.push(pos);
-
-      // Major hub nodes
-      const isMajor = i % 5 === 0;
-      const mesh = new THREE.Mesh(
-        isMajor ? largeSphereGeo : sphereGeo,
-        isMajor ? (i % 2 === 0 ? amberMaterial : emeraldMaterial) : slateMaterial
+    const tickGeo = new THREE.BufferGeometry();
+    const tickPoints: THREE.Vector3[] = [];
+    const tickCount = 48;
+    for (let i = 0; i < tickCount; i++) {
+      const angle = (i / tickCount) * Math.PI * 2;
+      const r1 = 6.08;
+      const r2 = i % 4 === 0 ? 6.36 : 6.24;
+      tickPoints.push(
+        new THREE.Vector3(Math.cos(angle) * r1, Math.sin(angle) * r1, 0),
+        new THREE.Vector3(Math.cos(angle) * r2, Math.sin(angle) * r2, 0)
       );
-      mesh.position.copy(pos);
-      group.add(mesh);
     }
+    tickGeo.setFromPoints(tickPoints);
+    const tickLines = new THREE.LineSegments(tickGeo, tickMat);
+    tickMarksGroup.add(tickLines);
 
-    // 4. Rail Interconnections (Lines)
-    const lineMaterial = new THREE.LineBasicMaterial({
+    // ── THE QUANTUM LEDGER CORE (POLYHEDRAL VAULT) ─────────────────
+    const coreGroup = new THREE.Group();
+    masterGroup.add(coreGroup);
+
+    // Outer Wireframe Stellate Icosahedron
+    const coreOuterGeo = new THREE.IcosahedronGeometry(1.25, 1);
+    const wireframeMat = new THREE.MeshBasicMaterial({
       color: 0xe09f3e,
+      wireframe: true,
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.65,
       blending: THREE.AdditiveBlending,
     });
+    const coreOuterMesh = new THREE.Mesh(coreOuterGeo, wireframeMat);
+    coreGroup.add(coreOuterMesh);
 
-    const linePoints: THREE.Vector3[] = [];
-    for (let i = 0; i < nodeCount; i++) {
-      for (let j = i + 1; j < nodeCount; j++) {
-        const dist = nodePositions[i].distanceTo(nodePositions[j]);
-        if (dist < 2.8) {
-          linePoints.push(nodePositions[i]);
-          linePoints.push(nodePositions[j]);
-        }
+    // Inner Glowing Crystalline Octahedron
+    const coreInnerGeo = new THREE.OctahedronGeometry(0.85, 0);
+    const coreInnerMat = new THREE.MeshStandardMaterial({
+      color: 0x22c997,
+      emissive: 0x22c997,
+      emissiveIntensity: 0.9,
+      roughness: 0.1,
+      metalness: 0.9,
+      transparent: true,
+      opacity: 0.85,
+    });
+    const coreInnerMesh = new THREE.Mesh(coreInnerGeo, coreInnerMat);
+    coreGroup.add(coreInnerMesh);
+
+    // ── HIGH-SPEED SETTLEMENT PARTICLE RAILS ───────────────────────
+    const createRailParticles = (count: number, colorHex: number, radiusX: number, radiusY: number, tiltZ: number) => {
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const phase = new Float32Array(count);
+      const speeds = new Float32Array(count);
+
+      for (let i = 0; i < count; i++) {
+        phase[i] = (i / count) * Math.PI * 2;
+        speeds[i] = 0.007 + Math.random() * 0.012;
+        const x = Math.cos(phase[i]) * radiusX;
+        const y = Math.sin(phase[i]) * radiusY;
+        const z = Math.sin(phase[i] * 2) * 0.8;
+        pos[i * 3] = x;
+        pos[i * 3 + 1] = y;
+        pos[i * 3 + 2] = z;
       }
+
+      geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+
+      // Circular glowing particle texture
+      const pCanvas = document.createElement("canvas");
+      pCanvas.width = 32;
+      pCanvas.height = 32;
+      const pCtx = pCanvas.getContext("2d");
+      if (pCtx) {
+        const radGrad = pCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+        radGrad.addColorStop(0, "rgba(255, 255, 255, 1)");
+        radGrad.addColorStop(0.25, `rgba(${colorHex >> 16}, ${(colorHex >> 8) & 255}, ${colorHex & 255}, 0.9)`);
+        radGrad.addColorStop(0.7, `rgba(${colorHex >> 16}, ${(colorHex >> 8) & 255}, ${colorHex & 255}, 0.2)`);
+        radGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        pCtx.fillStyle = radGrad;
+        pCtx.fillRect(0, 0, 32, 32);
+      }
+      const pTexture = new THREE.CanvasTexture(pCanvas);
+
+      const mat = new THREE.PointsMaterial({
+        size: 0.26,
+        map: pTexture,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+
+      const points = new THREE.Points(geo, mat);
+      points.rotation.z = tiltZ;
+      return { points, geo, phase, speeds, radiusX, radiusY };
+    };
+
+    const railGold = createRailParticles(100, 0xe09f3e, 6.2, 4.5, 0.35);
+    masterGroup.add(railGold.points);
+
+    const railEmerald = createRailParticles(90, 0x22c997, 5.1, 5.1, -0.6);
+    masterGroup.add(railEmerald.points);
+
+    const railCyan = createRailParticles(80, 0x38bdf8, 4.0, 3.2, 1.1);
+    masterGroup.add(railCyan.points);
+
+    // ── AMBIENT PARTICLES ──────────────────────────────────────────
+    const starCount = 240;
+    const starGeo = new THREE.BufferGeometry();
+    const starPos = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      starPos[i * 3] = (Math.random() - 0.5) * 26;
+      starPos[i * 3 + 1] = (Math.random() - 0.5) * 16;
+      starPos[i * 3 + 2] = (Math.random() - 0.5) * 12 - 2;
     }
-
-    const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-    const networkLines = new THREE.LineSegments(lineGeometry, lineMaterial);
-    group.add(networkLines);
-
-    // 5. Floating Remittance Particle Swarm (Transactions in Flight)
-    const particleCount = 180;
-    const particleGeometry = new THREE.BufferGeometry();
-    const particlePosArray = new Float32Array(particleCount * 3);
-    const particleSpeeds = new Float32Array(particleCount);
-
-    for (let i = 0; i < particleCount; i++) {
-      const idx = i * 3;
-      particlePosArray[idx] = (Math.random() - 0.5) * 14;
-      particlePosArray[idx + 1] = (Math.random() - 0.5) * 7;
-      particlePosArray[idx + 2] = (Math.random() - 0.5) * 8;
-      particleSpeeds[i] = 0.005 + Math.random() * 0.015;
-    }
-
-    particleGeometry.setAttribute("position", new THREE.BufferAttribute(particlePosArray, 3));
-
-    // Particle texture
-    const pCanvas = document.createElement("canvas");
-    pCanvas.width = 16;
-    pCanvas.height = 16;
-    const pCtx = pCanvas.getContext("2d");
-    if (pCtx) {
-      const grad = pCtx.createRadialGradient(8, 8, 0, 8, 8, 8);
-      grad.addColorStop(0, "rgba(224, 159, 62, 1)");
-      grad.addColorStop(0.5, "rgba(224, 159, 62, 0.4)");
-      grad.addColorStop(1, "rgba(0, 0, 0, 0)");
-      pCtx.fillStyle = grad;
-      pCtx.fillRect(0, 0, 16, 16);
-    }
-    const particleTexture = new THREE.CanvasTexture(pCanvas);
-
-    const particleMaterial = new THREE.PointsMaterial({
-      size: 0.18,
-      map: particleTexture,
+    starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
+    const starMat = new THREE.PointsMaterial({
+      size: 0.07,
+      color: 0x8a97af,
       transparent: true,
+      opacity: 0.4,
       blending: THREE.AdditiveBlending,
-      depthWrite: false,
     });
+    const starPoints = new THREE.Points(starGeo, starMat);
+    scene.add(starPoints);
 
-    const particles = new THREE.Points(particleGeometry, particleMaterial);
-    group.add(particles);
-
-    // 6. Subtle Mouse Interaction
+    // ── SMOOTH POINTER PARALLAX & PHYSICS ──────────────────────────
     let mouseX = 0;
     let mouseY = 0;
     let targetRotationX = 0;
     let targetRotationY = 0;
 
-    const onMouseMove = (e: MouseEvent) => {
+    const onPointerMove = (e: MouseEvent) => {
       const halfW = window.innerWidth / 2;
       const halfH = window.innerHeight / 2;
       mouseX = (e.clientX - halfW) / halfW;
       mouseY = (e.clientY - halfH) / halfH;
       targetRotationY = mouseX * 0.35;
-      targetRotationX = mouseY * 0.2;
+      targetRotationX = mouseY * 0.22;
     };
-    window.addEventListener("mousemove", onMouseMove, { passive: true });
+    window.addEventListener("mousemove", onPointerMove, { passive: true });
 
-    // 7. Handle Resize
+    // Handle Resize
     const onResize = () => {
       if (!container) return;
       const newW = container.clientWidth || window.innerWidth;
-      const newH = container.clientHeight || 600;
+      const newH = container.clientHeight || 520;
       camera.aspect = newW / newH;
       camera.updateProjectionMatrix();
       renderer.setSize(newW, newH);
     };
     window.addEventListener("resize", onResize);
 
-    // 8. Intersection Observer to pause when scrolled out of view
+    // Intersection Observer to pause when off-screen
     const observer = new IntersectionObserver(([entry]) => {
       isVisible = entry.isIntersecting;
     });
     observer.observe(container);
 
-    // 9. Animation Loop
-    let clock = new THREE.Clock();
+    // ── ANIMATION LOOP ─────────────────────────────────────────────
+    const clock = new THREE.Clock();
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate);
@@ -201,24 +286,53 @@ export default function HeroScene() {
       const delta = clock.getDelta();
       const elapsed = clock.getElapsedTime();
 
-      // Smooth group rotation with mouse dampening
-      group.rotation.y += (targetRotationY - group.rotation.y) * 0.04;
-      group.rotation.x += (targetRotationX - group.rotation.x) * 0.04;
-      group.rotation.y += delta * 0.05; // continuous idle orbit
-
-      // Gentle floating oscillation
-      group.position.y = Math.sin(elapsed * 0.8) * 0.15;
-
-      // Animate particles along flow
-      const positions = particleGeometry.attributes.position.array as Float32Array;
-      for (let i = 0; i < particleCount; i++) {
-        const idx = i * 3;
-        positions[idx] += particleSpeeds[i];
-        if (positions[idx] > 7) {
-          positions[idx] = -7;
-        }
+      if (prefersReducedMotion) {
+        renderer.render(scene, camera);
+        return;
       }
-      particleGeometry.attributes.position.needsUpdate = true;
+
+      // Smooth camera dampening with cursor physics
+      masterGroup.rotation.y += (targetRotationY - masterGroup.rotation.y) * 0.045;
+      masterGroup.rotation.x += (targetRotationX - masterGroup.rotation.x) * 0.045;
+
+      // Differential Planetary Ring Rotation
+      outerRing.rotation.z += delta * 0.1;
+      midRing.rotation.y += delta * 0.14;
+      midRing.rotation.x += delta * 0.06;
+      innerRing.rotation.z -= delta * 0.18;
+      innerRing.rotation.y += delta * 0.12;
+      tickMarksGroup.rotation.z += delta * 0.1;
+
+      // Core Geometric Rotation & Pulse
+      coreOuterMesh.rotation.y -= delta * 0.35;
+      coreOuterMesh.rotation.x += delta * 0.2;
+      coreInnerMesh.rotation.y += delta * 0.45;
+      coreInnerMesh.rotation.z -= delta * 0.28;
+
+      const coreBreath = 1 + Math.sin(elapsed * 2.2) * 0.06;
+      coreOuterMesh.scale.set(coreBreath, coreBreath, coreBreath);
+      coreInnerMesh.scale.set(1 / coreBreath, 1 / coreBreath, 1 / coreBreath);
+
+      // Particle Rails Propagation
+      const updateRail = (rail: ReturnType<typeof createRailParticles>, speedMultiplier: number) => {
+        const positions = rail.geo.attributes.position.array as Float32Array;
+        const count = rail.phase.length;
+        for (let i = 0; i < count; i++) {
+          rail.phase[i] += rail.speeds[i] * speedMultiplier;
+          const angle = rail.phase[i];
+          positions[i * 3] = Math.cos(angle) * rail.radiusX;
+          positions[i * 3 + 1] = Math.sin(angle) * rail.radiusY;
+          positions[i * 3 + 2] = Math.sin(angle * 2) * 0.8;
+        }
+        rail.geo.attributes.position.needsUpdate = true;
+      };
+
+      updateRail(railGold, 1.0);
+      updateRail(railEmerald, 1.12);
+      updateRail(railCyan, 0.9);
+
+      // Ambient Stellar Rotation
+      starPoints.rotation.y = elapsed * 0.012;
 
       renderer.render(scene, camera);
     };
@@ -228,18 +342,32 @@ export default function HeroScene() {
     return () => {
       cancelAnimationFrame(animationFrameId);
       observer.disconnect();
-      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mousemove", onPointerMove);
       window.removeEventListener("resize", onResize);
+
+      // Clean disposal
       renderer.dispose();
-      lineGeometry.dispose();
-      sphereGeo.dispose();
-      largeSphereGeo.dispose();
-      particleGeometry.dispose();
-      amberMaterial.dispose();
-      emeraldMaterial.dispose();
-      slateMaterial.dispose();
-      lineMaterial.dispose();
-      particleMaterial.dispose();
+      outerRing.geometry.dispose();
+      (outerRing.material as THREE.Material).dispose();
+      midRing.geometry.dispose();
+      (midRing.material as THREE.Material).dispose();
+      innerRing.geometry.dispose();
+      (innerRing.material as THREE.Material).dispose();
+      tickGeo.dispose();
+      tickMat.dispose();
+      coreOuterGeo.dispose();
+      wireframeMat.dispose();
+      coreInnerGeo.dispose();
+      coreInnerMat.dispose();
+      railGold.geo.dispose();
+      (railGold.points.material as THREE.Material).dispose();
+      railEmerald.geo.dispose();
+      (railEmerald.points.material as THREE.Material).dispose();
+      railCyan.geo.dispose();
+      (railCyan.points.material as THREE.Material).dispose();
+      starGeo.dispose();
+      starMat.dispose();
+
       if (container.contains(renderer.domElement)) {
         container.removeChild(renderer.domElement);
       }
@@ -248,19 +376,27 @@ export default function HeroScene() {
 
   return (
     <div
-      ref={containerRef}
+      className={className}
       style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
+        position: "relative",
         width: "100%",
         height: "100%",
-        pointerEvents: "none",
-        zIndex: 1,
-        opacity: 0.85,
+        minHeight: "480px",
         overflow: "hidden",
+        ...style,
       }}
-      aria-hidden="true"
-    />
+    >
+      <div
+        ref={containerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
+        aria-label="Interactive 3D representation of Vaada's financial recovery rails"
+      />
+    </div>
   );
 }

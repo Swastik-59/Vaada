@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { apiFetch } from "@/lib/api";
+import { soundbox } from "@/lib/soundbox";
+import { parseHinglishCommitment, HINGLISH_SANDBOX_PRESETS } from "@/lib/hinglishParser";
+import DashboardNav from "@/components/DashboardNav";
 import styles from "./case.module.css";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -270,6 +273,12 @@ export default function CasePage() {
   const [payUtr, setPayUtr] = useState("UTR" + Math.floor(1000000000 + Math.random() * 9000000000));
   const [copiedUpi, setCopiedUpi] = useState(false);
 
+  // Debtor Hinglish Intake Simulator Bench
+  const [operatorHinglishInput, setOperatorHinglishInput] = useState(
+    HINGLISH_SANDBOX_PRESETS[0].text
+  );
+  const parsedOperatorHinglish = parseHinglishCommitment(operatorHinglishInput);
+
   // Progressive Disclosure Trays
   const [showRawPayload, setShowRawPayload] = useState(false);
   const [showDecisionDag, setShowDecisionDag] = useState(false);
@@ -372,6 +381,7 @@ export default function CasePage() {
       setData(res.case);
       setShowPaymentModal(false);
       setActionSuccess("Bank remittance matched and ledger reconciled.");
+      soundbox.triggerSettlementCelebration(amountPaise, "Bank UTR Remittance");
     } catch (err) {
       setActionError(err instanceof Error ? err.message : "Payment recording failed");
     } finally {
@@ -441,6 +451,7 @@ export default function CasePage() {
 
   return (
     <div className={styles.caseShell}>
+      <DashboardNav title="Case Dossier" />
       {/* ── Fixed Chapter Header Bar ── */}
       <nav className={styles.caseNav}>
         <div className={styles.navLeft}>
@@ -763,6 +774,81 @@ export default function CasePage() {
                     No WhatsApp promise recorded yet. Dispatch a payment reminder from the action deck.
                   </div>
                 )}
+
+                {/* Interactive Debtor Hinglish Commitment Simulator */}
+                <div className={styles.hinglishIntakeBench}>
+                  <div className={styles.intakeHeaderRow}>
+                    <span className={styles.intakeTitle}>
+                      <span>🧠</span> Debtor Commitment Simulator (Hinglish Engine)
+                    </span>
+                    <span className={styles.intakeBadge}>Live NLP Intake</span>
+                  </div>
+
+                  <div className={styles.presetChipsRow}>
+                    {HINGLISH_SANDBOX_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => setOperatorHinglishInput(preset.text)}
+                        className={`${styles.presetChip} ${
+                          operatorHinglishInput === preset.text ? styles.presetChipActive : ""
+                        }`}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <textarea
+                    rows={2}
+                    value={operatorHinglishInput}
+                    onChange={(e) => setOperatorHinglishInput(e.target.value)}
+                    className={styles.operatorHinglishTextarea}
+                    placeholder="Type or paste debtor WhatsApp reply in Hindi / Hinglish..."
+                  />
+
+                  <div className={styles.tokenHighlightRow}>
+                    {parsedOperatorHinglish.tokens.map((token, i) => (
+                      <span
+                        key={i}
+                        className={`${styles.tokenTag} ${styles[`token_${token.type}`] || ""}`}
+                      >
+                        {token.text}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className={styles.contractPreviewBox}>
+                    <div className={styles.contractPreviewLabel}>
+                      SYNTHESIZED SETTLEMENT OBLIGATION
+                    </div>
+                    <div className={styles.contractSummaryText}>
+                      Pledged remittance of <strong>{parsedOperatorHinglish.amount}</strong> via{" "}
+                      <strong>{parsedOperatorHinglish.rail}</strong> scheduled for{" "}
+                      <strong>{parsedOperatorHinglish.date}</strong>. Policy action:{" "}
+                      <em>{parsedOperatorHinglish.action}</em>.
+                    </div>
+                    <div className={styles.contractConfidenceMeta}>
+                      <span>Confidence: {parsedOperatorHinglish.confidenceScore.toFixed(1)}%</span>
+                      <span>·</span>
+                      <span>Rail: {parsedOperatorHinglish.rail}</span>
+                      <span>·</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const amtMinor = (parsedOperatorHinglish.amountNumeric || 0) * 100 || (data.amount_minor || 0);
+                          soundbox.speakSettlementAnnouncement(
+                            amtMinor,
+                            parsedOperatorHinglish.rail
+                          );
+                        }}
+                        className={styles.miniVoiceBtn}
+                      >
+                        🔊 Hear Gateway Voice
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
 
               {/* Chapter 4: Outbound Channels (WhatsApp HSM & NPCI UPI Intent) */}

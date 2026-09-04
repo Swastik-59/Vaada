@@ -1,0 +1,193 @@
+/* ============================================================
+   Unified Dashboard Executive Navigation Bar
+   Used across all operational surfaces:
+   /queue, /analytics, /audit, /settings, /razorpay-taxonomy, /cases
+   ============================================================ */
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 36px;
+  height: 64px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.barLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandMark {
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-emphasis);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  transition: transform 0.15s ease;
+}
+
+.brandMark:hover {
+  transform: translateY(-1px);
+}
+
+.brandDevanagari {
+  font-family: var(--devanagari);
+  color: var(--accent);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.barDivider {
+  color: var(--border-strong);
+  font-size: 13px;
+}
+
+.barTitle {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.barCenter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barNavLink {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.barNavLink:hover {
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+}
+
+.barNavLinkActive {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: rgba(224, 159, 62, 0.12);
+  border: 1px solid rgba(224, 159, 62, 0.35);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.barRight {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.userProfilePill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-family: var(--mono);
+  font-size: 11px;
+}
+
+.userDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--status-recovered);
+  box-shadow: 0 0 6px var(--status-recovered);
+}
+
+.userEmail {
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.userRoleTag {
+  color: var(--accent-text);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(224, 159, 62, 0.15);
+  border: 1px solid rgba(224, 159, 62, 0.3);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.signOutBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-family: var(--sans);
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+}
+
+.signOutBtn:hover {
+  color: var(--status-disallowed);
+}
+
+.signInLink {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 4px;
+  background: rgba(224, 159, 62, 0.1);
+  border: 1px solid rgba(224, 159, 62, 0.3);
+  transition: all 0.15s ease;
+}
+
+.signInLink:hover {
+  background: rgba(224, 159, 62, 0.2);
+}
+
+@media (max-width: 1024px) {
+  .topBar {
+    padding: 0 20px;
+  }
+  .barCenter {
+    gap: 4px;
+  }
+  .barNavLink,
+  .barNavLinkActive {
+    padding: 5px 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .barCenter {
+    display: none;
+  }
+}

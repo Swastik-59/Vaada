@@ -1,15 +1,18 @@
 /* ============================================================
-   Landing Experience — Cinematic Narrative & Product Reality
+   VAADA — Editorial & Cinematic Landing Narrative
+   Typography & Color Restraint (/better-typography /better-colors)
    ============================================================ */
 
 .landingWrapper {
   background-color: var(--bg-deep);
   color: var(--text-primary);
   min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
 }
 
 .container {
-  max-width: 1240px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 40px;
   position: relative;
@@ -21,32 +24,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 48px;
-  height: 72px;
-  background-color: var(--bg-deep);
+  padding: 0 40px;
+  height: 70px;
+  background: rgba(7, 8, 10, 0.88);
+  backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--border-subtle);
   position: sticky;
   top: 0;
-  z-index: 50;
-  transition: border-color 0.2s ease;
+  z-index: 100;
 }
 
 .mastheadLeft {
   display: flex;
-  align-items: baseline;
-  gap: 16px;
+  align-items: center;
+  gap: 18px;
 }
 
 .brandMark {
   font-family: var(--display);
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   font-weight: 700;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   color: var(--text-emphasis);
   display: flex;
   align-items: center;
   gap: 8px;
-  transition: transform 0.2s ease;
+  text-decoration: none;
+  transition: transform 0.15s ease;
 }
 
 .brandMark:hover {
@@ -55,52 +59,50 @@
 
 .brandDevanagari {
   font-family: var(--devanagari);
-  color: var(--accent-text);
-  font-size: 1.1rem;
+  color: var(--accent);
+  font-size: 1.15rem;
   font-weight: 600;
 }
 
-.brandTagline {
+.regulatoryWindowPill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 4px 12px;
+  border-radius: 9999px;
   font-family: var(--sans);
-  font-size: 12px;
-  color: var(--text-muted);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.windowDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--status-recovered);
+  box-shadow: 0 0 6px var(--status-recovered);
 }
 
 .mastheadNav {
   display: flex;
   align-items: center;
-  gap: 32px;
+  gap: 28px;
 }
 
 .navLink {
   font-family: var(--sans);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-secondary);
-  position: relative;
+  text-decoration: none;
   transition: color 0.15s ease;
-  padding-bottom: 2px;
+  padding: 4px 0;
 }
 
 .navLink:hover {
   color: var(--text-primary);
-}
-
-.navLink::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 100%;
-  height: 1.5px;
-  background-color: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.2s var(--ease-spring);
-}
-
-.navLink:hover::after {
-  transform: scaleX(1);
 }
 
 .launchConsoleBtn {
@@ -111,751 +113,1184 @@
   background-color: var(--accent);
   padding: 8px 18px;
   border-radius: 4px;
-  letter-spacing: 0.02em;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .launchConsoleBtn:hover {
   background-color: var(--accent-hover);
-  transform: scale(1.02);
+  transform: translateY(-1px);
 }
 
-.launchConsoleBtn:active {
-  transform: scale(0.98);
-}
-
-/* ── Scene 1: Hero Scene (Split Composition) ── */
-.heroScene {
-  padding: 80px 0 60px;
-  border-bottom: 1px solid var(--border-subtle);
+/* ── Hero Stage: 3D Astrolabe with Text Layered Elegantly On Top ── */
+.heroSection {
+  min-height: calc(100vh - 70px);
   position: relative;
-  min-height: calc(100vh - 72px);
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
-
-.heroSplitGrid {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  gap: 64px;
   align-items: center;
+  padding: 40px 0 60px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.heroLeft {
+.heroSceneBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.heroVignetteOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 48%,
+    rgba(7, 8, 10, 0.52) 0%,
+    rgba(7, 8, 10, 0.28) 45%,
+    rgba(7, 8, 10, 0.94) 100%
+  );
+}
+
+.heroEditorialOverlay {
+  position: relative;
+  z-index: 2;
+  max-width: 960px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  text-align: center;
+  padding: 0 20px;
 }
 
-.liveClock {
-  font-family: var(--mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  display: flex;
+.brandPillTag {
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 24px;
-  padding: 4px 10px;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: rgba(7, 8, 10, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(224, 159, 62, 0.3);
+  padding: 5px 14px;
+  border-radius: 9999px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
-.clockPulseDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--status-recovered);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% { opacity: 0.4; }
-  50% { opacity: 1; }
-  100% { opacity: 0.4; }
-}
-
-.heroTitle {
+.heroQuote {
+  margin: 0 0 16px;
+  padding: 0;
+  border: none;
   font-family: var(--display);
-  font-size: var(--t-hero);
+  font-size: clamp(2rem, 3.4vw, 3rem);
   font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  color: var(--text-emphasis);
-  margin: 0 0 24px;
-  font-variant-numeric: tabular-nums;
+  line-height: 1.22;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, 0.95), 0 4px 40px rgba(7, 8, 10, 0.98);
+  text-wrap: balance;
 }
 
-.heroOverdueText {
-  color: var(--text-secondary);
-  font-weight: 500;
+.heroQuoteEmphasis {
+  color: #ffd27a;
+  -webkit-text-fill-color: #ffd27a;
+  display: inline;
+  font-weight: 800;
+  text-shadow: 0 0 28px rgba(224, 159, 62, 0.75), 0 2px 8px rgba(0, 0, 0, 0.9);
 }
 
-.heroSubText {
+.heroExplanation {
   font-family: var(--sans);
-  font-size: var(--t-body-lg);
-  font-weight: 400;
-  line-height: 1.6;
-  color: var(--text-secondary);
-  max-width: 520px;
-  margin: 0 0 40px;
+  font-size: clamp(0.96rem, 1.15vw, 1.08rem);
+  line-height: 1.62;
+  color: #d1d5db;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.95), 0 4px 24px rgba(7, 8, 10, 0.95);
+  max-width: 66ch;
+  margin: 0 0 22px;
+  text-wrap: pretty;
 }
 
-.heroActions {
+.heroExplanation strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.heroActionRow {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
   margin-bottom: 20px;
 }
 
 .primaryAction {
-  padding: 14px 28px;
-  background-color: var(--accent);
-  color: #07080a;
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
+  color: #050608;
+  background: var(--accent);
+  padding: 11px 26px;
   border-radius: 4px;
-  transition: background-color 0.15s ease, transform 0.15s var(--ease-spring);
+  text-decoration: none;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  box-shadow: 0 4px 20px rgba(224, 159, 62, 0.35);
 }
 
 .primaryAction:hover {
-  background-color: var(--accent-hover);
-  transform: scale(1.02);
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 26px rgba(224, 159, 62, 0.5);
 }
 
-.primaryAction:active {
-  transform: scale(0.98);
-}
-
-/* Right Side: Vertical Instrument Stack */
-.instrumentStack {
-  display: flex;
-  flex-direction: column;
-  border-left: 2px solid var(--border-strong);
-  background-color: var(--bg-surface);
-  border-radius: 0 8px 8px 0;
-  overflow: hidden;
-  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
-}
-
-.instrumentItem {
-  padding: 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border-bottom: 1px solid var(--border-subtle);
-  transition: background-color 0.15s ease;
-}
-
-.instrumentItem:last-child {
-  border-bottom: none;
-}
-
-.instrumentItem:hover {
-  background-color: var(--bg-hover);
-}
-
-.instrumentLabel {
+.secondaryAction {
   font-family: var(--sans);
-  font-size: var(--t-label);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: rgba(7, 8, 10, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  padding: 11px 20px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: all 0.15s ease;
 }
 
-.instrumentValue {
-  font-family: var(--mono);
-  font-size: var(--t-financial-lg);
-  font-weight: 600;
+.secondaryAction:hover {
+  background: var(--bg-elevated);
   color: var(--text-emphasis);
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
+  border-color: var(--border-strong);
 }
 
-.instrumentMeta {
-  font-family: var(--sans);
-  font-size: var(--t-body-sm);
+.heroRailsBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 18px;
+  background: rgba(13, 16, 23, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 9999px;
+  font-family: var(--mono);
+  font-size: 11.5px;
   color: var(--text-secondary);
 }
 
-.heroScrollHint {
-  margin-top: 48px;
-  font-family: var(--sans);
-  font-size: 12.5px;
-  color: var(--text-muted);
+.railGold {
+  color: var(--accent-text);
 }
 
-.heroScrollHint a {
-  display: inline-flex;
+.railEmerald {
+  color: var(--status-recovered);
+}
+
+.railCyan {
+  color: #38bdf8;
+}
+
+.railDivider {
+  color: var(--border-subtle);
+}
+
+.heroScrollHint {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: 6px;
-  transition: color 0.15s ease;
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  transition: color 0.15s ease, transform 0.15s ease;
 }
 
-.heroScrollHint a:hover {
-  color: var(--text-primary);
+.heroScrollHint:hover {
+  color: var(--accent);
+  transform: translate(-50%, 2px);
 }
 
-/* ── Scene General Styles ── */
-.sceneSection {
-  padding: 100px 0;
+.scrollArrow {
+  font-size: 14px;
+  animation: bounceDown 2s infinite ease-in-out;
+}
+
+@keyframes bounceDown {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+}
+
+/* ── Section: Financial Reality Metrics (Revealed on Scroll) ── */
+.metricsSection {
+  padding: 72px 0;
   border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+}
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+}
+
+.metricCardLabel {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.metricCardVal {
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 2.8vw, 2.4rem);
+  font-weight: 700;
+  color: var(--text-emphasis);
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+
+.metricCardSub {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ── General Scene Sections ── */
+.sceneSection {
+  padding: 96px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
 }
 
 .sceneSectionAlt {
-  padding: 100px 0;
-  background-color: var(--bg-surface);
+  padding: 96px 0;
+  background: var(--bg-surface);
   border-bottom: 1px solid var(--border-subtle);
+  position: relative;
 }
 
 .sceneHeader {
+  max-width: 760px;
   margin-bottom: 48px;
-  max-width: 820px;
 }
 
 .sceneEyebrow {
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.12em;
   color: var(--accent);
-  display: block;
-  margin-bottom: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: inline-block;
 }
 
 .sceneHeadline {
   font-family: var(--display);
-  font-size: var(--t-display);
+  font-size: clamp(2rem, 3.2vw, 2.75rem);
   font-weight: 700;
   letter-spacing: -0.03em;
-  line-height: 1.05;
   color: var(--text-emphasis);
+  line-height: 1.2;
   margin: 0 0 16px;
+  text-wrap: balance;
 }
 
 .sceneSubtitle {
   font-family: var(--sans);
-  font-size: var(--t-body-lg);
+  font-size: 1.05rem;
   line-height: 1.6;
   color: var(--text-secondary);
   margin: 0;
+  max-width: 65ch;
 }
 
-/* ── Scene 2: Interactive Gateway Comparative Box ── */
-.interactiveGatewayBox {
-  display: grid;
-  grid-template-columns: 360px 1fr;
-  gap: 32px;
-  background-color: var(--bg-surface);
+/* ── Gateway Intelligence Section ── */
+.gatewayTerminalBox {
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
   overflow: hidden;
-  padding: 32px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
 }
 
-.scenarioList {
+.terminalTopBar {
+  background: var(--bg-elevated);
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.gatewaySplitGrid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  min-height: 480px;
+}
+
+.scenarioListPanel {
+  background: rgba(10, 12, 16, 0.5);
+  border-right: 1px solid var(--border-subtle);
+  padding: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
 
-.selectorHeading {
-  font-family: var(--sans);
-  font-size: var(--t-label);
-  font-weight: 600;
-  letter-spacing: 0.08em;
+.scenarioListHeading {
+  font-family: var(--mono);
+  font-size: 10px;
   color: var(--text-muted);
-  margin-bottom: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
 }
 
-.scenarioButton {
-  background-color: transparent;
-  border: 1px solid transparent;
-  border-left: 2px solid var(--border-subtle);
-  border-radius: 0 4px 4px 0;
-  padding: 14px 18px;
+.scenarioBtn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 14px;
+  border-radius: 6px;
   text-align: left;
   cursor: pointer;
+  transition: all 0.15s ease;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: all 0.15s ease;
 }
 
-.scenarioButton:hover {
-  background-color: var(--bg-hover);
-  border-left-color: var(--text-muted);
+.scenarioBtn:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
 }
 
-.scenarioActive {
-  background-color: var(--bg-elevated);
-  border-left-color: var(--accent);
+.scenarioBtnActive {
+  background: rgba(224, 159, 62, 0.08);
+  border-color: var(--accent);
 }
 
-.btnCodeRow {
+.scenarioBtnTop {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.scenarioCode {
+.scenarioBtnCode {
   font-family: var(--mono);
-  font-size: var(--t-code-sm);
+  font-size: 11px;
   font-weight: 600;
   color: var(--accent-text);
 }
 
-.scenarioRail {
-  font-family: var(--mono);
-  font-size: 10.5px;
-  color: var(--text-muted);
-}
-
-.scenarioReason {
+.scenarioBtnRail {
   font-family: var(--sans);
-  font-size: var(--t-body-sm);
-  color: var(--text-secondary);
+  font-size: 10px;
+  color: var(--text-muted);
+  background: var(--bg-elevated);
+  padding: 2px 6px;
+  border-radius: 3px;
 }
 
-.taxonomyTruthBadge {
-  margin-top: 20px;
-  padding: 12px 14px;
-  background-color: var(--bg-deep);
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
+.scenarioBtnReason {
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.scenarioBtnRecoverability {
   font-family: var(--mono);
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--status-recovered);
+  font-weight: 600;
 }
 
-.diagnosticCanvas {
-  background-color: var(--bg-deep);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  padding: 36px;
-}
-
-.canvasBody {
+/* Diagnostic Canvas */
+.diagnosticCanvasPanel {
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  justify-content: space-between;
+  background: var(--bg-surface);
 }
 
-.canvasTop {
+.diagnosticHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  padding-bottom: 24px;
   border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 20px;
-  gap: 20px;
 }
 
-.canvasCodeTitle {
+.diagnosticCodeTitle {
   font-family: var(--mono);
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.2rem;
+  font-weight: 700;
   color: var(--text-emphasis);
-  margin: 0 0 10px;
+  margin: 0 0 6px;
 }
 
-.canvasOfficialDesc {
+.diagnosticDesc {
   font-family: var(--sans);
-  font-size: var(--t-body);
+  font-size: 13.5px;
   color: var(--text-secondary);
-  line-height: 1.55;
+  line-height: 1.5;
   margin: 0;
-  max-width: 640px;
+  max-width: 60ch;
 }
 
-.canvasRecoverabilityBadge {
+.recoverabilityBadge {
   font-family: var(--mono);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--status-recovered);
-  background-color: rgba(34, 201, 151, 0.12);
+  background: rgba(34, 201, 151, 0.1);
   border: 1px solid rgba(34, 201, 151, 0.3);
   padding: 6px 14px;
-  border-radius: 4px;
+  border-radius: 9999px;
   white-space: nowrap;
 }
 
-/* Sequential Translation Chain */
-.translationChain {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.chainDivider {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
-}
-
-.chainDivider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background-color: var(--border-subtle);
-}
-
-.commercialInterpretationBlock {
-  padding: 16px 20px;
-  background-color: var(--bg-surface);
-  border-left: 2px solid var(--border-strong);
-  border-radius: 0 4px 4px 0;
-}
-
-.commercialText {
-  font-family: var(--sans);
-  font-size: var(--t-body);
-  line-height: 1.6;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-.policyDirectiveBlock {
-  padding: 18px 20px;
-  background-color: var(--bg-surface);
-  border-left: 2px solid var(--accent);
-  border-radius: 0 4px 4px 0;
-}
-
-.policyText {
-  font-family: var(--sans);
-  font-size: 1.05rem;
-  line-height: 1.55;
-  color: var(--text-emphasis);
-  font-weight: 500;
-  margin: 0;
-}
-
-/* ── Scene 3: Hinglish Linguistic Prose & Contract ── */
-.hinglishContainer {
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-}
-
-.hinglishProse {
-  font-family: var(--sans);
-  font-size: var(--t-display);
-  line-height: 1.35;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  color: var(--text-emphasis);
-  max-width: 1100px;
-}
-
-.wordContext {
-  color: var(--text-secondary);
-  transition: color 0.15s ease;
-}
-
-.wordSignal {
-  color: var(--text-emphasis);
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-underline-offset: 6px;
-  text-decoration-thickness: 2.5px;
-  font-weight: 600;
-  cursor: pointer;
-  position: relative;
-}
-
-.wordSignal:hover {
-  color: var(--accent-text);
-}
-
-.structuredContractRow {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  background-color: var(--bg-deep);
-  border: 1px solid var(--border-subtle);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.contractField {
-  padding: 24px 28px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  border-right: 1px solid var(--border-subtle);
-}
-
-.contractField:last-child {
-  border-right: none;
-}
-
-.cFieldLabel {
-  font-family: var(--sans);
-  font-size: var(--t-label);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-}
-
-.cFieldValue {
-  font-family: var(--mono);
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--text-emphasis);
-  font-variant-numeric: tabular-nums;
-}
-
-.cFieldSub {
-  font-family: var(--sans);
-  font-size: var(--t-body-sm);
-  color: var(--text-muted);
-}
-
-/* ── Scene 4: Statutory Section 43B(h) Direct Calculator ── */
-.calculatorSectionLayout {
-  display: flex;
-  flex-direction: column;
-  gap: 48px;
-}
-
-.calculatorControlsDirect {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  padding-bottom: 36px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.calcControl {
+.translationPipeline {
+  margin: 24px 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.calcLabel {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  font-family: var(--sans);
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.calcLabel strong {
-  font-family: var(--mono);
-  color: var(--text-emphasis);
-  font-size: 1.1rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.rangeSlider {
-  width: 100%;
-  accent-color: var(--accent);
-  cursor: pointer;
-  height: 6px;
-  border-radius: 3px;
-  background-color: var(--border-strong);
-}
-
-.calcDirectResults {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 32px;
-}
-
-.calcDirectCol {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 28px;
-  background-color: var(--bg-surface);
+.pipelineStep {
+  background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
+  padding: 16px 20px;
   border-radius: 6px;
 }
 
-.calcResLabel {
-  font-family: var(--sans);
-  font-size: var(--t-label);
+.stepTag {
+  font-family: var(--mono);
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tagGateway { color: #f87171; }
+.tagLinguistic { color: var(--accent); }
+.tagProtocol { color: var(--status-recovered); }
+
+.stepBody {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.stepCodeBox {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: #c8d0de;
+  margin-top: 8px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+/* ── Hinglish Linguistic Sonar Lab ── */
+.sonarLabBox {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 36px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+/* Quick Prompt Suggestion Chips */
+.chipsSection {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chipsHeading {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
   color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chipsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.promptChip {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.promptChip:hover {
+  background: var(--bg-surface);
+  border-color: var(--accent);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.promptChipActive {
+  background: rgba(224, 159, 62, 0.14);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  box-shadow: 0 0 12px rgba(224, 159, 62, 0.2);
+}
+
+/* Sandbox Input Container */
+.sandboxInputWrapper {
+  background: var(--bg-deep);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.sandboxInputHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.sandboxInputTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.liveIndicatorDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--status-recovered);
+  box-shadow: 0 0 8px var(--status-recovered);
+  display: inline-block;
+}
+
+.sandboxActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sandboxTextarea {
+  width: 100%;
+  background: rgba(10, 12, 16, 0.7);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  padding: 12px 14px;
+  font-family: var(--display);
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sandboxTextarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(224, 159, 62, 0.25);
+}
+
+.tokenLegendBar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(54, 64, 87, 0.25);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.tokenLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legendDotDate {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.legendDotAmount {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38bdf8;
+}
+
+.legendDotRail {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #a78bfa;
+}
+
+.legendDotIntent {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-recovered);
+}
+
+.hinglishProse {
+  font-family: var(--display);
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  padding: 24px 0;
+  letter-spacing: -0.01em;
+}
+
+.wordToken {
+  display: inline-block;
+  margin: 0 4px;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+.wordSignalDate {
+  color: var(--accent);
+  font-weight: 700;
+  background: rgba(224, 159, 62, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(224, 159, 62, 0.35);
+}
+
+.wordSignalAmount {
+  color: #38bdf8;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+}
+
+.wordSignalRail {
+  color: #a78bfa;
+  font-weight: 700;
+  background: rgba(167, 139, 250, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+}
+
+.wordSignalIntent {
+  color: var(--status-recovered);
+  font-weight: 700;
+  background: rgba(34, 201, 151, 0.12);
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(34, 201, 151, 0.35);
+}
+
+.extractedContractGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.contractCard {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 16px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.contractCardLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.contractCardVal {
+  font-family: var(--display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.contractCardSub {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.sampleMessageTabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.sampleTab {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sampleTab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sampleTabActive {
+  background: rgba(224, 159, 62, 0.12);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* ── Section 43B(h) Statutory MSME Reactor ── */
+.calculatorBox {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 36px;
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+}
+
+.calcControlsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 36px;
+}
+
+.calcControlItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.calcLabelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+
+.calcParamName {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.calcParamValue {
+  font-family: var(--display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-emphasis);
+}
+
+.rangeSlider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--border-subtle);
+  outline: none;
+  transition: background 0.15s;
+}
+
+.rangeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(224, 159, 62, 0.4);
+  transition: transform 0.1s ease;
+}
+
+.rangeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.disallowanceBanner {
+  background: rgba(232, 80, 80, 0.1);
+  border: 1px solid var(--status-disallowed);
+  padding: 14px 20px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+  font-family: var(--sans);
+}
+
+.disallowanceTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--status-disallowed);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.disallowanceAction {
+  font-size: 12px;
+  color: #fca5a5;
+}
+
+.calcResultsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.calcCard {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 24px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.calcCardDisallowed {
+  background: rgba(232, 80, 80, 0.08);
+  border-color: rgba(232, 80, 80, 0.4);
+}
+
+.calcCardLabel {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
 }
 
 .calcHeroNum {
   font-family: var(--display);
-  font-size: var(--t-headline);
+  font-size: clamp(1.8rem, 2.8vw, 2.4rem);
   font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  margin: 4px 0;
-  transition: color 0.3s ease;
+  line-height: 1.1;
+  margin-bottom: 8px;
 }
 
-.calcResDesc {
+.calcCardDesc {
   font-family: var(--sans);
-  font-size: var(--t-body-sm);
+  font-size: 12.5px;
   color: var(--text-secondary);
   line-height: 1.5;
   margin: 0;
 }
 
-/* ── Scene 5: Data Provenance Tabular Statement ── */
-.provenanceStatementList {
+/* ── Autonomous Recovery Pipeline ── */
+.pipelineFlowContainer {
   display: flex;
   flex-direction: column;
-  border-top: 1px solid var(--border-subtle);
+  gap: 24px;
 }
 
-.provenanceRow {
+.pipelineStepsRow {
   display: grid;
-  grid-template-columns: 260px 1fr;
-  padding: 32px 0;
-  border-bottom: 1px solid var(--border-subtle);
-  gap: 32px;
-  align-items: baseline;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
 }
 
-.provStatus {
-  font-family: var(--sans);
-  font-size: var(--t-label);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--accent);
-}
-
-.provContent {
+.pipelineStepCard {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 20px 16px;
+  border-radius: 6px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  transition: all 0.15s ease;
 }
 
-.provTitle {
+.pipelineStepCard:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.pStepNumber {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent-text);
+  margin-bottom: 8px;
+}
+
+.pStepTitle {
   font-family: var(--display);
-  font-size: var(--t-subhead);
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-emphasis);
-  margin: 0;
+  margin: 0 0 8px;
 }
 
-.provDesc {
+.pStepDesc {
   font-family: var(--sans);
-  font-size: var(--t-body);
+  font-size: 12px;
   color: var(--text-secondary);
-  line-height: 1.6;
+  line-height: 1.45;
   margin: 0;
-  max-width: 820px;
 }
 
-/* ── Scene 6: Console Launchpad Footer ── */
+/* ── Data Provenance Matrix ── */
+.provenanceTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.provenanceTable th,
+.provenanceTable td {
+  padding: 18px 24px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.provenanceTable th {
+  background: var(--bg-elevated);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.provenanceTable td {
+  font-family: var(--sans);
+  font-size: 13.5px;
+}
+
+.provStatusBadge {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.statusReal {
+  background: rgba(34, 201, 151, 0.12);
+  color: var(--status-recovered);
+  border: 1px solid rgba(34, 201, 151, 0.3);
+}
+
+.statusAcademic {
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.statusSynthetic {
+  background: rgba(224, 159, 62, 0.12);
+  color: var(--accent-text);
+  border: 1px solid rgba(224, 159, 62, 0.3);
+}
+
+/* ── Command Center Launchpad Footer ── */
 .footerLaunchpad {
-  padding: 100px 0 48px;
-  background-color: var(--neutral-1);
+  padding: 80px 0 40px;
+  background: #05070a;
   border-top: 1px solid var(--border-subtle);
 }
 
 .launchpadBanner {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  padding: 48px;
+  border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 48px;
-  padding-bottom: 72px;
-  border-bottom: 1px solid var(--border-subtle);
+  flex-wrap: wrap;
+  gap: 24px;
 }
 
 .launchpadPrompt {
   font-family: var(--display);
-  font-size: var(--t-display);
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+  font-weight: 700;
   color: var(--text-emphasis);
-  line-height: 1.1;
-  max-width: 680px;
   margin: 0;
+  max-width: 24ch;
 }
 
 .launchpadCta {
-  padding: 16px 36px;
-  background-color: var(--accent);
-  color: #07080a;
   font-family: var(--sans);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
+  color: #050608;
+  background: var(--accent);
+  padding: 14px 28px;
   border-radius: 4px;
-  white-space: nowrap;
-  transition: background-color 0.15s ease, transform 0.15s var(--ease-spring);
+  text-decoration: none;
+  transition: all 0.15s ease;
+  box-shadow: 0 4px 18px rgba(224, 159, 62, 0.2);
 }
 
 .launchpadCta:hover {
-  background-color: var(--accent-hover);
-  transform: scale(1.02);
+  background: var(--accent-hover);
+  transform: translateY(-2px);
 }
 
 .footerBottomMeta {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 32px;
-  font-family: var(--mono);
-  font-size: 11px;
+  font-family: var(--sans);
+  font-size: 12px;
   color: var(--text-muted);
-  letter-spacing: 0.04em;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-/* Responsive */
+/* ── Responsive ── */
 @media (max-width: 1024px) {
-  .heroSplitGrid {
-    grid-template-columns: 1fr;
-    gap: 48px;
-  }
-  .instrumentStack {
-    border-left: none;
-    border-top: 2px solid var(--border-strong);
-    border-radius: 0 0 8px 8px;
-  }
-  .interactiveGatewayBox {
+  .gatewaySplitGrid {
     grid-template-columns: 1fr;
   }
-  .structuredContractRow {
+  .pipelineStepsRow {
     grid-template-columns: repeat(2, 1fr);
   }
-  .calculatorControlsDirect {
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .calcResultsGrid {
     grid-template-columns: 1fr;
   }
-  .calcDirectResults {
-    grid-template-columns: 1fr;
-  }
-  .provenanceRow {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .launchpadBanner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 28px;
-  }
-  .footerBottomMeta {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+  .extractedContractGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 640px) {
-  .structuredContractRow {
+@media (max-width: 768px) {
+  .masthead {
+    padding: 0 20px;
+  }
+  .container {
+    padding: 0 20px;
+  }
+  .mastheadNav {
+    display: none;
+  }
+  .calcControlsRow {
     grid-template-columns: 1fr;
   }
-  .contractField {
-    border-right: none;
-    border-bottom: 1px solid var(--border-subtle);
+  .pipelineStepsRow {
+    grid-template-columns: 1fr;
+  }
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+  .extractedContractGrid {
+    grid-template-columns: 1fr;
+  }
+  .astrolabeCanvasContainer {
+    height: 380px;
   }
 }
