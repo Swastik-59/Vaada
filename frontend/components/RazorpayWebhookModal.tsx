@@ -237,3 +237,5 @@ export function RazorpayWebhookModal({
     </div>
   );
 }
+
+export default RazorpayWebhookModal;

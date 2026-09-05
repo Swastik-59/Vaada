@@ -1,0 +1,113 @@
+.shellContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-primary, #0c0e12);
+  color: var(--text-primary, #e2e8f0);
+}
+
+.shellMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.loadingScreen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary, #0c0e12);
+  color: var(--text-secondary, #94a3b8);
+  font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, sans-serif);
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(196, 148, 58, 0.2);
+  border-top-color: var(--accent, #c4943a);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingText {
+  font-size: 0.875rem;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #64748b);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.forbiddenContainer {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.forbiddenCard {
+  max-width: 520px;
+  width: 100%;
+  background: var(--bg-secondary, #141820);
+  border: 1px solid var(--border-subtle, #1e2430);
+  border-radius: 8px;
+  padding: 32px;
+  text-align: center;
+}
+
+.forbiddenBadge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--status-disallowed, #f87171);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 4px 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.forbiddenTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+  margin-bottom: 12px;
+}
+
+.forbiddenDesc {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--text-secondary, #94a3b8);
+  margin-bottom: 24px;
+}
+
+.forbiddenActionBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  background: var(--accent, #c4943a);
+  color: #0b0f17;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.forbiddenActionBtn:hover {
+  opacity: 0.9;
+}

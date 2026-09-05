@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 interface HeroSceneProps {
@@ -10,6 +10,7 @@ interface HeroSceneProps {
 
 export default function HeroScene({ className, style }: HeroSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [webglSupported, setWebglSupported] = useState(true);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -19,8 +20,12 @@ export default function HeroScene({ className, style }: HeroSceneProps) {
     try {
       const testCanvas = document.createElement("canvas");
       const gl = testCanvas.getContext("webgl") || testCanvas.getContext("experimental-webgl");
-      if (!gl) return;
+      if (!gl) {
+        setWebglSupported(false);
+        return;
+      }
     } catch {
+      setWebglSupported(false);
       return;
     }
 
@@ -386,17 +391,42 @@ export default function HeroScene({ className, style }: HeroSceneProps) {
         ...style,
       }}
     >
-      <div
-        ref={containerRef}
-        style={{
-          width: "100%",
-          height: "100%",
-          position: "absolute",
-          top: 0,
-          left: 0,
-        }}
-        aria-label="Interactive 3D representation of Vaada's financial recovery rails"
-      />
+      {webglSupported ? (
+        <div
+          ref={containerRef}
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
+          aria-label="Interactive 3D representation of Vaada's financial recovery rails"
+        />
+      ) : (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "radial-gradient(ellipse at center, rgba(196, 148, 58, 0.08) 0%, rgba(7, 8, 10, 0.95) 75%)",
+          }}
+          aria-label="Vaada financial recovery rails graphic"
+        >
+          <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ opacity: 0.6 }}>
+            <circle cx="200" cy="200" r="160" stroke="#c4943a" strokeWidth="1" strokeDasharray="4 8" />
+            <circle cx="200" cy="200" r="110" stroke="#22c55e" strokeWidth="1" strokeDasharray="2 4" />
+            <circle cx="200" cy="200" r="60" stroke="#38bdf8" strokeWidth="1" />
+            <line x1="200" y1="30" x2="200" y2="370" stroke="rgba(255,255,255,0.05)" />
+            <line x1="30" y1="200" x2="370" y2="200" stroke="rgba(255,255,255,0.05)" />
+          </svg>
+        </div>
+      )}
     </div>
   );
 }

@@ -11,17 +11,23 @@ from app.api.cookies import REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.api.schemas import (
     CaseActionRequest,
     CashDiscountRequest,
+    ChangePasswordRequest,
     CustomerReplyRequest,
     EventIngestRequest,
+    ForgotPasswordRequest,
+    JobTriggerRequest,
     LoginRequest,
     PaymentReconcileRequest,
     RazorpayLookupRequest,
     RazorpaySimulatorRequest,
-    JobTriggerRequest,
+    ResetPasswordRequest,
+    SignupRequest,
     StatutoryNoticeRequest,
     SyntheticBatchRequest,
     TDSReconcileRequest,
+    TenantSampleDataRequest,
 )
+from app.services.sample_data import clear_tenant_sample_data, generate_tenant_sample_data
 from app.services.jobs import (
     run_promise_adherence_check,
     run_stale_case_monitor,
@@ -45,6 +51,7 @@ from app.services.razorpay import (
 )
 from app.db.models import (
     AuditEvent,
+    CaseState,
     CaseTransition,
     ComplianceCheck,
     Customer,
@@ -65,7 +72,16 @@ from app.db.models import (
 from app.events.razorpay import RazorpayTestModeSource, verify_razorpay_signature
 from app.events.synthetic import SyntheticEventSource
 from app.llm.client import LLMClient
-from app.services.auth import authenticate, issue_session, revoke_refresh, rotate_refresh
+from app.services.auth import (
+    authenticate,
+    change_user_password,
+    complete_password_reset,
+    issue_session,
+    register_user,
+    request_password_reset,
+    revoke_refresh,
+    rotate_refresh,
+)
 from app.services.cases import (
     apply_cash_discount,
     apply_human_override,
@@ -83,6 +99,51 @@ from app.services.portal import generate_portal_token
 from app.services.statutory import get_43b_h_status
 
 router = APIRouter()
+
+
+@router.get("/auth/config")
+def auth_config(settings: Settings = Depends(get_settings)) -> dict:
+    return {
+        "demo_mode": settings.demo_mode,
+    }
+
+
+@router.post("/auth/signup")
+def signup(
+    body: SignupRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    user = register_user(
+        db,
+        email=body.email,
+        password=body.password,
+        password_confirm=body.password_confirm,
+        tenant_name=body.tenant_name,
+        correlation_id=getattr(request.state, "correlation_id", None),
+    )
+    access, refresh, csrf, expires = issue_session(db, user=user, settings=settings)
+    set_auth_cookies(
+        response,
+        access_token=access,
+        refresh_token=refresh,
+        csrf_token=csrf,
+        refresh_expires=expires,
+        settings=settings,
+    )
+    memberships = list(user.memberships)
+    return {
+        "user_id": user.id,
+        "uid": user.uid,
+        "email": user.email,
+        "status": user.status,
+        "memberships": [
+            {"tenant_id": item.tenant_id, "role": item.role}
+            for item in memberships
+        ],
+    }
 
 
 @router.post("/auth/login")
@@ -105,7 +166,9 @@ def login(
     memberships = list(user.memberships)
     return {
         "user_id": user.id,
+        "uid": user.uid,
         "email": user.email,
+        "status": user.status,
         "memberships": [
             {"tenant_id": item.tenant_id, "role": item.role}
             for item in memberships
@@ -123,21 +186,96 @@ def refresh_session(
     token = request.cookies.get(REFRESH_COOKIE)
     user, access, refresh_token, csrf, expires = rotate_refresh(db, refresh_token=token or "", settings=settings)
     set_auth_cookies(response, access_token=access, refresh_token=refresh_token, csrf_token=csrf, refresh_expires=expires, settings=settings)
-    return {"user_id": user.id}
+    return {"user_id": user.id, "uid": user.uid}
+
+
+@router.post("/auth/forgot-password")
+def forgot_password(
+    body: ForgotPasswordRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    raw_token = request_password_reset(
+        db,
+        email=body.email,
+        correlation_id=getattr(request.state, "correlation_id", None),
+    )
+    resp = {
+        "message": "If an account associated with this email exists, password reset instructions have been dispatched."
+    }
+    if settings.demo_mode and raw_token:
+        resp["dev_reset_token"] = raw_token
+    return resp
+
+
+@router.post("/auth/reset-password")
+def reset_password(
+    body: ResetPasswordRequest,
+    request: Request,
+    db: Session = Depends(get_db),
+) -> dict:
+    user = complete_password_reset(
+        db,
+        token=body.token,
+        new_password=body.new_password,
+        new_password_confirm=body.new_password_confirm,
+        correlation_id=getattr(request.state, "correlation_id", None),
+    )
+    return {
+        "message": "Password successfully updated. All prior sessions have been revoked.",
+        "uid": user.uid,
+    }
+
+
+@router.post("/auth/change-password")
+def change_password(
+    body: ChangePasswordRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(current_principal),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    change_user_password(
+        db,
+        user=principal.user,
+        current_password=body.current_password,
+        new_password=body.new_password,
+        new_password_confirm=body.new_password_confirm,
+        correlation_id=principal.correlation_id or getattr(request.state, "correlation_id", None),
+    )
+    access, refresh, csrf, expires = issue_session(db, user=principal.user, settings=settings)
+    set_auth_cookies(
+        response,
+        access_token=access,
+        refresh_token=refresh,
+        csrf_token=csrf,
+        refresh_expires=expires,
+        settings=settings,
+    )
+    return {
+        "message": "Password successfully updated. All other active sessions have been invalidated.",
+        "uid": principal.user_uid,
+    }
 
 
 @router.post("/auth/logout")
 def logout(request: Request, response: Response, db: Session = Depends(get_db)) -> dict:
     user_id = None
+    user_uid = None
     try:
         principal = current_principal(request, db, get_settings())
         user_id = principal.user.id
+        user_uid = principal.user_uid
     except Exception:
         user_id = None
+        user_uid = None
     revoke_refresh(
         db,
         refresh_token=request.cookies.get(REFRESH_COOKIE),
         user_id=user_id,
+        user_uid=user_uid,
         correlation_id=getattr(request.state, "correlation_id", None),
     )
     clear_auth_cookies(response)
@@ -145,13 +283,62 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db)) 
 
 
 @router.get("/auth/me")
-def me(principal: Principal = Depends(current_principal)) -> dict:
+def me(principal: Principal = Depends(current_principal), db: Session = Depends(get_db)) -> dict:
+    tenant = db.get(Tenant, principal.tenant_id)
     return {
         "user_id": principal.user.id,
+        "uid": principal.user.uid,
         "email": principal.user.email,
+        "status": principal.user.status,
         "tenant_id": principal.tenant_id,
+        "tenant_name": tenant.name if tenant else principal.tenant_id,
         "role": principal.role,
+        "created_at": principal.user.created_at.isoformat() if principal.user.created_at else None,
+        "last_login_at": principal.user.last_login_at.isoformat() if principal.user.last_login_at else None,
     }
+
+
+@router.post("/tenant/sample-data")
+def generate_sample_data(
+    body: TenantSampleDataRequest,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("cases:create")),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    if settings.env == "production" and not settings.demo_mode:
+        raise AuthorizationFailed("Sample data generation is disabled in production environments.")
+
+    tenant = db.get(Tenant, principal.tenant_id)
+    if not tenant:
+        raise NotFound("Tenant not found.")
+
+    return generate_tenant_sample_data(
+        db,
+        tenant=tenant,
+        actor_uid=principal.user_uid,
+        scenario=body.scenario,
+        count=body.count,
+    )
+
+
+@router.delete("/tenant/sample-data")
+def reset_sample_data(
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("cases:create")),
+    settings: Settings = Depends(get_settings),
+) -> dict:
+    if settings.env == "production" and not settings.demo_mode:
+        raise AuthorizationFailed("Sample data operations are disabled in production environments.")
+
+    tenant = db.get(Tenant, principal.tenant_id)
+    if not tenant:
+        raise NotFound("Tenant not found.")
+
+    return clear_tenant_sample_data(
+        db,
+        tenant=tenant,
+        actor_uid=principal.user_uid,
+    )
 
 
 @router.post("/events")
@@ -280,6 +467,9 @@ def simulate_razorpay_webhook(
     Generates authentic Razorpay Test Mode webhook payloads, computes HMAC-SHA256 signature,
     and runs them through the full closed-loop event processing pipeline.
     """
+    if settings.env == "production" and not settings.demo_mode:
+        raise AuthorizationFailed("Gateway simulator is disabled in production environments.")
+
     tenant = db.get(Tenant, principal.tenant_id)
     if not tenant:
         raise NotFound("Tenant not found.")

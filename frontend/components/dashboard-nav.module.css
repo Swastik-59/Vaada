@@ -190,4 +190,54 @@
   .barCenter {
     display: none;
   }
+  .mobileMenuToggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+}
+
+.mobileMenuToggle {
+  display: none;
+}
+
+.mobileDrawer {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 16px 20px;
+  gap: 12px;
+  position: sticky;
+  top: 64px;
+  z-index: 49;
+}
+
+.mobileNavLink {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.mobileNavLinkActive {
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-text);
+  background: rgba(224, 159, 62, 0.12);
+  border: 1px solid rgba(224, 159, 62, 0.35);
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 6px;
 }

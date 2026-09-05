@@ -13,6 +13,37 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
 
 
+class SignupRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=10, max_length=128)
+    password_confirm: str = Field(min_length=10, max_length=128)
+    tenant_name: str | None = Field(default=None, max_length=100)
+
+
+class ForgotPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=320)
+
+
+class ResetPasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    token: str = Field(min_length=10, max_length=256)
+    new_password: str = Field(min_length=10, max_length=128)
+    new_password_confirm: str = Field(min_length=10, max_length=128)
+
+
+class ChangePasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    current_password: str = Field(min_length=8, max_length=128)
+    new_password: str = Field(min_length=10, max_length=128)
+    new_password_confirm: str = Field(min_length=10, max_length=128)
+
+
 class EventIngestRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -125,4 +156,11 @@ class JobTriggerRequest(BaseModel):
 
     job_name: str = Field(pattern="^(promise_adherence|stale_cases|compliance_sweeper|analytics|all)$")
     stale_days: int = Field(default=7, ge=1, le=90)
+
+
+class TenantSampleDataRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    scenario: str = Field(default="mixed", pattern="^(mixed|msme_43b_h|payment_failures|hinglish_promissory)$")
+    count: int = Field(default=6, ge=1, le=20)
 

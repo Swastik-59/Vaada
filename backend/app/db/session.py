@@ -85,6 +85,48 @@ def _migrate_sqlite_columns(engine):
                     conn.execute(text("ALTER TABLE promises_to_pay ADD COLUMN t_minus_1_sent BOOLEAN DEFAULT 0 NOT NULL"))
                 if "is_broken" not in cols:
                     conn.execute(text("ALTER TABLE promises_to_pay ADD COLUMN is_broken BOOLEAN DEFAULT 0 NOT NULL"))
+
+            if "users" in tables:
+                cols = [c["name"] for c in inspector.get_columns("users")]
+                if "uid" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN uid VARCHAR(64)"))
+                    from app.core.identity import generate_user_uid
+                    user_ids = [row[0] for row in conn.execute(text("SELECT id FROM users")).fetchall()]
+                    for uid_id in user_ids:
+                        conn.execute(text("UPDATE users SET uid = :uid WHERE id = :id"), {"uid": generate_user_uid(), "id": uid_id})
+                    conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS ix_users_uid ON users (uid)"))
+                if "status" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN status VARCHAR(32) DEFAULT 'active' NOT NULL"))
+                if "updated_at" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN updated_at DATETIME"))
+                if "last_login_at" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN last_login_at DATETIME"))
+                if "email_verified_at" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN email_verified_at DATETIME"))
+                if "password_changed_at" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN password_changed_at DATETIME"))
+                if "failed_login_count" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN failed_login_count INTEGER DEFAULT 0 NOT NULL"))
+                if "locked_until" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN locked_until DATETIME"))
+                if "session_version" not in cols:
+                    conn.execute(text("ALTER TABLE users ADD COLUMN session_version INTEGER DEFAULT 1 NOT NULL"))
+
+            if "audit_events" in tables:
+                cols = [c["name"] for c in inspector.get_columns("audit_events")]
+                if "actor_uid" not in cols:
+                    conn.execute(text("ALTER TABLE audit_events ADD COLUMN actor_uid VARCHAR(64)"))
+                    conn.execute(text("CREATE INDEX IF NOT EXISTS ix_audit_events_actor_uid ON audit_events (actor_uid)"))
+
+            if "refresh_tokens" in tables:
+                cols = [c["name"] for c in inspector.get_columns("refresh_tokens")]
+                if "session_id" not in cols:
+                    conn.execute(text("ALTER TABLE refresh_tokens ADD COLUMN session_id VARCHAR(64)"))
+                if "session_version" not in cols:
+                    conn.execute(text("ALTER TABLE refresh_tokens ADD COLUMN session_version INTEGER DEFAULT 1 NOT NULL"))
+
+            from app.db.models import Base
+            Base.metadata.create_all(bind=conn)
             conn.commit()
     except Exception:
         pass

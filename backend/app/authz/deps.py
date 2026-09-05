@@ -12,9 +12,14 @@ from app.core.security import constant_time_equals, decode_access_token
 from app.db.models import Membership, User
 
 
+from datetime import UTC, datetime
+from sqlalchemy import select
+
 @dataclass
 class Principal:
     user: User
+    user_uid: str
+    session_id: str | None
     membership: Membership
     tenant_id: str
     role: str
@@ -34,6 +39,12 @@ def current_principal(
     settings: Settings = Depends(get_settings),
 ) -> Principal:
     token = request.cookies.get("vaada_access")
+    is_cookie_auth = bool(token)
+    if not token:
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:].strip()
+
     if not token:
         raise AuthenticationFailed("Authentication required.")
     try:
@@ -43,11 +54,38 @@ def current_principal(
     if payload.get("typ") != "access":
         raise AuthenticationFailed("Authentication required.")
 
-    user = db.get(User, payload["sub"])
-    if user is None or not user.is_active:
+    sub = payload.get("sub")
+    if not sub:
         raise AuthenticationFailed("Authentication required.")
 
-    _enforce_csrf(request, settings)
+    # Primary lookup by permanent server-generated UID
+    user = db.scalar(select(User).where(User.uid == sub))
+    if user is None:
+        # Fallback to internal primary key for backward compatibility
+        user = db.get(User, sub)
+
+    if user is None:
+        raise AuthenticationFailed("Authentication required.")
+
+    # Account status & deactivation enforcement
+    if not user.is_active or user.status != "active":
+        raise AuthenticationFailed("Account is disabled or pending verification.")
+
+    # Account lockout enforcement
+    if user.locked_until:
+        locked_until = user.locked_until
+        if locked_until.tzinfo is None:
+            locked_until = locked_until.replace(tzinfo=UTC)
+        if locked_until > datetime.now(UTC):
+            raise AuthenticationFailed("Account is temporarily locked.")
+
+    # Global session revocation check via session_version
+    token_ver = payload.get("ver")
+    if token_ver is not None and token_ver != user.session_version:
+        raise AuthenticationFailed("Session has been revoked.")
+
+    if is_cookie_auth:
+        _enforce_csrf(request, settings)
 
     tenant_id = request.headers.get("X-Vaada-Tenant-Id")
     memberships = list(user.memberships)
@@ -64,6 +102,8 @@ def current_principal(
 
     return Principal(
         user=user,
+        user_uid=user.uid,
+        session_id=payload.get("jti"),
         membership=membership,
         tenant_id=membership.tenant_id,
         role=membership.role,

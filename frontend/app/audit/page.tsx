@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import DashboardNav from "@/components/DashboardNav";
+import AuthenticatedAppShell from "@/components/AuthenticatedAppShell";
 import styles from "./audit.module.css";
 
 type AuditEvent = {
@@ -83,7 +83,6 @@ export default function AuditPage() {
   const [prefix, setPrefix] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [isUnauthorized, setIsUnauthorized] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -91,20 +90,13 @@ export default function AuditPage() {
       .then((data) => setItems(data.items ?? []))
       .catch((err) => {
         const msg = err instanceof Error ? err.message : String(err);
-        if (msg.includes("401") || msg.toLowerCase().includes("unauthorized")) {
-          setIsUnauthorized(true);
-        } else {
-          setError(msg);
-        }
+        setError(msg);
       })
       .finally(() => setLoading(false));
   }, [prefix]);
 
   return (
-    <div className={styles.shell}>
-      {/* Top Console Navigation */}
-      <DashboardNav title="Audit Trail" />
-
+    <AuthenticatedAppShell title="Immutable Audit Trail">
       <div className={styles.header}>
         <div>
           <h1 className={styles.headerTitle}>Audit Log</h1>
@@ -132,18 +124,11 @@ export default function AuditPage() {
         </div>
       </div>
 
-      {isUnauthorized && (
-        <div className={styles.authNotice}>
-          <span>Operator authentication required to view immutable audit events.</span>
-          <Link href="/login" className={styles.signInBtn}>Sign In →</Link>
-        </div>
-      )}
-
       {error && <div className={styles.errorNotice}>Notice: {error}</div>}
 
       {loading && <div className={styles.statusState}>Fetching audit ledger...</div>}
 
-      {!loading && !isUnauthorized && items.length === 0 && (
+      {!loading && items.length === 0 && (
         <div className={styles.statusState}>No audit events recorded for this category.</div>
       )}
 
@@ -194,6 +179,6 @@ export default function AuditPage() {
           </table>
         </div>
       )}
-    </div>
+    </AuthenticatedAppShell>
   );
 }

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { apiFetch } from "@/lib/api";
 import { soundbox } from "@/lib/soundbox";
 import { parseHinglishCommitment, HINGLISH_SANDBOX_PRESETS } from "@/lib/hinglishParser";
-import DashboardNav from "@/components/DashboardNav";
+import AuthenticatedAppShell from "@/components/AuthenticatedAppShell";
 import styles from "./case.module.css";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -254,7 +254,6 @@ export default function CasePage() {
   const router = useRouter();
   const [data, setData] = useState<CaseData | null>(null);
   const [error, setError] = useState("");
-  const [isUnauthorized, setIsUnauthorized] = useState(false);
   const [reason, setReason] = useState("Operator intervention in recovery lifecycle.");
   const [busy, setBusy] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
@@ -289,11 +288,7 @@ export default function CasePage() {
       setData(payload);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes("401") || msg.toLowerCase().includes("unauthorized")) {
-        setIsUnauthorized(true);
-      } else {
-        setError(msg);
-      }
+      setError(msg);
     }
   }
 
@@ -405,37 +400,26 @@ export default function CasePage() {
     }
   }
 
-  if (isUnauthorized) {
-    return (
-      <div className={styles.caseShell}>
-        <div className={styles.unauthorizedBox}>
-          <span className={styles.unauthTag}>OPERATOR SESSION REQUIRED</span>
-          <h2 className={styles.unauthTitle}>Authentication Needed</h2>
-          <p className={styles.unauthBody}>
-            You must be signed in with an active operator account to inspect confidential debtor records.
-          </p>
-          <Link href="/login" className={styles.unauthBtn}>Sign In With Demo Account →</Link>
-        </div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
-      <div className={styles.caseShell}>
-        <div className={styles.errorBox}>
-          <span>Error loading case dossier: {error}</span>
-          <Link href="/queue" className={styles.backBtn}>← Return to Portfolio Queue</Link>
+      <AuthenticatedAppShell title="Case Dossier">
+        <div className={styles.caseShell}>
+          <div className={styles.errorBox}>
+            <span>Error loading case dossier: {error}</span>
+            <Link href="/queue" className={styles.backBtn}>← Return to Portfolio Queue</Link>
+          </div>
         </div>
-      </div>
+      </AuthenticatedAppShell>
     );
   }
 
   if (!data) {
     return (
-      <div className={styles.caseShell}>
-        <div className={styles.loadingBox}>Loading recovery dossier...</div>
-      </div>
+      <AuthenticatedAppShell title="Case Dossier">
+        <div className={styles.caseShell}>
+          <div className={styles.loadingBox}>Loading recovery dossier...</div>
+        </div>
+      </AuthenticatedAppShell>
     );
   }
 
@@ -450,8 +434,8 @@ export default function CasePage() {
   };
 
   return (
-    <div className={styles.caseShell}>
-      <DashboardNav title="Case Dossier" />
+    <AuthenticatedAppShell title={`Case Dossier — ${data.invoice_number ?? data.id.slice(0, 8)}`}>
+      <div className={styles.caseShell}>
       {/* ── Fixed Chapter Header Bar ── */}
       <nav className={styles.caseNav}>
         <div className={styles.navLeft}>
@@ -1256,6 +1240,7 @@ export default function CasePage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AuthenticatedAppShell>
   );
 }

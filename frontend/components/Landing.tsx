@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import HeroScene from "@/components/HeroScene";
+import { useAuth } from "@/context/AuthContext";
 import { parseHinglishText, HINGLISH_QUICK_PROMPTS, ParsedContract } from "@/lib/hinglishParser";
 import { soundbox } from "@/lib/soundbox";
 import styles from "./landing.module.css";
@@ -221,6 +222,9 @@ export default function Landing() {
   const penalInterestRate = 0.2025; // 3x RBI Bank Rate ~ 20.25% p.a.
   const accruedInterest = calcInvoice * penalInterestRate * (calcDaysOverdue / 365);
 
+  const { user, isAuthenticated } = useAuth();
+  const consoleHref = isAuthenticated && user?.uid ? `/queue/${user.uid}` : "/login?next=/queue";
+
   return (
     <div className={styles.landingWrapper}>
       {/* ── Top Masthead ── */}
@@ -243,7 +247,7 @@ export default function Landing() {
           <a href="#statutory-reactor" className={styles.navLink}>Section 43B(h)</a>
           <a href="#pipeline-flow" className={styles.navLink}>Clearing Rails</a>
           <Link href="/analytics" className={styles.navLink}>Portfolio Analytics</Link>
-          <Link href="/queue" className={styles.launchConsoleBtn}>
+          <Link href={consoleHref} className={styles.launchConsoleBtn}>
             Operations Console →
           </Link>
         </nav>
@@ -277,7 +281,7 @@ export default function Landing() {
             </p>
 
             <div className={styles.heroActionRow}>
-              <Link href="/queue" className={styles.primaryAction}>
+              <Link href={consoleHref} className={styles.primaryAction}>
                 Launch Operations Console →
               </Link>
               <a href="#financial-realities" className={styles.secondaryAction}>

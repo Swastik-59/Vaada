@@ -694,6 +694,11 @@ def seed_demo(db: Session, settings: Settings) -> dict[str, str]:
     else:
         admin.password_hash = password_hash
         admin.is_active = True
+        if not admin.uid:
+            from app.core.identity import generate_user_uid
+            admin.uid = generate_user_uid()
+        admin.status = "active"
+        admin.session_version = admin.session_version or 1
 
     if db.query(Membership).filter_by(user_id=admin.id, tenant_id=tenant.id).one_or_none() is None:
         db.add(Membership(user_id=admin.id, tenant_id=tenant.id, role=Role.MANAGER.value))
@@ -712,6 +717,11 @@ def seed_demo(db: Session, settings: Settings) -> dict[str, str]:
     else:
         viewer.password_hash = password_hash
         viewer.is_active = True
+        if not viewer.uid:
+            from app.core.identity import generate_user_uid
+            viewer.uid = generate_user_uid()
+        viewer.status = "active"
+        viewer.session_version = viewer.session_version or 1
 
     db.flush()
 

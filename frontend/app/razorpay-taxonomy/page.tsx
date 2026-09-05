@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { apiFetch } from "@/lib/api";
-import DashboardNav from "@/components/DashboardNav";
+import AuthenticatedAppShell from "@/components/AuthenticatedAppShell";
 import styles from "./taxonomy.module.css";
 
 interface OfficialRecord {
@@ -165,20 +165,17 @@ export default function RazorpayTaxonomyPage() {
   }
 
   return (
-    <div className={styles.shell}>
-      {/* Top Navigation */}
-      <DashboardNav title="Gateway Taxonomy" />
-
+    <AuthenticatedAppShell title="Gateway Taxonomy">
       <div className={styles.container}>
         {/* Page Header */}
         <header className={styles.header}>
           <div className={styles.eyebrow}>
-            Authoritative Payment Failure Taxonomy
+            Payment Gateway Failure Taxonomy
           </div>
           <h1 className={styles.title}>Razorpay Error Intelligence</h1>
           <p className={styles.subtitle}>
-            A real, locally versioned representation of Razorpay&apos;s published payment failure taxonomy.
-            Deterministic lookups separate official diagnostics from Vaada&apos;s derived recovery policies.
+            A locally versioned catalog of Razorpay published payment failure taxonomy.
+            Deterministic lookups separate official gateway diagnostics from Vaada automated recovery policies.
           </p>
 
           <div className={styles.metaRow}>
@@ -192,7 +189,7 @@ export default function RazorpayTaxonomyPage() {
               Official Sources: <strong>5 Razorpay developer documents</strong>
             </span>
             <span className={styles.metaItem}>
-              Zero-Hallucination Policy: <strong>Enforced via deterministic lookup</strong>
+              Policy Engine: <strong>Rule-based statutory routing</strong>
             </span>
           </div>
         </header>
@@ -595,6 +592,6 @@ export default function RazorpayTaxonomyPage() {
           )}
         </section>
       </div>
-    </div>
+    </AuthenticatedAppShell>
   );
 }

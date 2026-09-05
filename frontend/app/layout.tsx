@@ -4,6 +4,7 @@ import { DM_Sans, Inter, JetBrains_Mono, Noto_Serif_Devanagari } from "next/font
 import Preloader from "@/components/Preloader";
 import SmoothScrollProvider from "@/components/SmoothScroll";
 import PageTransitionProvider from "@/components/PageTransition";
+import { AuthProvider } from "@/context/AuthContext";
 
 const display = DM_Sans({
   subsets: ["latin"],
@@ -60,12 +61,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
       </head>
       <body>
-        <Preloader />
-        <SmoothScrollProvider>
-          <PageTransitionProvider>
-            {children}
-          </PageTransitionProvider>
-        </SmoothScrollProvider>
+        <AuthProvider>
+          <Preloader />
+          <SmoothScrollProvider>
+            <PageTransitionProvider>
+              {children}
+            </PageTransitionProvider>
+          </SmoothScrollProvider>
+        </AuthProvider>
       </body>
     </html>
   );

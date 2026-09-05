@@ -20,8 +20,23 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.types import Uuid
 
 
+from app.core.identity import generate_user_uid
+
+
 class Base(DeclarativeBase):
     pass
+
+
+class UserStatus(StrEnum):
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    DISABLED = "disabled"
+    PENDING_VERIFICATION = "pending_verification"
+
+
+class VerificationTokenType(StrEnum):
+    EMAIL_VERIFICATION = "email_verification"
+    PASSWORD_RESET = "password_reset"
 
 
 class Role(StrEnum):
@@ -77,9 +92,18 @@ class User(Base, TimestampMixin):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
-    email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False)
+    uid: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True, default=generate_user_uid)
+    email: Mapped[str] = mapped_column(String(320), unique=True, nullable=False, index=True)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), default=UserStatus.ACTIVE.value, nullable=False, index=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    email_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_changed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    failed_login_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    session_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
 
     memberships: Mapped[list[Membership]] = relationship(back_populates="user")
     refresh_tokens: Mapped[list[RefreshToken]] = relationship(back_populates="user")
@@ -102,13 +126,28 @@ class RefreshToken(Base, TimestampMixin):
     __tablename__ = "refresh_tokens"
 
     id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
-    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False)
+    session_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    session_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     replaced_by_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
 
     user: Mapped[User] = relationship(back_populates="refresh_tokens")
+
+
+class VerificationToken(Base, TimestampMixin):
+    __tablename__ = "verification_tokens"
+
+    id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False, index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    token_type: Mapped[str] = mapped_column(String(32), nullable=False, index=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    user: Mapped[User] = relationship()
 
 
 class NoticeType(StrEnum):
@@ -296,8 +335,9 @@ class AuditEvent(Base, TimestampMixin):
 
     id: Mapped[str] = mapped_column(Uuid(as_uuid=False), primary_key=True, default=lambda: str(uuid4()))
     tenant_id: Mapped[str | None] = mapped_column(ForeignKey("tenants.id"), nullable=True)
-    actor_type: Mapped[str] = mapped_column(String(16), nullable=False)
+    actor_type: Mapped[str] = mapped_column(String(32), nullable=False)
     actor_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
+    actor_uid: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     action: Mapped[str] = mapped_column(String(64), nullable=False)
     resource_type: Mapped[str] = mapped_column(String(64), nullable=False)
     resource_id: Mapped[str | None] = mapped_column(String(36), nullable=True)

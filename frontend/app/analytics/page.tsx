@@ -4,7 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiFetch } from "@/lib/api";
-import DashboardNav from "@/components/DashboardNav";
+import AuthenticatedAppShell from "@/components/AuthenticatedAppShell";
 import styles from "./analytics.module.css";
 
 type FunnelConversion = {
@@ -56,13 +56,6 @@ type AnalyticsData = {
   calculated_at: string;
 };
 
-type UserProfile = {
-  user_id: string;
-  email: string;
-  tenant_id: string;
-  role: string;
-};
-
 function formatCurrency(minor: number = 0): string {
   const inr = minor / 100;
   return new Intl.NumberFormat("en-IN", {
@@ -75,7 +68,6 @@ function formatCurrency(minor: number = 0): string {
 export default function AnalyticsPage() {
   const router = useRouter();
   const [data, setData] = useState<AnalyticsData | null>(null);
-  const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -97,18 +89,6 @@ export default function AnalyticsPage() {
   };
 
   useEffect(() => {
-    // 1. Fetch user session
-    apiFetch("/api/v1/auth/me")
-      .then((res) => {
-        if (res && res.email) {
-          setUser(res);
-        }
-      })
-      .catch(() => {
-        // Not logged in or guest session
-      });
-
-    // 2. Fetch analytics
     fetchAnalytics();
   }, []);
 
@@ -121,7 +101,6 @@ export default function AnalyticsPage() {
         body: JSON.stringify({ job_name: "all", stale_days: 7 }),
       });
       setJobResult(res);
-      // Refresh analytics to reflect any status changes immediately
       await fetchAnalytics();
     } catch (err: any) {
       alert(`Job execution failed: ${err.message}`);
@@ -132,13 +111,13 @@ export default function AnalyticsPage() {
 
   if (loading && !data) {
     return (
-      <div className={styles.shell}>
+      <AuthenticatedAppShell title="Institutional Analytics">
         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "60vh" }}>
           <div style={{ fontFamily: "var(--mono)", fontSize: "0.875rem", color: "var(--text-secondary)" }}>
             Computing portfolio state & statutory exposure...
           </div>
         </div>
-      </div>
+      </AuthenticatedAppShell>
     );
   }
 
@@ -147,11 +126,7 @@ export default function AnalyticsPage() {
   const f = data?.funnel;
 
   return (
-    <div className={styles.shell}>
-      {/* ── Top Executive Navigation ── */}
-      <DashboardNav title="Institutional Analytics" user={user} />
-
-      {/* ── Workspace ── */}
+    <AuthenticatedAppShell title="Institutional Analytics">
       <main className={styles.workspace}>
         {/* Header Strip */}
         <header className={styles.header}>
@@ -631,6 +606,6 @@ export default function AnalyticsPage() {
           </div>
         </section>
       </main>
-    </div>
+    </AuthenticatedAppShell>
   );
 }

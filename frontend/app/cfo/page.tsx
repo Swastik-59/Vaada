@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import DashboardNav from "@/components/DashboardNav";
+import AuthenticatedAppShell from "@/components/AuthenticatedAppShell";
 import styles from "./cfo.module.css";
 
 export default function CFOPage() {
@@ -25,9 +25,7 @@ export default function CFOPage() {
   }
 
   return (
-    <div className={styles.cfoShell}>
-      <DashboardNav title="CFO Executive Suite" />
-
+    <AuthenticatedAppShell title="CFO Executive Suite">
       <main className={styles.container}>
         {/* Executive Header */}
         <div className={styles.cfoHeader}>
@@ -276,6 +274,6 @@ export default function CFOPage() {
           </div>
         </section>
       </main>
-    </div>
+    </AuthenticatedAppShell>
   );
 }

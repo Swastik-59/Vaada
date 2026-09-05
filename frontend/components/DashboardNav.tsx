@@ -1,56 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { apiFetch } from "@/lib/api";
+import { useAuth, UserProfile } from "@/context/AuthContext";
 import styles from "./dashboard-nav.module.css";
-
-interface UserProfile {
-  email: string;
-  role: string;
-}
 
 interface DashboardNavProps {
   title?: string;
   user?: UserProfile | null;
 }
 
-const DASHBOARD_TABS = [
-  { href: "/queue", label: "Operations Console", matchPrefix: "/queue" },
-  { href: "/cfo", label: "CFO Executive Suite", matchPrefix: "/cfo" },
-  { href: "/analytics", label: "Portfolio Analytics", matchPrefix: "/analytics" },
-  { href: "/audit", label: "Audit Trail", matchPrefix: "/audit" },
-  { href: "/settings", label: "Compliance Rules", matchPrefix: "/settings" },
-  { href: "/razorpay-taxonomy", label: "Gateway Taxonomy", matchPrefix: "/razorpay-taxonomy" },
-];
-
-export default function DashboardNav({ title, user: initialUser }: DashboardNavProps) {
+export default function DashboardNav({ title, user: propUser }: DashboardNavProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const [user, setUser] = useState<UserProfile | null>(initialUser ?? null);
+  const { user: authUser, logout } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  useEffect(() => {
-    if (initialUser !== undefined) {
-      setUser(initialUser);
-      return;
-    }
+  const activeUser = propUser !== undefined ? propUser : authUser;
+  const canonicalQueueHref = activeUser?.uid ? `/queue/${activeUser.uid}` : "/queue";
 
-    apiFetch("/api/v1/auth/me")
-      .then((res) => {
-        if (res?.user) setUser(res.user);
-      })
-      .catch(() => {
-        setUser(null);
-      });
-  }, [initialUser]);
+  const DASHBOARD_TABS = [
+    { href: canonicalQueueHref, label: "Recovery Queue", matchPrefix: "/queue" },
+    { href: "/cfo", label: "CFO Suite", matchPrefix: "/cfo" },
+    { href: "/analytics", label: "Analytics", matchPrefix: "/analytics" },
+    { href: "/audit", label: "Audit Trail", matchPrefix: "/audit" },
+    { href: "/razorpay-taxonomy", label: "Gateway Taxonomy", matchPrefix: "/razorpay-taxonomy" },
+    { href: "/settings", label: "Settings & Security", matchPrefix: "/settings" },
+  ];
 
   async function handleSignOut() {
-    try {
-      await apiFetch("/api/v1/auth/logout", { method: "POST" });
-    } catch {
-      // Ignore network failure on logout
-    }
+    await logout();
     router.push("/login");
   }
 
@@ -58,72 +38,107 @@ export default function DashboardNav({ title, user: initialUser }: DashboardNavP
   let derivedTitle = title;
   if (!derivedTitle) {
     if (pathname.startsWith("/queue") || pathname.startsWith("/cases")) {
-      derivedTitle = pathname.startsWith("/cases") ? "Case Dossier" : "Operations Console";
+      derivedTitle = pathname.startsWith("/cases") ? "Case Dossier" : "Recovery Queue";
     } else if (pathname.startsWith("/cfo")) {
       derivedTitle = "CFO Executive Suite";
     } else if (pathname.startsWith("/analytics")) {
-      derivedTitle = "Institutional Analytics";
+      derivedTitle = "Portfolio Analytics";
     } else if (pathname.startsWith("/audit")) {
-      derivedTitle = "Audit Trail";
+      derivedTitle = "Immutable Audit Trail";
     } else if (pathname.startsWith("/settings")) {
-      derivedTitle = "Compliance Rules";
+      derivedTitle = "Settings & Security";
     } else if (pathname.startsWith("/razorpay-taxonomy")) {
-      derivedTitle = "Gateway Taxonomy";
+      derivedTitle = "Gateway Error Taxonomy";
     } else {
-      derivedTitle = "Dashboard";
+      derivedTitle = "Workspace";
     }
   }
 
   return (
-    <nav className={styles.topBar}>
-      <div className={styles.barLeft}>
-        <Link href="/" className={styles.brandMark} title="Return to Home">
-          <span>VAADA</span>
-          <span className={styles.brandDevanagari}>वादा</span>
-        </Link>
-        <span className={styles.barDivider}>/</span>
-        <span className={styles.barTitle}>{derivedTitle}</span>
-      </div>
-
-      <div className={styles.barCenter}>
-        {DASHBOARD_TABS.map((tab) => {
-          const isActive =
-            pathname === tab.href ||
-            (tab.matchPrefix !== "/queue" && pathname.startsWith(tab.matchPrefix)) ||
-            (tab.matchPrefix === "/queue" && (pathname === "/queue" || pathname.startsWith("/cases")));
-
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className={isActive ? styles.barNavLinkActive : styles.barNavLink}
-            >
-              {tab.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      <div className={styles.barRight}>
-        {user ? (
-          <div className={styles.userProfilePill}>
-            <span className={styles.userDot} />
-            <span className={styles.userEmail}>{user.email}</span>
-            <span className={styles.userRoleTag}>{user.role}</span>
-            <button
-              onClick={handleSignOut}
-              className={styles.signOutBtn}
-              title="Sign Out"
-            >
-              Sign Out
-            </button>
-          </div>
-        ) : (
-          <Link href="/login" className={styles.signInLink}>
-            Sign In
+    <>
+      <nav className={styles.topBar}>
+        <div className={styles.barLeft}>
+          <Link href="/" className={styles.brandMark} title="Return to Home">
+            <span>VAADA</span>
+            <span className={styles.brandDevanagari}>वादा</span>
           </Link>
-        )}
-      </div>
-    </nav>
+          <span className={styles.barDivider}>/</span>
+          <span className={styles.barTitle} title={activeUser?.tenant_name || derivedTitle}>
+            {activeUser?.tenant_name ? `${activeUser.tenant_name}` : derivedTitle}
+          </span>
+        </div>
+
+        {/* Desktop Navigation Links */}
+        <div className={styles.barCenter}>
+          {DASHBOARD_TABS.map((tab) => {
+            const isActive =
+              (tab.matchPrefix === "/queue" && (pathname.startsWith("/queue") || pathname.startsWith("/cases"))) ||
+              (tab.matchPrefix !== "/queue" && pathname.startsWith(tab.matchPrefix));
+
+            return (
+              <Link
+                key={tab.label}
+                href={tab.href}
+                className={isActive ? styles.barNavLinkActive : styles.barNavLink}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className={styles.barRight}>
+          {activeUser ? (
+            <div className={styles.userProfilePill}>
+              <span className={styles.userDot} />
+              <span className={styles.userEmail} title={activeUser.email}>{activeUser.email}</span>
+              <span className={styles.userRoleTag}>{activeUser.role}</span>
+              <button
+                onClick={handleSignOut}
+                className={styles.signOutBtn}
+                title="Sign Out of Session"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <Link href="/login" className={styles.signInLink}>
+              Sign In
+            </Link>
+          )}
+
+          {/* Mobile Menu Hamburger */}
+          <button
+            className={styles.mobileMenuToggle}
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label="Toggle navigation menu"
+          >
+            {mobileOpen ? "✕" : "☰"}
+          </button>
+        </div>
+      </nav>
+
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className={styles.mobileDrawer}>
+          {DASHBOARD_TABS.map((tab) => {
+            const isActive =
+              (tab.matchPrefix === "/queue" && (pathname.startsWith("/queue") || pathname.startsWith("/cases"))) ||
+              (tab.matchPrefix !== "/queue" && pathname.startsWith(tab.matchPrefix));
+
+            return (
+              <Link
+                key={tab.label}
+                href={tab.href}
+                className={isActive ? styles.mobileNavLinkActive : styles.mobileNavLink}
+                onClick={() => setMobileOpen(false)}
+              >
+                {tab.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }
