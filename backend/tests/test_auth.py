@@ -100,3 +100,32 @@ def test_seed_creates_operator_login() -> None:
 def test_unauthenticated_cases_are_rejected() -> None:
     client = _seeded_client()
     assert client.get("/api/v1/cases").status_code == 401
+
+
+def test_refresh_token_rotation_handles_naive_expires_at() -> None:
+    previous = os.environ.get("VAADA_SEED_ADMIN_PASSWORD")
+    os.environ["VAADA_SEED_ADMIN_PASSWORD"] = "local-seed-pass-12"
+    try:
+        get_settings.cache_clear()
+        app = create_app()
+        db = app.state.session_factory()
+        try:
+            seed_demo(db, get_settings())
+            db.commit()
+        finally:
+            db.close()
+        client = TestClient(app)
+        login_res = client.post(
+            "/api/v1/auth/login",
+            json={"email": "operator@vaada.local", "password": "local-seed-pass-12"},
+        )
+        assert login_res.status_code == 200
+        refresh_res = client.post("/api/v1/auth/refresh")
+        assert refresh_res.status_code == 200
+        assert "uid" in refresh_res.json()
+    finally:
+        if previous is None:
+            os.environ.pop("VAADA_SEED_ADMIN_PASSWORD", None)
+        else:
+            os.environ["VAADA_SEED_ADMIN_PASSWORD"] = previous
+        get_settings.cache_clear()

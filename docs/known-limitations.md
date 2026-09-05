@@ -28,7 +28,11 @@ This document explicitly details known limitations, edge cases, and technical tr
 
 ### Local In-Memory Rate Limiter
 - **Limitation**: In single-instance deployments, the in-memory rate limiter protects endpoints cleanly. In multi-node horizontally scaled deployments, rate limiting requires Redis backing (`redis-py` or `slowapi`).
-- **Handling**: Architecture is modularized so `RateLimitMiddleware` can swap storage backends without altering route definitions.
+- **Handling**: The Render Free Tier deployment intentionally remains single-instance and treats rate limiting as best-effort protection. A production deployment requires a shared, durable rate-limit store before horizontal scaling.
+
+### Render Free Tier Availability and Persistence
+- **Limitation**: Render Free web services can spin down after inactivity, restart without notice, and have an ephemeral filesystem. Free Render Postgres databases expire after 30 days and do not provide backups.
+- **Handling**: Vaada's deployment configuration keeps application processes stateless and uses Postgres for durable relational data. It does not run persistent schedulers or store uploaded data locally. Production deployment requires a non-expiring database, a durable worker/queue, object storage for uploads, and monitored cold-start behavior.
 
 ### Ollama Model Serving Latency
 - **Limitation**: Local GGUF 7B quantization running on CPU-only developer environments may take 2.5–4.0 seconds per extraction call.

@@ -327,7 +327,8 @@
   flex-wrap: wrap;
 }
 
-.filterPill {
+.filterPill,
+.pill {
   background-color: transparent;
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
@@ -340,17 +341,125 @@
   transition: all var(--duration-fast) ease;
 }
 
-.filterPill:hover {
-  background-color: var(--bg-surface);
+.filterPill:hover,
+.pill:hover {
+  background-color: var(--bg-hover, var(--neutral-4));
+  border-color: var(--border-strong);
   color: var(--text-primary);
 }
 
+.filterPill.pillActive,
+.pill.pillActive,
 .pillActive {
-  background-color: var(--bg-elevated);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
+  background-color: var(--bg-elevated, var(--neutral-3));
+  border-color: var(--border-strong, var(--neutral-5));
+  color: var(--text-emphasis, var(--neutral-12));
   font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
+
+.sortableHeader {
+  cursor: pointer;
+  user-select: none;
+  transition: color var(--duration-fast) ease;
+}
+
+.sortableHeader:hover {
+  color: var(--text-primary);
+}
+
+.tableRow {
+  transition: background-color var(--duration-fast) ease;
+}
+
+.tableRow:hover {
+  background-color: var(--bg-hover, var(--neutral-4));
+}
+
+.tableRow:last-child td {
+  border-bottom: none;
+}
+
+.buyerCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.buyerName {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 13.5px;
+  line-height: 1.3;
+}
+
+.buyerGstin {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.interestNote {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--status-disallowed, #e85050);
+  margin-top: 2px;
+}
+
+.clockCritical {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--status-disallowed, #e85050);
+}
+
+.stateLabel {
+  display: block;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.actionHint {
+  display: block;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.inspectBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 6px 14px;
+  border-radius: 4px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: all var(--duration-fast) ease;
+}
+
+.inspectBtn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.textRight {
+  text-align: right;
+}
+
 
 /* ── Table Container ── */
 .tableContainer {

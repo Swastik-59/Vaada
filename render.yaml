@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: vaada-api
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: VAADA_ENV
+        value: production
+      - key: VAADA_LOG_LEVEL
+        value: INFO
+      - key: VAADA_COOKIE_SECURE
+        value: "true"
+      - key: VAADA_DATABASE_URL
+        fromDatabase:
+          name: vaada-postgres
+          property: connectionString
+      - key: VAADA_JWT_SECRET
+        generateValue: true
+      - key: VAADA_CORS_ORIGINS
+        sync: false
+      - key: VAADA_RAZORPAY_KEY_ID
+        sync: false
+      - key: VAADA_RAZORPAY_KEY_SECRET
+        sync: false
+      - key: VAADA_RAZORPAY_WEBHOOK_SECRET
+        sync: false
+
+databases:
+  - name: vaada-postgres
+    plan: free
+    databaseName: vaada
+    user: vaada

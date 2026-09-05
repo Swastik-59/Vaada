@@ -3,7 +3,8 @@ from __future__ import annotations
 from collections.abc import Generator
 from pathlib import Path
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -153,6 +154,16 @@ def session_factory(engine) -> sessionmaker[Session]:
     return sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 
+def database_is_ready(engine) -> bool:
+    """Run the smallest bounded query needed for a readiness decision."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return True
+    except SQLAlchemyError:
+        return False
+
+
 def get_db_dependency(factory: sessionmaker[Session]):
     def _get_db() -> Generator[Session, None, None]:
         db = factory()
@@ -166,4 +177,3 @@ def get_db_dependency(factory: sessionmaker[Session]):
             db.close()
 
     return _get_db
-

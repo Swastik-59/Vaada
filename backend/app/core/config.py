@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     refresh_token_days: int = 7
 
     database_url: str = "sqlite+pysqlite:///./vaada.db"
+    # Test-only convenience. Production schema changes are applied by Alembic.
+    auto_create_schema: bool = False
 
     llm_base_url: str = ""
     llm_model: str = "qwen2.5:7b-instruct"

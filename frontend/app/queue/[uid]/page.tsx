@@ -385,31 +385,31 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
 
               <div className={styles.filterPills}>
                 <button
-                  className={stateFilter === null ? styles.pillActive : styles.pill}
+                  className={`${styles.filterPill} ${stateFilter === null ? styles.pillActive : ""}`}
                   onClick={() => setStateFilter(null)}
                 >
                   All ({items.length})
                 </button>
                 <button
-                  className={stateFilter === "promise_recorded" ? styles.pillActive : styles.pill}
+                  className={`${styles.filterPill} ${stateFilter === "promise_recorded" ? styles.pillActive : ""}`}
                   onClick={() => setStateFilter("promise_recorded")}
                 >
                   Promise Recorded
                 </button>
                 <button
-                  className={stateFilter === "human_review" ? styles.pillActive : styles.pill}
+                  className={`${styles.filterPill} ${stateFilter === "human_review" ? styles.pillActive : ""}`}
                   onClick={() => setStateFilter("human_review")}
                 >
                   Needs Review
                 </button>
                 <button
-                  className={stateFilter === "awaiting_action" ? styles.pillActive : styles.pill}
+                  className={`${styles.filterPill} ${stateFilter === "awaiting_action" ? styles.pillActive : ""}`}
                   onClick={() => setStateFilter("awaiting_action")}
                 >
                   Action Pending
                 </button>
                 <button
-                  className={stateFilter === "recovered" ? styles.pillActive : styles.pill}
+                  className={`${styles.filterPill} ${stateFilter === "recovered" ? styles.pillActive : ""}`}
                   onClick={() => setStateFilter("recovered")}
                 >
                   Settled
@@ -558,7 +558,7 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
                           </div>
                         </td>
                         <td>
-                          <div>
+                          <div className={styles.statusCell}>
                             <span className={styles.stateLabel} style={{ color: desc.color }}>
                               ● {desc.label}
                             </span>

@@ -148,7 +148,14 @@ def issue_session(db: Session, *, user: User, settings: Settings) -> tuple[str, 
 def rotate_refresh(db: Session, *, refresh_token: str, settings: Settings) -> tuple[User, str, str, str, datetime]:
     token_row = db.scalar(select(RefreshToken).where(RefreshToken.token_hash == hash_token(refresh_token)))
     now = datetime.now(UTC)
-    if token_row is None or token_row.revoked_at is not None or token_row.expires_at <= now:
+    if token_row is None or token_row.revoked_at is not None:
+        raise AuthenticationFailed("Refresh token is invalid.")
+
+    expires_at = token_row.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=UTC)
+
+    if expires_at <= now:
         raise AuthenticationFailed("Refresh token is invalid.")
 
     user = db.get(User, token_row.user_id)

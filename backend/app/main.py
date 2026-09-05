@@ -21,14 +21,15 @@ from app.core.middleware import (
     public_error_payload,
 )
 from app.db.models import Base
-from app.db.session import create_engine_from_settings, get_db_dependency, session_factory
+from app.db.session import database_is_ready, create_engine_from_settings, get_db_dependency, session_factory
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
     engine = create_engine_from_settings(settings)
-    Base.metadata.create_all(bind=engine)
+    if settings.auto_create_schema:
+        Base.metadata.create_all(bind=engine)
     factory = session_factory(engine)
     db_dependency = get_db_dependency(factory)
 
@@ -70,6 +71,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def health() -> dict:
         return {"status": "ok"}
 
+    @app.get("/ready")
+    def ready() -> JSONResponse:
+        if not database_is_ready(engine):
+            return JSONResponse(status_code=503, content={"status": "unavailable"})
+        return JSONResponse(content={"status": "ready"})
+
     @app.get("/api/v1/health")
     def api_health() -> dict:
         return {"status": "ok", "env": settings.env}
@@ -78,3 +85,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 app = create_app()
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True, reload_dirs=["app"])

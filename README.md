@@ -507,6 +507,21 @@ python verify_e2e_golden_path.py
 
 ---
 
+## Vercel + Render deployment
+
+Vaada deploys as two services: the Next.js application on Vercel and the FastAPI API on Render. The browser continues to call `/api/v1/*` on the Vercel origin; Next.js proxies these paths server-side to Render, preserving the existing cookie and CSRF model.
+
+1. Create a Render Blueprint from [`render.yaml`](render.yaml). Set `VAADA_CORS_ORIGINS` to the exact Vercel production origin and add the Razorpay Test Mode variables if webhooks are enabled.
+2. Set Vercel's server-only `VAADA_API_ORIGIN` to the HTTPS Render API origin, with no path or trailing slash.
+3. Set `VAADA_COOKIE_SECURE=true` in Render. Do not set any `NEXT_PUBLIC_*` variable to a secret, token, or database URL.
+4. Confirm `GET /health` returns `200` before routing frontend traffic. `GET /ready` additionally verifies database reachability.
+
+The Render free tier is suitable for evaluation, not production: a web service can spin down after 15 minutes of inactivity, its filesystem is ephemeral, and a free Render Postgres database expires after 30 days. Use managed Postgres for all durable data; do not store uploads, SQLite data, or job state on the web-service filesystem. See [Render's free-tier documentation](https://render.com/docs/free) and [health-check documentation](https://render.com/docs/health-checks).
+
+Local configuration belongs in the repository-root `.env`; see [`.env.example`](.env.example) for safe variable names and placeholders.
+
+---
+
 ## API Reference
 
 The backend exposes a fully documented REST API at `http://localhost:8000/api/v1`.
