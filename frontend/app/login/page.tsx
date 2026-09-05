@@ -327,7 +327,7 @@ function LoginForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="new-password"
-                  placeholder="Uppercase, lowercase, digit, symbol required"
+                  placeholder="Enter a strong password"
                   required
                   className={styles.formInput}
                 />
