@@ -164,3 +164,9 @@ class TenantSampleDataRequest(BaseModel):
     scenario: str = Field(default="mixed", pattern="^(mixed|msme_43b_h|payment_failures|hinglish_promissory)$")
     count: int = Field(default=6, ge=1, le=20)
 
+
+class InvoiceImportRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    csv_text: str = Field(min_length=10, max_length=5_000_000)
+

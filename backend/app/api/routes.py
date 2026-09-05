@@ -15,6 +15,7 @@ from app.api.schemas import (
     CustomerReplyRequest,
     EventIngestRequest,
     ForgotPasswordRequest,
+    InvoiceImportRequest,
     JobTriggerRequest,
     LoginRequest,
     PaymentReconcileRequest,
@@ -27,6 +28,7 @@ from app.api.schemas import (
     TDSReconcileRequest,
     TenantSampleDataRequest,
 )
+from app.services.importer import get_csv_template, import_invoices_csv
 from app.services.sample_data import clear_tenant_sample_data, generate_tenant_sample_data
 from app.services.jobs import (
     run_promise_adherence_check,
@@ -99,6 +101,11 @@ from app.services.portal import generate_portal_token
 from app.services.statutory import get_43b_h_status
 
 router = APIRouter()
+
+
+@router.get("/health")
+def api_health_check(settings: Settings = Depends(get_settings)) -> dict:
+    return {"status": "ok", "env": settings.env}
 
 
 @router.get("/auth/config")
@@ -393,6 +400,66 @@ def list_invoices(
             }
             for item in rows
         ]
+    }
+
+
+@router.get("/invoices/template.csv")
+def download_invoice_template() -> Response:
+    content = get_csv_template()
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": 'attachment; filename="vaada_receivables_template.csv"'},
+    )
+
+
+@router.post("/invoices/import")
+async def import_invoices_endpoint(
+    request: Request,
+    db: Session = Depends(get_db),
+    principal: Principal = Depends(require_permission("cases:create")),
+) -> dict:
+    content_type = request.headers.get("content-type", "")
+    csv_text = ""
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        file_obj = form.get("file")
+        if not file_obj or not hasattr(file_obj, "read"):
+            raise ValidationFailed("No CSV file uploaded in 'file' field.")
+        raw_bytes = await file_obj.read()
+        try:
+            csv_text = raw_bytes.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            try:
+                csv_text = raw_bytes.decode("latin-1")
+            except Exception:
+                raise ValidationFailed("Failed to decode uploaded CSV file. Expected UTF-8 or Latin-1.")
+    elif "application/json" in content_type:
+        body = await request.json()
+        csv_text = body.get("csv_text", "")
+    elif "text/csv" in content_type or "text/plain" in content_type:
+        raw_bytes = await request.body()
+        csv_text = raw_bytes.decode("utf-8-sig", errors="replace")
+    else:
+        raise ValidationFailed("Unsupported content type. Send multipart/form-data or application/json.")
+
+    if not csv_text.strip():
+        raise ValidationFailed("CSV content is empty.")
+
+    result = import_invoices_csv(
+        db,
+        tenant_id=principal.tenant_id,
+        actor_uid=principal.user_uid,
+        csv_text=csv_text,
+    )
+    return {
+        "success": result.success,
+        "imported_count": result.imported_count,
+        "duplicate_count": result.duplicate_count,
+        "error_count": result.error_count,
+        "errors": result.errors,
+        "total_amount_minor": result.total_amount_minor,
+        "created_case_ids": result.created_case_ids,
     }
 
 
@@ -1143,6 +1210,7 @@ def _tenant_metrics(db: Session, tenant_id: str) -> dict:
 def _case_summary(db: Session, case: RecoveryCase) -> dict:
     invoice = db.get(Invoice, case.invoice_id)
     customer = db.get(Customer, case.customer_id) if case.customer_id else (db.get(Customer, invoice.customer_id) if invoice else None)
+    source_event = db.get(PaymentEvent, case.source_event_id) if case.source_event_id else None
     
     statutory_info = get_43b_h_status(invoice, customer) if (invoice and customer) else None
 
@@ -1154,6 +1222,7 @@ def _case_summary(db: Session, case: RecoveryCase) -> dict:
         "recovery_probability": float(case.recovery_probability) if case.recovery_probability is not None else None,
         "contact_attempt_count": case.contact_attempt_count,
         "version": case.version,
+        "source": source_event.source if source_event else "manual",
         "invoice_number": invoice.invoice_number if invoice else None,
         "amount_minor": invoice.amount_minor if invoice else None,
         "net_payable_minor": invoice.net_payable_minor if (invoice and invoice.net_payable_minor > 0) else (invoice.amount_minor if invoice else None),

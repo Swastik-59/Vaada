@@ -7,6 +7,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
 import AuthenticatedAppShell from "@/components/AuthenticatedAppShell";
 import RazorpayWebhookModal from "@/components/RazorpayWebhookModal";
+import ImportCsvModal from "@/components/ImportCsvModal";
 import styles from "../queue.module.css";
 
 type CaseRow = {
@@ -19,6 +20,7 @@ type CaseRow = {
   currency: string | null;
   due_at: string | null;
   contact_attempt_count: number;
+  source?: string | null;
   customer_name?: string | null;
   customer_gstin?: string | null;
   customer_is_msme?: boolean;
@@ -79,6 +81,8 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [clearingSample, setClearingSample] = useState(false);
 
   // Sample data generation state
   const [selectedScenario, setSelectedScenario] = useState("mixed");
@@ -120,6 +124,21 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
       setError(err instanceof Error ? err.message : "Failed to generate sample data");
     } finally {
       setGeneratingSample(false);
+    }
+  }
+
+  async function handleClearSampleData() {
+    if (!window.confirm("Are you sure you want to clear all synthetic demonstration records? Real imported invoices will be preserved.")) {
+      return;
+    }
+    try {
+      setClearingSample(true);
+      await apiFetch("/api/v1/tenant/sample-data", { method: "DELETE" });
+      await loadCases();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to clear synthetic data.");
+    } finally {
+      setClearingSample(false);
     }
   }
 
@@ -293,6 +312,9 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
               </button>
 
               <div className={styles.secondaryActionRow}>
+                <button className={styles.secondaryBtn} onClick={() => setIsImportModalOpen(true)}>
+                  📥 Import Receivables (CSV)
+                </button>
                 <button className={styles.secondaryBtn} onClick={() => setIsSimulatorOpen(true)}>
                   Simulate Gateway Webhook
                 </button>
@@ -308,6 +330,47 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
         {/* ── Active Queue Table & Cards ── */}
         {items.length > 0 && (
           <>
+            {/* Provenance Banner if synthetic records are present */}
+            {items.some((i) => i.source === "synthetic_seed") && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "0.6rem 1rem",
+                  backgroundColor: "rgba(196, 148, 58, 0.08)",
+                  border: "1px solid rgba(196, 148, 58, 0.25)",
+                  borderRadius: "6px",
+                  marginBottom: "1rem",
+                  fontSize: "0.82rem",
+                  color: "#e6edf3",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ color: "var(--accent, #c4943a)", fontWeight: 600 }}>PROVENANCE: SYNTHETIC PORTFOLIO</span>
+                  <span style={{ color: "#8b949e" }}>·</span>
+                  <span style={{ color: "#c9d1d9" }}>
+                    Simulated Indian commercial debt scenarios loaded for demonstration. Isolated to your workspace.
+                  </span>
+                </div>
+                <button
+                  onClick={handleClearSampleData}
+                  disabled={clearingSample}
+                  style={{
+                    background: "transparent",
+                    border: "1px solid rgba(248, 113, 113, 0.4)",
+                    borderRadius: "4px",
+                    color: "#f87171",
+                    fontSize: "0.78rem",
+                    padding: "0.25rem 0.65rem",
+                    cursor: clearingSample ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {clearingSample ? "Clearing..." : "Clear Synthetic Records"}
+                </button>
+              </div>
+            )}
+
             {/* Controls: Search and Filters */}
             <div className={styles.controlsRow}>
               <div className={styles.searchBox}>
@@ -350,6 +413,43 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
                   onClick={() => setStateFilter("recovered")}
                 >
                   Settled
+                </button>
+              </div>
+
+              {/* Quick Actions */}
+              <div style={{ display: "flex", gap: "0.5rem", marginLeft: "auto" }}>
+                <button
+                  onClick={() => setIsImportModalOpen(true)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.35rem",
+                    padding: "0.45rem 0.85rem",
+                    backgroundColor: "rgba(196, 148, 58, 0.12)",
+                    border: "1px solid rgba(196, 148, 58, 0.35)",
+                    borderRadius: "6px",
+                    color: "var(--accent, #c4943a)",
+                    fontSize: "0.82rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  <span>📥</span> Import CSV
+                </button>
+                <button
+                  onClick={() => setIsSimulatorOpen(true)}
+                  style={{
+                    padding: "0.45rem 0.85rem",
+                    backgroundColor: "#21262d",
+                    border: "1px solid #30363d",
+                    borderRadius: "6px",
+                    color: "#c9d1d9",
+                    fontSize: "0.82rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                  }}
+                >
+                  Simulate Webhook
                 </button>
               </div>
             </div>
@@ -536,6 +636,16 @@ export default function CanonicalQueuePage({ params }: { params: Promise<{ uid: 
           }}
         />
       )}
+
+      {/* CSV Receivables Import Modal */}
+      <ImportCsvModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImportComplete={() => {
+          setIsImportModalOpen(false);
+          loadCases();
+        }}
+      />
     </AuthenticatedAppShell>
   );
 }
