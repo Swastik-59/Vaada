@@ -10,10 +10,12 @@ COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt \
     && useradd --create-home --uid 10001 appuser
 
+COPY backend/alembic ./alembic
+COPY backend/alembic.ini ./alembic.ini
 COPY backend/app ./app
 COPY data ./data
 
 USER appuser
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "alembic upgrade head && { if [ -n \"$VAADA_SEED_ADMIN_PASSWORD\" ]; then python -m app.seed || true; fi; } && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

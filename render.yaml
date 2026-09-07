@@ -28,6 +28,8 @@ services:
         sync: false
       - key: VAADA_RAZORPAY_WEBHOOK_SECRET
         sync: false
+      - key: VAADA_SEED_ADMIN_PASSWORD
+        sync: false
 
 databases:
   - name: vaada-postgres

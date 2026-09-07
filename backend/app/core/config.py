@@ -74,6 +74,15 @@ class Settings(BaseSettings):
             )
         return value
 
+    @field_validator("database_url", mode="after")
+    @classmethod
+    def normalize_database_url(cls, value: str) -> str:
+        if value.startswith("postgres://"):
+            return "postgresql+psycopg://" + value[len("postgres://"):]
+        if value.startswith("postgresql://"):
+            return "postgresql+psycopg://" + value[len("postgresql://"):]
+        return value
+
     @field_validator("seed_admin_email", "seed_admin_password", mode="before")
     @classmethod
     def strip_seed_credentials(cls, value: object) -> object:
