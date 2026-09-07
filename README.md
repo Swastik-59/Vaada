@@ -5,10 +5,24 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15.1+-black.svg?logo=next.js&logoColor=white)](https://nextjs.org)
 [![SQLite / PostgreSQL](https://img.shields.io/badge/Database-SQLite%20%7C%20PostgreSQL%2016+-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org)
-[![Tests](https://img.shields.io/badge/Tests-64%20Passed-brightgreen.svg)](./backend/tests)
+[![Tests](https://img.shields.io/badge/Tests-100%20Passed-brightgreen.svg)](./backend/tests)
 [![Razorpay](https://img.shields.io/badge/Taxonomy-Official%20Razorpay%20v2026--09-0284c7.svg)]()
 [![L3Cube-HingCorpus](https://img.shields.io/badge/Linguistics-L3Cube--HingCorpus%20%7C%20HingLID-f97316.svg)](https://github.com/l3cube-pune/code-mixed-nlp)
 [![Compliance](https://img.shields.io/badge/Compliance-RBI%20FPC%20%7C%20MSMED%20%7C%20DPDP-blue.svg)]()
+[![Demo Video](https://img.shields.io/badge/Demo%20Video-Google%20Drive-red.svg?logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1Vo0Ja56-99YX1C3KN5aF97Ne0omrCfrt/view?usp=sharing)
+
+---
+
+## 🎬 Product Demo Video
+
+[![Watch Demo Video](https://img.shields.io/badge/Watch%20Demo-Google%20Drive%20Video-E11D48?style=for-the-badge&logo=google-drive&logoColor=white)](https://drive.google.com/file/d/1Vo0Ja56-99YX1C3KN5aF97Ne0omrCfrt/view?usp=sharing)
+
+> 📹 **Live Walkthrough**: [Watch the Vaada Demo on Google Drive](https://drive.google.com/file/d/1Vo0Ja56-99YX1C3KN5aF97Ne0omrCfrt/view?usp=sharing)  
+> Full end-to-end walkthrough demonstrating:
+> - **Payment Failure Diagnosis**: Real-time evaluation against the authoritative Razorpay Error Taxonomy.
+> - **India Statutory Engine**: Automated MSME 43B(h) due-date tracking, 3x RBI statutory interest compounding, and Form 16A TDS reconciliation.
+> - **Code-Mixed Hinglish Intelligence**: Promise-to-pay extraction with heuristic fallback and L3Cube benchmark grounding.
+> - **Executive & Operator Consoles**: Bounded human-in-the-loop workflows, dynamic NPCI UPI links, and customer settlement portal.
 
 ---
 
