@@ -61,8 +61,10 @@ class OriginCheckMiddleware(BaseHTTPMiddleware):
         if request.method in SAFE_METHODS:
             return await call_next(request)
         origin = request.headers.get("origin")
-        if origin and origin not in self.settings.cors_origin_list:
-            return JSONResponse(
+        if origin:
+            normalized_origin = origin.rstrip("/")
+            if normalized_origin not in self.settings.cors_origin_list:
+                return JSONResponse(
                 status_code=403,
                 content={
                     "error": {

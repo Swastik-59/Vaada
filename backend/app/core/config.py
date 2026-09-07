@@ -92,7 +92,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+        return [item.strip().rstrip("/") for item in self.cors_origins.split(",") if item.strip()]
 
     @property
     def is_sqlite(self) -> bool:
