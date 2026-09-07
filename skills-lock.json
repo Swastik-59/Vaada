@@ -13,6 +13,12 @@
       "skillPath": "plugins/ai-security-skills/skills/agent-security-audit/SKILL.md",
       "computedHash": "c2fbacb37c953b1d850fbb3d6408d56670776376eb56630b031b5e5c69fcde96"
     },
+    "crafting-effective-readmes": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "skillPath": "skills/crafting-effective-readmes/SKILL.md",
+      "computedHash": "cb11facecbb4a15f7ca6cfac2e740ac66798676c246c057879a71babb27c9a4f"
+    },
     "fastapi": {
       "source": "fastapi/fastapi",
       "sourceType": "github",
@@ -24,6 +30,12 @@
       "sourceType": "github",
       "skillPath": "frontend-design/SKILL.md",
       "computedHash": "eb642575592351d2c6727243662995a145911fbbdf3a30289c94e08463c2e177"
+    },
+    "indexion-readme": {
+      "source": "trkbt10/indexion-skills",
+      "sourceType": "github",
+      "skillPath": "skills/indexion-readme/SKILL.md",
+      "computedHash": "c4c450d5fb474a7502704e7e898309b2a1b7ddea40439e28f4027a2af3aa5f81"
     },
     "nextjs": {
       "source": "ulpi-io/skills",
