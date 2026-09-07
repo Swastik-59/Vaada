@@ -34,5 +34,6 @@ services:
 databases:
   - name: vaada-postgres
     plan: free
+    region: singapore
     databaseName: vaada
     user: vaada

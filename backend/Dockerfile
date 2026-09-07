@@ -18,4 +18,4 @@ COPY data ./data
 USER appuser
 EXPOSE 8000
 
-CMD ["sh", "-c", "alembic upgrade head && { if [ -n \"$VAADA_SEED_ADMIN_PASSWORD\" ]; then python -m app.seed || true; fi; } && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "python -m app.db.wait && alembic upgrade head && { if [ -n \"$VAADA_SEED_ADMIN_PASSWORD\" ]; then python -m app.seed || true; fi; } && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
